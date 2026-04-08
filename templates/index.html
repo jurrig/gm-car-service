@@ -189,6 +189,7 @@
             </div>
 
             <form id="booking-form" action="/book" method="POST" enctype="multipart/form-data" class="booking-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <!-- STEP 1: Journey Information -->
                 <div class="form-step form-step-active" id="step-1">
                     <h3 class="step-heading">JOURNEY INFORMATION</h3>
@@ -798,6 +799,12 @@
                 <a href="#faq">FAQ</a>
                 <a href="#about">About</a>
                 <a href="/admin">Admin</a>
+            </div>
+            <div class="footer-links" style="margin-top:0.5rem;">
+                <a href="/privacy">Privacy Policy</a>
+                <a href="/terms">Terms of Service</a>
+                <a href="/disclaimer">Disclaimer</a>
+                <a href="/contact">Contact Us</a>
             </div>
             <div class="footer-copy">
                 &copy; 2026 G&amp;M Car Service. All rights reserved.

@@ -422,6 +422,7 @@
             <div class="exp-form">
                 <h3>&#10133; Log Expense</h3>
                 <form method="POST" action="{{ url_for('admin_expense_add') }}" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div class="exp-row">
                         <div class="exp-group">
                             <label>Date</label>
@@ -486,6 +487,7 @@
                         <td>
                             <form method="POST" action="{{ url_for('admin_expense_delete', expense_id=e.id) }}"
                                 onsubmit="return confirm('Delete this expense?');" style="display:inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <button class="btn-del-exp" type="submit">&#10005;</button>
                             </form>
                         </td>

@@ -138,6 +138,7 @@
             Settings</h1>
 
         <form method="POST" action="{{ url_for('admin_settings_save') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
             <!-- Flight Tracking -->
             <div class="settings-card">

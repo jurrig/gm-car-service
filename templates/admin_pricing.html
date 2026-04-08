@@ -323,6 +323,7 @@
                                     onclick="openModal('{{ t.vehicle_type }}', {{ t.id }}, {{ t.min_miles }}, {{ t.max_miles if t.max_miles else 'null' }}, {{ t.base_fare }}, {{ t.per_mile }}, {{ t.min_fare }}, '{{ t.label or '' }}')">Edit</button>
                                 <form method="POST" action="{{ url_for('admin_pricing_delete', tier_id=t.id) }}"
                                     onsubmit="return confirm('Delete this tier?');" style="display:inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <button class="btn-tier btn-tier-del" type="submit">Delete</button>
                                 </form>
                             </div>
@@ -343,6 +344,7 @@
         <div class="modal-box">
             <h3 id="modal-title">Add Pricing Tier</h3>
             <form method="POST" action="{{ url_for('admin_pricing_save') }}" id="tierForm">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="hidden" name="tier_id" id="f-tier-id" value="">
                 <input type="hidden" name="vehicle_type" id="f-vehicle-type" value="">
 

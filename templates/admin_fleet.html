@@ -379,6 +379,7 @@
                             onclick='editVehicle({{ v.id }}, {{ v.vehicle_type|tojson }}, {{ v.name|tojson }}, {{ v.license_plate|tojson }}, {{ v.is_active|tojson }}, {{ (v.driver_id or "")|tojson }})'>Edit</button>
                         <form method="POST" action="{{ url_for('admin_fleet_delete', vehicle_id=v.id) }}"
                             onsubmit="return confirm('Delete this vehicle?')">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <button type="submit" class="btn btn-del">Delete</button>
                         </form>
                     </div>
@@ -419,6 +420,7 @@
                         onclick='editDriver({{ d.id }}, {{ d.name|tojson }}, {{ d.phone|tojson }}, {{ (d.email or "")|tojson }}, {{ d.is_active|tojson }}, {{ d.commission_rate }}, {{ (d.zelle_info or "")|tojson }}, {{ (d.pin or "")|tojson }})'>Edit</button>
                     <form method="POST" action="{{ url_for('admin_driver_delete', driver_id=d.id) }}"
                         onsubmit="return confirm('Delete this driver? Their vehicles will be unassigned.')">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <button type="submit" class="btn btn-del">Delete</button>
                     </form>
                 </div>
@@ -432,6 +434,7 @@
         <div class="modal">
             <h3 id="vehicleModalTitle">Add Vehicle</h3>
             <form method="POST" action="{{ url_for('admin_fleet_save') }}" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="hidden" name="vehicle_id" id="v_id">
 
                 <label>Vehicle Type</label>
@@ -478,6 +481,7 @@
         <div class="modal">
             <h3 id="driverModalTitle">Add Driver</h3>
             <form method="POST" action="{{ url_for('admin_driver_save') }}" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="hidden" name="driver_id" id="d_id">
 
                 <label>Full Name</label>

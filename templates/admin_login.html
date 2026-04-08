@@ -23,6 +23,7 @@
             {% endif %}
 
             <form method="POST" action="{{ url_for('admin_login') }}" class="login-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <label for="secret">Admin Password</label>
                 <input type="password" id="secret" name="secret" required placeholder="Enter admin password"
                     autocomplete="current-password">

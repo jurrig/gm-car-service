@@ -72,6 +72,7 @@
         <div class="login-error">{{ error }}</div>
         {% endif %}
         <form method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="password" name="pin" placeholder="PIN" maxlength="10" required autofocus inputmode="numeric">
             <button type="submit">Sign In</button>
         </form>

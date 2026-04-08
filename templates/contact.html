@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Us – G&M Car Service</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        body {
+            background: #0a0a1a;
+            color: #ddd;
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0;
+        }
+
+        .contact-page {
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        .contact-page h1 {
+            color: #c8a84e;
+            border-bottom: 2px solid #c8a84e33;
+            padding-bottom: 0.5rem;
+        }
+
+        .contact-page a {
+            color: #c8a84e;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 1rem;
+            color: #c8a84e;
+            text-decoration: none;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        .contact-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin: 1.5rem 0 2rem;
+        }
+
+        .contact-card {
+            background: #13132a;
+            border: 1px solid #c8a84e33;
+            border-radius: 10px;
+            padding: 1.2rem;
+            text-align: center;
+        }
+
+        .contact-card .icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .contact-card h3 {
+            color: #c8a84e;
+            margin: 0 0 0.3rem;
+            font-size: 1rem;
+        }
+
+        .contact-card p {
+            margin: 0;
+            font-size: 0.95rem;
+        }
+
+        .contact-form {
+            background: #13132a;
+            border: 1px solid #c8a84e33;
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+
+        .contact-form h2 {
+            color: #c8a84e;
+            margin-top: 0;
+        }
+
+        .contact-form label {
+            display: block;
+            color: #c8a84e;
+            font-weight: 600;
+            margin: 1rem 0 0.3rem;
+            font-size: 0.9rem;
+        }
+
+        .contact-form input,
+        .contact-form textarea {
+            width: 100%;
+            padding: 0.7rem;
+            border: 1px solid #c8a84e55;
+            border-radius: 6px;
+            background: #0a0a1a;
+            color: #eee;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+
+        .contact-form input:focus,
+        .contact-form textarea:focus {
+            outline: none;
+            border-color: #c8a84e;
+        }
+
+        .contact-form textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .contact-form button {
+            display: block;
+            width: 100%;
+            margin-top: 1.2rem;
+            padding: 0.8rem;
+            background: linear-gradient(135deg, #c8a84e, #a88a3e);
+            color: #0a0a1a;
+            font-weight: 700;
+            font-size: 1rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .contact-form button:hover {
+            opacity: 0.9;
+        }
+
+        .alert {
+            padding: 0.8rem 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .alert-success {
+            background: #143a1a;
+            border: 1px solid #2ecc71;
+            color: #2ecc71;
+        }
+
+        .alert-error {
+            background: #3a1414;
+            border: 1px solid #e74c3c;
+            color: #e74c3c;
+        }
+
+        @media (max-width: 600px) {
+            .contact-info {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="contact-page">
+        <a href="/" class="back-link">← Back to G&M Car Service</a>
+        <h1>Contact Us</h1>
+        <p>Have a question, special request, or need a custom quote? We'd love to hear from you.</p>
+
+        <div class="contact-info">
+            <div class="contact-card">
+                <div class="icon">📞</div>
+                <h3>Call Us</h3>
+                <p><a href="tel:+19415551234">(941) 555-1234</a></p>
+                <p style="font-size:0.8rem;color:#888;">Available 5 AM – 11 PM ET</p>
+            </div>
+            <div class="contact-card">
+                <div class="icon">💬</div>
+                <h3>Text Us</h3>
+                <p><a href="sms:+19415551234">(941) 555-1234</a></p>
+                <p style="font-size:0.8rem;color:#888;">Quick questions & ride updates</p>
+            </div>
+            <div class="contact-card">
+                <div class="icon">📧</div>
+                <h3>Email</h3>
+                <p><a href="mailto:info@gmcarservice.com">info@gmcarservice.com</a></p>
+                <p style="font-size:0.8rem;color:#888;">We reply within 24 hours</p>
+            </div>
+            <div class="contact-card">
+                <div class="icon">📍</div>
+                <h3>Service Area</h3>
+                <p>Sarasota County, FL</p>
+                <p style="font-size:0.8rem;color:#888;">Tampa Bay & Southwest Florida</p>
+            </div>
+        </div>
+
+        {% if success %}
+        <div class="alert alert-success">✅ Message sent! We'll get back to you shortly.</div>
+        {% endif %}
+        {% if error %}
+        <div class="alert alert-error">{{ error }}</div>
+        {% endif %}
+
+        <div class="contact-form">
+            <h2>Send a Message</h2>
+            <form method="POST" action="/contact">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <label for="c_name">Your Name *</label>
+                <input type="text" id="c_name" name="name" required placeholder="John Smith">
+
+                <label for="c_email">Email</label>
+                <input type="email" id="c_email" name="email" placeholder="john@example.com">
+
+                <label for="c_phone">Phone</label>
+                <input type="tel" id="c_phone" name="phone" placeholder="(941) 555-0000">
+
+                <label for="c_message">Message *</label>
+                <textarea id="c_message" name="message" required placeholder="How can we help you?"></textarea>
+
+                <button type="submit">Send Message</button>
+            </form>
+        </div>
+
+        <p style="margin-top:2rem;font-size:0.85rem;color:#666;">
+            G&M Car Service is operated by LottoDeamon LLC · Sarasota County, Florida<br>
+            <a href="/privacy">Privacy Policy</a> · <a href="/terms">Terms of Service</a> · <a
+                href="/disclaimer">Disclaimer</a>
+        </p>
+    </div>
+</body>
+
+</html>

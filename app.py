@@ -1,5 +1,8 @@
-from flask import Flask, render_template, send_from_directory, request, redirect, url_for, session, jsonify
+from flask import Flask, render_template, send_from_directory, request, redirect, url_for, session, jsonify, abort
 from flask_mail import Mail
+from flask_wtf.csrf import CSRFProtect
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from functools import wraps
 from models import db, Booking, PricingTier, Vehicle, Driver, AppSetting, Expense, MileageLog, DriverShift, Payout
 from notifications import send_email_alert, send_sms_alert, send_rider_sms
@@ -8,12 +11,19 @@ from flight_tracker import check_flight, update_booking_flight_status, check_upc
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from werkzeug.utils import secure_filename
+from werkzeug.security import generate_password_hash, check_password_hash
 import os
 
 load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-change-me')
+
+# CSRF protection
+csrf = CSRFProtect(app)
+
+# Rate limiter
+limiter = Limiter(get_remote_address, app=app, default_limits=["200 per day", "60 per hour"], storage_uri="memory://")
 
 # Database configuration
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///gmcarservice.db'
@@ -326,6 +336,7 @@ def book():
 
 # --------------- Admin Dashboard ---------------
 ADMIN_SECRET = os.environ.get('ADMIN_SECRET', 'admin')
+ADMIN_HASH = generate_password_hash(ADMIN_SECRET)
 
 
 def admin_required(f):
@@ -338,9 +349,10 @@ def admin_required(f):
 
 
 @app.route('/admin/login', methods=['GET', 'POST'])
+@limiter.limit("5 per minute")
 def admin_login():
     if request.method == 'POST':
-        if request.form.get('secret', '') == ADMIN_SECRET:
+        if check_password_hash(ADMIN_HASH, request.form.get('secret', '')):
             session['admin_logged_in'] = True
             return redirect(url_for('admin_dashboard'))
         return render_template('admin_login.html', error='Invalid admin password.')
@@ -902,6 +914,7 @@ def admin_traffic_check(booking_id):
 
 # --------------- Public API: Availability Check ---------------
 @app.route('/api/check-availability', methods=['POST'])
+@csrf.exempt
 def api_check_availability():
     """
     Booking Agent: check if the requested pickup time is available.
@@ -1057,6 +1070,7 @@ def admin_assign_driver(booking_id):
 
 # --------------- Driver Portal (PIN login, sees only assigned rides) ---------------
 @app.route('/driver/login', methods=['GET', 'POST'])
+@limiter.limit("5 per minute")
 def driver_login():
     if request.method == 'POST':
         pin = request.form.get('pin', '').strip()
@@ -1323,6 +1337,7 @@ def admin_expense_delete(expense_id):
 
 # --------------- Payout Management ---------------
 @app.route('/admin/payout/mark-paid/<int:payout_id>', methods=['POST'])
+@csrf.exempt
 @admin_required
 def admin_payout_mark_paid(payout_id):
     """Mark a payout as settled and auto-log it as an expense."""
@@ -1414,6 +1429,56 @@ def admin_expenses_export():
         mimetype='text/csv',
         headers={'Content-Disposition': f'attachment;filename=gm_carservice_ledger_{datetime.now().strftime("%Y%m%d")}.csv'}
     )
+
+
+# --------------- Error Handlers ---------------
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('404.html'), 404
+
+@app.errorhandler(500)
+def server_error(e):
+    return render_template('500.html'), 500
+
+
+# --------------- Legal Pages ---------------
+@app.route('/privacy')
+def privacy_policy():
+    return render_template('privacy.html')
+
+@app.route('/terms')
+def terms_of_service():
+    return render_template('terms.html')
+
+@app.route('/disclaimer')
+def disclaimer():
+    return render_template('disclaimer.html')
+
+@app.route('/contact', methods=['GET', 'POST'])
+@limiter.limit("10 per hour")
+def contact():
+    if request.method == 'POST':
+        name = request.form.get('name', '').strip()
+        email = request.form.get('email', '').strip()
+        phone = request.form.get('phone', '').strip()
+        message = request.form.get('message', '').strip()
+        if not name or not message:
+            return render_template('contact.html', error='Name and message are required.')
+        try:
+            business_email = os.environ.get('BUSINESS_EMAIL', os.environ.get('MAIL_USERNAME', ''))
+            if business_email:
+                from flask_mail import Message
+                msg = Message(
+                    subject=f'[GM Car Service] Contact from {name}',
+                    recipients=[business_email],
+                    reply_to=email or None,
+                    body=f"Name: {name}\nEmail: {email}\nPhone: {phone}\n\n{message}"
+                )
+                mail.send(msg)
+            return render_template('contact.html', success=True)
+        except Exception:
+            return render_template('contact.html', error='Could not send message. Please call us instead.')
+    return render_template('contact.html')
 
 
 if __name__ == '__main__':

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Page Not Found – G&M Car Service</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        body {
+            background: #0a0a1a;
+            color: #eee;
+            font-family: 'Segoe UI', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .err-box {
+            text-align: center;
+            max-width: 500px;
+            padding: 2rem;
+        }
+
+        .err-box h1 {
+            font-size: 5rem;
+            color: #c8a84e;
+            margin: 0;
+        }
+
+        .err-box p {
+            font-size: 1.2rem;
+            color: #aaa;
+        }
+
+        .err-box a {
+            color: #c8a84e;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .err-box a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="err-box">
+        <h1>404</h1>
+        <p>Sorry, we couldn't find that page.</p>
+        <a href="/">← Back to G&M Car Service</a>
+    </div>
+</body>
+
+</html>
