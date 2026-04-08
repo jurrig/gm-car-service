@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0a0a1a">
+    <title>Expenses - G&amp;M Car Service</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .exp-body {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 1.5rem;
+        }
+
+        .exp-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .exp-stat {
+            background: #12122a;
+            border-radius: 10px;
+            padding: 1.2rem;
+            text-align: center;
+            border: 1px solid rgba(200, 168, 78, 0.15);
+        }
+
+        .exp-stat .val {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #c8a84e;
+        }
+
+        .exp-stat .val.red {
+            color: #dc3545;
+        }
+
+        .exp-stat .val.green {
+            color: #28a745;
+        }
+
+        .exp-stat .lbl {
+            font-size: 0.75rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 0.2rem;
+        }
+
+        .exp-form {
+            background: #12122a;
+            border: 1px solid rgba(200, 168, 78, 0.15);
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin-bottom: 2rem;
+        }
+
+        .exp-form h3 {
+            color: #c8a84e;
+            font-size: 1rem;
+            margin: 0 0 1rem 0;
+        }
+
+        .exp-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .exp-row.full {
+            grid-template-columns: 1fr;
+        }
+
+        .exp-group label {
+            display: block;
+            font-size: 0.7rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.2rem;
+        }
+
+        .exp-group input,
+        .exp-group select {
+            width: 100%;
+            padding: 0.5rem 0.7rem;
+            border: 1px solid #333;
+            border-radius: 6px;
+            background: #0a0a1a;
+            color: #e0e0e0;
+            font-size: 0.9rem;
+        }
+
+        .exp-group textarea {
+            width: 100%;
+            padding: 0.5rem 0.7rem;
+            border: 1px solid #333;
+            border-radius: 6px;
+            background: #0a0a1a;
+            color: #e0e0e0;
+            font-size: 0.9rem;
+            min-height: 40px;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        .btn-add-exp {
+            background: #c8a84e;
+            color: #0a0a1a;
+            border: none;
+            padding: 0.6rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        .btn-export {
+            background: #28a745;
+            color: #fff;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 0.85rem;
+        }
+
+        .cat-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .cat-chip {
+            background: #12122a;
+            border: 1px solid rgba(200, 168, 78, 0.15);
+            border-radius: 8px;
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
+            color: #ccc;
+        }
+
+        .cat-chip strong {
+            color: #c8a84e;
+        }
+
+        .exp-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .exp-table th {
+            text-align: left;
+            font-size: 0.7rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 0.5rem 0.75rem;
+            border-bottom: 1px solid #333;
+        }
+
+        .exp-table td {
+            padding: 0.6rem 0.75rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            font-size: 0.9rem;
+            color: #e0e0e0;
+        }
+
+        .exp-table tr:hover {
+            background: rgba(200, 168, 78, 0.04);
+        }
+
+        .receipt-thumb {
+            width: 36px;
+            height: 36px;
+            border-radius: 4px;
+            object-fit: cover;
+            border: 1px solid #333;
+            cursor: pointer;
+        }
+
+        .btn-del-exp {
+            background: #dc3545;
+            color: #fff;
+            border: none;
+            padding: 0.3rem 0.6rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            cursor: pointer;
+        }
+
+        @media (max-width:600px) {
+            .exp-row {
+                grid-template-columns: 1fr;
+            }
+
+            .exp-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* Tab navigation */
+        .exp-tabs {
+            display: flex;
+            gap: 0;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid #222;
+        }
+
+        .exp-tab {
+            padding: 0.6rem 1.2rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #888;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.2s;
+            background: none;
+            border-top: none;
+            border-left: none;
+            border-right: none;
+        }
+
+        .exp-tab.active {
+            color: #c8a84e;
+            border-bottom-color: #c8a84e;
+        }
+
+        .exp-tab:hover {
+            color: #e0e0e0;
+        }
+
+        .tab-panel {
+            display: none;
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+
+        /* Payout table */
+        .payout-row {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr 0.6fr 0.6fr 0.6fr 0.8fr 1fr;
+            gap: 0.5rem;
+            align-items: center;
+            padding: 0.6rem 0.75rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            font-size: 0.85rem;
+        }
+
+        .payout-row:hover {
+            background: rgba(200, 168, 78, 0.04);
+        }
+
+        .payout-header {
+            font-size: 0.7rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid #333;
+        }
+
+        .payout-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .payout-badge.pending {
+            background: rgba(253, 126, 20, 0.15);
+            color: #fd7e14;
+        }
+
+        .payout-badge.settled {
+            background: rgba(40, 167, 69, 0.15);
+            color: #28a745;
+        }
+
+        .btn-zelle {
+            background: rgba(106, 17, 203, 0.15);
+            color: #9b59b6;
+            border: 1px solid rgba(106, 17, 203, 0.3);
+            padding: 0.3rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-mark-paid {
+            background: rgba(40, 167, 69, 0.15);
+            color: #28a745;
+            border: 1px solid rgba(40, 167, 69, 0.3);
+            padding: 0.3rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        @media (max-width:700px) {
+            .payout-row {
+                grid-template-columns: 1fr 1fr;
+                font-size: 0.8rem;
+            }
+
+            .payout-header {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body style="background:#0a0a1a; color:#e0e0e0; font-family:'Inter',sans-serif;">
+    <header>
+        <h1>G&amp;M Car Service</h1>
+        <nav class="admin-nav">
+            <span>&#128176; Expenses</span>
+            <div style="display:flex; gap:0.75rem; align-items:center;">
+                <a href="{{ url_for('admin_dashboard') }}"
+                    style="color:#c8a84e; text-decoration:none; font-weight:600;">&#128663; Dashboard</a>
+                <a href="{{ url_for('admin_pricing') }}"
+                    style="color:#c8a84e; text-decoration:none; font-weight:600;">&#9881; Pricing</a>
+                <a href="{{ url_for('admin_fleet') }}"
+                    style="color:#c8a84e; text-decoration:none; font-weight:600;">&#128664; Fleet</a>
+                <a href="{{ url_for('admin_expenses_export') }}" class="btn-export">&#128196; Export CSV</a>
+                <a href="{{ url_for('admin_logout') }}">Logout</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="exp-body">
+        <!-- 2026 Tax Deduction Tracker -->
+        <div
+            style="background:linear-gradient(135deg,#12122a,#1a1a3a);border:1px solid rgba(200,168,78,0.3);border-radius:14px;padding:1.25rem 1.5rem;margin-bottom:1.5rem;">
+            <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:1rem;">
+                <span style="font-size:1.3rem;">&#128176;</span>
+                <h3 style="color:#c8a84e;margin:0;font-size:1rem;">2026 IRS Mileage Deduction Tracker</h3>
+                <span style="font-size:0.7rem;color:#888;margin-left:auto;">Rate: $0.725/mi</span>
+            </div>
+            <div class="exp-stats" style="margin-bottom:0;">
+                <div class="exp-stat" style="border-color:rgba(40,167,69,0.3);">
+                    <div class="val" style="color:#28a745;">{{ '%.1f' | format(total_business_miles) }} mi</div>
+                    <div class="lbl">Total Business Miles</div>
+                </div>
+                <div class="exp-stat" style="border-color:rgba(40,167,69,0.3);">
+                    <div class="val" style="color:#28a745;">${{ '%.2f' | format(mileage_deduction) }}</div>
+                    <div class="lbl">Standard Deduction</div>
+                </div>
+                <div class="exp-stat" style="border-color:rgba(253,126,20,0.3);">
+                    <div class="val" style="color:#fd7e14;">${{ '%.2f' | format(toll_deductions) }}</div>
+                    <div class="lbl">Toll Deductions</div>
+                </div>
+                <div class="exp-stat" style="border-color:rgba(200,168,78,0.4);">
+                    <div class="val">${{ '%.2f' | format(total_projected_writeoff) }}</div>
+                    <div class="lbl">Total Projected Write-Off</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- P&L Summary -->
+        <div class="exp-stats">
+            <div class="exp-stat">
+                <div class="val green">${{ '%.2f' | format(year_income) }}</div>
+                <div class="lbl">Gross Bookings</div>
+            </div>
+            <div class="exp-stat">
+                <div class="val red">${{ '%.2f' | format(year_payouts_total) }}</div>
+                <div class="lbl">Driver Payouts</div>
+            </div>
+            <div class="exp-stat">
+                <div class="val red">${{ '%.2f' | format(year_total) }}</div>
+                <div class="lbl">Operating Expenses</div>
+            </div>
+            <div class="exp-stat">
+                <div
+                    class="val {% if year_income - year_payouts_total - year_total >= 0 %}green{% else %}red{% endif %}">
+                    ${{ '%.2f' | format(year_income - year_payouts_total - year_total) }}</div>
+                <div class="lbl">LLC Net Profit</div>
+            </div>
+            <div class="exp-stat">
+                <div class="val" style="color:#fd7e14;">${{ '%.2f' | format(pending_payouts_total) }}</div>
+                <div class="lbl">Pending Payouts</div>
+            </div>
+            <div class="exp-stat">
+                <div class="val red">${{ '%.2f' | format(month_total) }}</div>
+                <div class="lbl">This Month Expenses</div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="exp-tabs">
+            <button class="exp-tab active" onclick="switchTab('expenses')">&#128176; Expenses</button>
+            <button class="exp-tab" onclick="switchTab('payouts')">&#128181; Driver Payouts</button>
+            <button class="exp-tab" onclick="switchTab('mileage')">&#128663; Mileage Log</button>
+        </div>
+
+        <!-- ===== TAB: Expenses ===== -->
+        <div class="tab-panel active" id="tab-expenses">
+            <!-- Category Breakdown -->
+            <div class="cat-bar">
+                {% for cat, total in cat_totals.items() %}
+                {% if total > 0 %}
+                <div class="cat-chip">{{ cat }}: <strong>${{ '%.2f' | format(total) }}</strong></div>
+                {% endif %}
+                {% endfor %}
+            </div>
+
+            <!-- Add Expense Form -->
+            <div class="exp-form">
+                <h3>&#10133; Log Expense</h3>
+                <form method="POST" action="{{ url_for('admin_expense_add') }}" enctype="multipart/form-data">
+                    <div class="exp-row">
+                        <div class="exp-group">
+                            <label>Date</label>
+                            <input type="date" name="date" required
+                                value="{{ now.strftime('%Y-%m-%d') if now is defined else '' }}">
+                        </div>
+                        <div class="exp-group">
+                            <label>Category</label>
+                            <select name="category" required>
+                                {% for cat in categories %}
+                                <option value="{{ cat }}">{{ cat }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="exp-group">
+                            <label>Amount ($)</label>
+                            <input type="number" name="amount" step="0.01" min="0" required placeholder="0.00">
+                        </div>
+                    </div>
+                    <div class="exp-row">
+                        <div class="exp-group">
+                            <label>Description</label>
+                            <input type="text" name="description" placeholder="Shell gas, Wellen Park car wash, etc.">
+                        </div>
+                        <div class="exp-group">
+                            <label>Receipt Photo</label>
+                            <input type="file" name="receipt" accept="image/*" capture="environment">
+                        </div>
+                        <div class="exp-group" style="display:flex;align-items:flex-end;">
+                            <button type="submit" class="btn-add-exp">&#10133; Add Expense</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Expense List -->
+            {% if expenses %}
+            <table class="exp-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Category</th>
+                        <th>Description</th>
+                        <th>Receipt</th>
+                        <th>Amount</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for e in expenses %}
+                    <tr>
+                        <td>{{ e.date.strftime('%b %d, %Y') if e.date else '—' }}</td>
+                        <td>{{ e.category }}</td>
+                        <td>{{ e.description or '—' }}</td>
+                        <td>
+                            {% if e.receipt_filename %}
+                            <img src="{{ url_for('static', filename='uploads/' + e.receipt_filename) }}"
+                                class="receipt-thumb" onclick="window.open(this.src, '_blank')" alt="Receipt">
+                            {% else %}—{% endif %}
+                        </td>
+                        <td style="color:#dc3545; font-weight:600;">${{ '%.2f' | format(e.amount) }}</td>
+                        <td>
+                            <form method="POST" action="{{ url_for('admin_expense_delete', expense_id=e.id) }}"
+                                onsubmit="return confirm('Delete this expense?');" style="display:inline;">
+                                <button class="btn-del-exp" type="submit">&#10005;</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p style="text-align:center; color:#666; padding:3rem;">No expenses logged yet. Use the form above to track
+                fuel, tolls, maintenance, etc.</p>
+            {% endif %}
+        </div>
+
+        <!-- ===== TAB: Driver Payouts ===== -->
+        <div class="tab-panel" id="tab-payouts">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+                <h3 style="color:#c8a84e;margin:0;font-size:1rem;">&#128181; Driver Payouts</h3>
+                <select id="payoutDriverFilter" onchange="filterPayouts()"
+                    style="background:#0a0a1a;color:#e0e0e0;border:1px solid #333;border-radius:6px;padding:0.35rem 0.6rem;font-size:0.85rem;">
+                    <option value="all">All Drivers</option>
+                    {% for d in drivers %}
+                    <option value="{{ d.id }}">{{ d.name }} ({{ (d.commission_rate * 100)|int }}%)</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            {% if payouts %}
+            <div class="payout-header payout-row">
+                <span>Driver / Route</span>
+                <span>Base Fare</span>
+                <span>Rate</span>
+                <span>Tolls</span>
+                <span>Tips</span>
+                <span>Total Payout</span>
+                <span>Actions</span>
+            </div>
+            {% for p in payouts %}
+            <div class="payout-row" data-driver-id="{{ p.driver_id }}">
+                <div>
+                    <strong>{{ p.driver.name if p.driver else 'Unknown' }}</strong>
+                    <div style="font-size:0.75rem;color:#888;">
+                        {% if p.booking %}{{ p.booking.pickup_location.split(',')[0] }} &rarr; {{
+                        p.booking.dropoff_location.split(',')[0] }}{% endif %}
+                        &middot; {{ p.date.strftime('%b %d') if p.date else '' }}
+                    </div>
+                </div>
+                <span>${{ '%.2f' | format(p.fare_amount) }}</span>
+                <span style="color:#c8a84e;">{{ (p.commission_rate * 100)|int }}%</span>
+                <span>{% if p.toll_reimbursement > 0 %}${{ '%.2f' | format(p.toll_reimbursement) }}{% else %}&mdash;{%
+                    endif %}</span>
+                <span>{% if p.tip_amount > 0 %}${{ '%.2f' | format(p.tip_amount) }}{% else %}&mdash;{% endif %}</span>
+                <span style="font-weight:700;color:#c8a84e;">${{ '%.2f' | format(p.total_payout) }}</span>
+                <div style="display:flex;gap:0.4rem;flex-wrap:wrap;">
+                    {% if p.status == 'Pending' %}
+                    <button class="btn-zelle" onclick="zellePayDriver({{ p.id }})"
+                        title="Copy Zelle info &amp; amount">&#128184; Zelle</button>
+                    <button class="btn-mark-paid" onclick="markPaid({{ p.id }}, this)">&#9989; Mark Paid</button>
+                    {% else %}
+                    <span class="payout-badge settled">&#9989; Settled {{ p.paid_at.strftime('%m/%d') if p.paid_at else
+                        '' }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <p style="text-align:center;color:#666;padding:2rem;">No payouts yet. Complete a ride with an assigned
+                driver to generate payouts.</p>
+            {% endif %}
+        </div>
+
+        <!-- ===== TAB: Mileage Log ===== -->
+        <div class="tab-panel" id="tab-mileage">
+            <!-- Mileage Log -->
+            {% if mileage_logs %}
+            <h3 style="color:#c8a84e;margin-top:2rem;font-size:1rem;">&#128663; Mileage Log (YTD)</h3>
+            <table class="exp-table" style="margin-top:0.75rem;">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Route</th>
+                        <th>Category</th>
+                        <th>Miles</th>
+                        <th>Deduction</th>
+                        <th>Odometer</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for m in mileage_logs %}
+                    <tr>
+                        <td>{{ m.date.strftime('%b %d') if m.date else '—' }}</td>
+                        <td style="font-size:0.82rem;">{{ m.route_description or '—' }}</td>
+                        <td style="font-size:0.82rem;">{{ m.category }}</td>
+                        <td style="color:#c8a84e;font-weight:600;">{{ '%.1f' | format(m.miles) }}</td>
+                        <td style="color:#28a745;font-weight:600;">${{ '%.2f' | format(m.deduction_value) }}</td>
+                        <td>{% if m.odometer_photo %}<img
+                                src="{{ url_for('static', filename='uploads/' + m.odometer_photo) }}"
+                                class="receipt-thumb" onclick="window.open(this.src,'_blank')" alt="Odometer">{% else
+                            %}—{% endif %}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% endif %}
+        </div>
+    </main>
+
+    <script>
+        function switchTab(name) {
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.exp-tab').forEach(t => t.classList.remove('active'));
+            document.getElementById('tab-' + name).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        function filterPayouts() {
+            const val = document.getElementById('payoutDriverFilter').value;
+            document.querySelectorAll('#tab-payouts .payout-row:not(.payout-header)').forEach(row => {
+                row.style.display = (val === 'all' || row.dataset.driverId === val) ? '' : 'none';
+            });
+        }
+
+        function zellePayDriver(payoutId) {
+            fetch('/admin/payout/zelle-info/' + payoutId)
+                .then(r => r.json())
+                .then(d => {
+                    const text = d.zelle_info
+                        ? d.driver_name + ' — ' + d.zelle_info + ' — $' + d.amount.toFixed(2) + ' — ' + d.memo
+                        : 'No Zelle info set for ' + d.driver_name + '. Add it in Fleet → Edit Driver.';
+                    if (d.zelle_info && navigator.clipboard) {
+                        navigator.clipboard.writeText('$' + d.amount.toFixed(2) + ' to ' + d.zelle_info);
+                        alert('Copied to clipboard!\n\n' + text);
+                    } else {
+                        alert(text);
+                    }
+                })
+                .catch(() => alert('Error fetching Zelle info'));
+        }
+
+        function markPaid(payoutId, btn) {
+            if (!confirm('Mark this payout as settled? This will auto-log it as an expense.')) return;
+            btn.disabled = true;
+            btn.textContent = '...';
+            fetch('/admin/payout/mark-paid/' + payoutId, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ method: 'Zelle' })
+            }).then(r => r.json()).then(d => {
+                if (d.success) location.reload();
+                else { alert('Error'); btn.disabled = false; btn.textContent = '✅ Mark Paid'; }
+            }).catch(() => { alert('Network error'); btn.disabled = false; });
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0a0a1a">
+    <title>Pricing Settings - G&amp;M Car Service</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        body {
+            background: #0a0a1a;
+            color: #e0e0e0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .pricing-body {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 1.5rem;
+        }
+
+        .pricing-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .pricing-nav a {
+            color: #c8a84e;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .pricing-nav a:hover {
+            text-decoration: underline;
+        }
+
+        .pricing-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            color: #fff;
+            margin-bottom: 0.5rem;
+        }
+
+        .pricing-sub {
+            color: #999;
+            margin-bottom: 2rem;
+        }
+
+        .vehicle-section {
+            background: #12122a;
+            border-radius: 12px;
+            border: 1px solid rgba(200, 168, 78, 0.15);
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+        }
+
+        .vehicle-section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.25rem;
+            background: rgba(200, 168, 78, 0.05);
+            border-bottom: 1px solid rgba(200, 168, 78, 0.1);
+        }
+
+        .vehicle-section-header h3 {
+            color: #c8a84e;
+            font-size: 1.2rem;
+            margin: 0;
+        }
+
+        .tier-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .tier-table th {
+            background: #1a1a3a;
+            color: #999;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 0.6rem 0.75rem;
+            text-align: left;
+        }
+
+        .tier-table td {
+            padding: 0.6rem 0.75rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            font-size: 0.95rem;
+        }
+
+        .tier-table tbody tr:hover {
+            background: rgba(200, 168, 78, 0.03);
+        }
+
+        .tier-table .money {
+            color: #c8a84e;
+            font-weight: 600;
+        }
+
+        .tier-actions {
+            display: flex;
+            gap: 0.35rem;
+        }
+
+        .btn-tier {
+            padding: 0.35rem 0.7rem;
+            border: none;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            color: #fff;
+            transition: opacity 0.2s;
+        }
+
+        .btn-tier:hover {
+            opacity: 0.8;
+        }
+
+        .btn-edit {
+            background: #007bff;
+        }
+
+        .btn-tier-del {
+            background: #dc3545;
+        }
+
+        .btn-add-tier {
+            background: #28a745;
+            color: #fff;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-add-tier:hover {
+            opacity: 0.85;
+        }
+
+        /* ===== Modal ===== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal-box {
+            background: #1a1a3a;
+            border: 1px solid rgba(200, 168, 78, 0.25);
+            border-radius: 16px;
+            padding: 2rem;
+            width: 100%;
+            max-width: 500px;
+            margin: 1rem;
+        }
+
+        .modal-box h3 {
+            color: #c8a84e;
+            margin-bottom: 1.25rem;
+            font-size: 1.2rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .form-row.full {
+            grid-template-columns: 1fr;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.75rem;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            margin-bottom: 0.25rem;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 0.6rem 0.75rem;
+            background: #12122a;
+            border: 1px solid #333;
+            border-radius: 6px;
+            color: #e0e0e0;
+            font-size: 0.95rem;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            border-color: #c8a84e;
+            outline: none;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+        }
+
+        .btn-modal {
+            flex: 1;
+            padding: 0.7rem 1rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .btn-modal:hover {
+            opacity: 0.85;
+        }
+
+        .btn-save {
+            background: #c8a84e;
+            color: #0a0a1a;
+        }
+
+        .btn-cancel {
+            background: #333;
+            color: #ccc;
+        }
+
+        .no-tiers {
+            padding: 1.5rem;
+            text-align: center;
+            color: #666;
+        }
+
+        .pricing-hint {
+            background: rgba(200, 168, 78, 0.08);
+            border: 1px solid rgba(200, 168, 78, 0.2);
+            border-radius: 10px;
+            padding: 1rem 1.25rem;
+            margin-bottom: 2rem;
+            color: #bbb;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .pricing-hint strong {
+            color: #c8a84e;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>G&amp;M Car Service</h1>
+        <nav class="admin-nav">
+            <span>&#9881; Pricing Settings</span>
+            <a href="{{ url_for('admin_logout') }}">Logout</a>
+        </nav>
+    </header>
+
+    <main class="pricing-body">
+        <div class="pricing-nav">
+            <div>
+                <h2 class="pricing-title">Tier Pricing</h2>
+                <p class="pricing-sub">Set distance-based rates for each vehicle type.</p>
+            </div>
+            <a href="{{ url_for('admin_dashboard') }}">&larr; Back to Dashboard</a>
+        </div>
+
+        <div class="pricing-hint">
+            <strong>How tiers work:</strong> When a passenger enters a route, the system finds the matching distance
+            tier and calculates: <strong>Base Fare + (Per Mile &times; Distance)</strong>. If the result is below the
+            Minimum Fare, the minimum is charged instead. Leave <em>Max Miles</em> blank for the last tier (unlimited).
+        </div>
+
+        {% for vtype in vehicle_types %}
+        <div class="vehicle-section">
+            <div class="vehicle-section-header">
+                <h3>{{ vehicle_labels[vtype] }}</h3>
+                <button class="btn-add-tier" onclick="openModal('{{ vtype }}')">+ Add Tier</button>
+            </div>
+
+            {% if grouped[vtype] %}
+            <table class="tier-table">
+                <thead>
+                    <tr>
+                        <th>Distance Range</th>
+                        <th>Base Fare</th>
+                        <th>Per Mile</th>
+                        <th>Min Fare</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for t in grouped[vtype] %}
+                    <tr>
+                        <td>{{ t.label or (t.min_miles|string + '–' + (t.max_miles|string if t.max_miles else '∞') + '
+                            mi') }}</td>
+                        <td class="money">${{ '%.2f' | format(t.base_fare) }}</td>
+                        <td class="money">${{ '%.2f' | format(t.per_mile) }}/mi</td>
+                        <td class="money">${{ '%.2f' | format(t.min_fare) }}</td>
+                        <td>
+                            <div class="tier-actions">
+                                <button class="btn-tier btn-edit"
+                                    onclick="openModal('{{ t.vehicle_type }}', {{ t.id }}, {{ t.min_miles }}, {{ t.max_miles if t.max_miles else 'null' }}, {{ t.base_fare }}, {{ t.per_mile }}, {{ t.min_fare }}, '{{ t.label or '' }}')">Edit</button>
+                                <form method="POST" action="{{ url_for('admin_pricing_delete', tier_id=t.id) }}"
+                                    onsubmit="return confirm('Delete this tier?');" style="display:inline;">
+                                    <button class="btn-tier btn-tier-del" type="submit">Delete</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="no-tiers">No tiers set. Click "+ Add Tier" to create one.</div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </main>
+
+    <!-- ===== Add/Edit Tier Modal ===== -->
+    <div class="modal-overlay" id="tierModal">
+        <div class="modal-box">
+            <h3 id="modal-title">Add Pricing Tier</h3>
+            <form method="POST" action="{{ url_for('admin_pricing_save') }}" id="tierForm">
+                <input type="hidden" name="tier_id" id="f-tier-id" value="">
+                <input type="hidden" name="vehicle_type" id="f-vehicle-type" value="">
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Min Miles</label>
+                        <input type="number" name="min_miles" id="f-min-miles" step="0.1" min="0" value="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Max Miles (blank = unlimited)</label>
+                        <input type="number" name="max_miles" id="f-max-miles" step="0.1" min="0" placeholder="∞">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Base Fare ($)</label>
+                        <input type="number" name="base_fare" id="f-base-fare" step="0.01" min="0" value="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Per Mile ($)</label>
+                        <input type="number" name="per_mile" id="f-per-mile" step="0.01" min="0" value="0" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Minimum Fare ($)</label>
+                        <input type="number" name="min_fare" id="f-min-fare" step="0.01" min="0" value="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Label (optional)</label>
+                        <input type="text" name="label" id="f-label" placeholder="e.g. 0–30 mi">
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn-modal btn-cancel" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn-modal btn-save">Save Tier</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function openModal(vehicleType, id, minMiles, maxMiles, baseFare, perMile, minFare, label) {
+            document.getElementById('f-vehicle-type').value = vehicleType;
+            document.getElementById('f-tier-id').value = id || '';
+            document.getElementById('f-min-miles').value = minMiles ?? 0;
+            document.getElementById('f-max-miles').value = maxMiles ?? '';
+            document.getElementById('f-base-fare').value = baseFare ?? 0;
+            document.getElementById('f-per-mile').value = perMile ?? 0;
+            document.getElementById('f-min-fare').value = minFare ?? 0;
+            document.getElementById('f-label').value = label || '';
+            document.getElementById('modal-title').textContent = id ? 'Edit Pricing Tier' : 'Add Pricing Tier';
+            document.getElementById('tierModal').classList.add('show');
+        }
+
+        function closeModal() {
+            document.getElementById('tierModal').classList.remove('show');
+        }
+
+        // Close on backdrop click
+        document.getElementById('tierModal').addEventListener('click', function (e) {
+            if (e.target === this) closeModal();
+        });
+    </script>
+</body>
+
+</html>

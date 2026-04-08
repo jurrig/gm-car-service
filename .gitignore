@@ -1,0 +1,38 @@
+# ── Secrets & Environment ──
+.env
+.env.txt
+.env.local
+.env.production
+server/.env
+
+# ── Database ──
+instance/
+*.db
+*.sqlite3
+
+# ── Python ──
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+venv/
+.venv/
+
+# ── Uploads (user photos, odometer snaps) ──
+static/uploads/*
+!static/uploads/.gitkeep
+
+# ── OS / Editor ──
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.vscode/
+*.code-workspace
+
+# ── Node (server/) ──
+node_modules/
+server/node_modules/
+npm-debug.log*

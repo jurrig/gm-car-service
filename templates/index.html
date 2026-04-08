@@ -1,0 +1,1440 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0a0a1a">
+    <meta name="description"
+        content="G&M Car Service — Private chauffeur and airport transportation in Sarasota County, FL. Long-distance rides to Orlando, Fort Lauderdale, Palm Beach & Miami. Sedan, SUV & luxury. Instant quotes 24/7.">
+    <meta name="keywords"
+        content="car service Sarasota, private chauffeur Sarasota County, airport transportation SRQ, airport ride Tampa TPA, Sarasota to Orlando car service, Sarasota to Miami car service, Sarasota to Fort Lauderdale, Sarasota to Palm Beach, Siesta Key transportation, luxury car service Florida, long distance car service Florida">
+    <meta name="author" content="Gerry Jureidini">
+    <link rel="canonical" href="https://gmcarservice.com/">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="G&M Car Service | Private Chauffeur in Sarasota County">
+    <meta property="og:description"
+        content="Get an instant quote for private car service in Sarasota County. Airport transfers, long-distance rides to Orlando, Fort Lauderdale, Palm Beach & Miami. 24/7.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://gmcarservice.com/">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:site_name" content="G&M Car Service">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="G&M Car Service | Private Chauffeur Sarasota">
+    <meta name="twitter:description"
+        content="Instant quotes for private car service in Sarasota County. Sedan, SUV & luxury. 24/7.">
+
+    <title>G&amp;M Car Service | Private Chauffeur &amp; Airport Transportation Sarasota County, FL</title>
+    <link rel="manifest" href="/manifest.json">
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <!-- LocalBusiness Schema -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "LocalBusiness",
+        "@id": "https://gmcarservice.com",
+        "name": "G&M Car Service",
+        "description": "Private chauffeur and airport transportation service in Sarasota County, Florida. Sedan, SUV, and luxury vehicles available 24/7.",
+        "url": "https://gmcarservice.com",
+        "telephone": "+1-941-555-1234",
+        "founder": {
+            "@type": "Person",
+            "name": "Gerry Jureidini"
+        },
+        "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Sarasota",
+            "addressRegion": "FL",
+            "addressCountry": "US"
+        },
+        "geo": {
+            "@type": "GeoCoordinates",
+            "latitude": 27.3364,
+            "longitude": -82.5307
+        },
+        "areaServed": [
+            { "@type": "County", "name": "Sarasota County, FL" },
+            { "@type": "Airport", "name": "Sarasota-Bradenton International Airport", "iataCode": "SRQ" },
+            { "@type": "Airport", "name": "Tampa International Airport", "iataCode": "TPA" },
+            { "@type": "Airport", "name": "Orlando International Airport", "iataCode": "MCO" },
+            { "@type": "Airport", "name": "Fort Lauderdale-Hollywood International Airport", "iataCode": "FLL" },
+            { "@type": "Airport", "name": "Palm Beach International Airport", "iataCode": "PBI" },
+            { "@type": "Airport", "name": "Miami International Airport", "iataCode": "MIA" },
+            { "@type": "City", "name": "Orlando, FL" },
+            { "@type": "City", "name": "Fort Lauderdale, FL" },
+            { "@type": "City", "name": "Palm Beach, FL" },
+            { "@type": "City", "name": "Miami, FL" }
+        ],
+        "openingHoursSpecification": {
+            "@type": "OpeningHoursSpecification",
+            "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"],
+            "opens": "00:00",
+            "closes": "23:59"
+        },
+        "priceRange": "$$",
+        "paymentAccepted": "Cash, Credit Card",
+        "sameAs": []
+    }
+    </script>
+
+    <!-- FAQPage Schema -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+            {
+                "@type": "Question",
+                "name": "How much does a ride from Sarasota to Tampa Airport (TPA) cost?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "A sedan ride from Sarasota to Tampa International Airport starts at approximately $165. Use our instant quote tool for an exact fare based on your pickup location. SUV and luxury options are also available."
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "Do you provide service to Sarasota-Bradenton Airport (SRQ)?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Yes! We provide 24/7 airport transfers to and from SRQ. Enter your address in our quote tool to get an instant fare estimate."
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "What vehicles do you offer?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "We offer three vehicle types: Sedan (up to 4 passengers, from $15 + $2.50/mile), SUV (up to 6 passengers, from $20 + $3.00/mile), and Luxury (up to 4 passengers, from $30 + $4.00/mile)."
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "How do I book a ride?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Enter your pickup and drop-off addresses on our website to get an instant quote. Choose your vehicle, then provide your name and phone number to confirm. No upfront payment is required — pay at the time of service."
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "What areas do you serve?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "We serve all of Sarasota County including Sarasota, Siesta Key, Longboat Key, Lakewood Ranch, Venice, and North Port. We also provide long-distance rides to Orlando, Fort Lauderdale, Palm Beach, and Miami, as well as airport transfers to Tampa (TPA), St. Pete-Clearwater (PIE), Orlando (MCO), Fort Lauderdale (FLL), Palm Beach (PBI), and Miami (MIA)."
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "Is your service available 24/7?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Yes, G&M Car Service operates around the clock, 7 days a week including holidays. Early morning airport runs and late-night pickups are no problem."
+                }
+            }
+        ]
+    }
+    </script>
+</head>
+
+<body>
+    <!-- ========== NAVBAR ========== -->
+    <nav class="navbar">
+        <a href="/" class="nav-brand">G&amp;M <span>Car Service</span></a>
+        <div class="nav-links">
+            <a href="#book-now">Get a Quote</a>
+            <a href="#services">Vehicles</a>
+            <a href="#routes">Routes</a>
+            <a href="#about">About</a>
+            <a href="tel:+19415551234" class="nav-phone">&#9742; (941) 555-1234</a>
+        </div>
+        <button class="nav-toggle" aria-label="Menu">&#9776;</button>
+    </nav>
+
+    <!-- ========== HERO ========== -->
+    <section class="hero">
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+            <p class="hero-subtitle">PRIVATE CHAUFFEUR</p>
+            <h1>Get an Instant Quote</h1>
+            <p class="hero-desc">Private car service from Sarasota County to Orlando, Fort Lauderdale, Palm Beach, Miami
+                &amp; all Florida airports. Available 24/7.</p>
+            <a href="#book-now" class="hero-btn">GET A QUOTE</a>
+        </div>
+    </section>
+
+    <!-- ========== BOOKING SECTION ========== -->
+    <section id="book-now" class="section booking-section">
+        <div class="container">
+            <div class="booking-header">
+                <h2 class="booking-title">GET AN INSTANT QUOTE</h2>
+                <p class="booking-sub">Enter your journey details and choose a vehicle to see your fare instantly. No
+                    commitment required.</p>
+            </div>
+
+            {% if error %}
+            <div class="error">{{ error }}</div>
+            {% endif %}
+
+            <!-- Step tabs -->
+            <div class="step-tabs">
+                <div class="step-tab active" data-step="1"><span class="step-num">1</span> Journey Info</div>
+                <div class="step-tab" data-step="2"><span class="step-num">2</span> Your Quote</div>
+                <div class="step-tab" data-step="3"><span class="step-num">3</span> Book Now</div>
+            </div>
+
+            <form id="booking-form" action="/book" method="POST" enctype="multipart/form-data" class="booking-form">
+                <!-- STEP 1: Journey Information -->
+                <div class="form-step form-step-active" id="step-1">
+                    <h3 class="step-heading">JOURNEY INFORMATION</h3>
+
+                    <div class="form-group">
+                        <label for="pickup_location">COLLECTION ADDRESS *</label>
+                        <div style="position:relative;">
+                            <input type="text" id="pickup_location" name="pickup_location" required
+                                placeholder="Start typing an address..." autocomplete="off"
+                                style="padding-right:2.8rem;">
+                            <button type="button" id="gps-btn" onclick="useCurrentLocation()"
+                                title="Use my current location"
+                                style="position:absolute;right:0.5rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:0.3rem;line-height:1;font-size:1.25rem;color:#c8a84e;opacity:0.8;transition:opacity .2s;"
+                                onmouseenter="this.style.opacity='1'" onmouseleave="this.style.opacity='0.8'">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="4" />
+                                    <path d="M12 2v4" />
+                                    <path d="M12 18v4" />
+                                    <path d="M2 12h4" />
+                                    <path d="M18 12h4" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="dropoff_location">DESTINATION ADDRESS *</label>
+                        <input type="text" id="dropoff_location" name="dropoff_location" required
+                            placeholder="Start typing an address..." autocomplete="off">
+                    </div>
+
+                    <h3 class="step-heading options-heading">OPTIONS</h3>
+
+                    <div class="form-row form-row-3">
+                        <div class="form-group">
+                            <label for="direction">DIRECTION *</label>
+                            <select id="direction" name="direction">
+                                <option value="one_way">One Way</option>
+                                <option value="round_trip">Round Trip</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="passengers">PASSENGERS *</label>
+                            <select id="passengers" name="passengers">
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4" selected>4</option>
+                                <option value="5">5</option>
+                                <option value="6">6</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="suitcases">SUITCASES</label>
+                            <select id="suitcases" name="suitcases">
+                                <option value="0">0</option>
+                                <option value="1">1</option>
+                                <option value="2" selected>2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                                <option value="5">5</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="pickup_date">DEPARTURE DATE *</label>
+                            <input type="date" id="pickup_date" name="pickup_date" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="pickup_time">DEPARTURE TIME *</label>
+                            <input type="time" id="pickup_time" name="pickup_time" required>
+                        </div>
+                    </div>
+
+                    <!-- Hidden fields -->
+                    <input type="hidden" id="miles" name="miles" value="0">
+                    <input type="hidden" id="toll_fee" name="toll_fee" value="0">
+                    <input type="hidden" id="vehicle_type" name="vehicle_type" value="sedan">
+
+                    <!-- Embedded Map -->
+                    <h3 class="step-heading map-heading">MAP</h3>
+                    <div id="route-map" class="route-map"></div>
+
+                    <!-- Distance / Journey Time bar -->
+                    <div class="map-stats">
+                        <div class="map-stat">
+                            <span class="stat-label">DISTANCE</span>
+                            <span class="stat-value" id="est-distance">&mdash;</span>
+                        </div>
+                        <div class="map-stat">
+                            <span class="stat-label">JOURNEY TIME</span>
+                            <span class="stat-value" id="est-duration">&mdash;</span>
+                        </div>
+                    </div>
+                    <!-- Toll indicator -->
+                    <div id="toll-indicator"
+                        style="display:none;margin:0.5rem 0;padding:0.6rem 1rem;background:rgba(200,168,78,0.08);border:1px solid rgba(200,168,78,0.2);border-radius:8px;font-size:0.85rem;color:#c8a84e;justify-content:space-between;align-items:center;">
+                    </div>
+
+                    <!-- Availability status banner -->
+                    <div id="avail-banner"
+                        style="display:none; margin:1rem 0; padding:1rem 1.25rem; border-radius:10px; font-size:0.95rem;">
+                    </div>
+
+                    <input type="hidden" id="trip_duration_min" name="trip_duration_min" value="">
+
+                    <button type="button" class="btn btn-gold" id="btn-get-quote"
+                        onclick="checkAvailabilityAndProceed()">GET MY QUOTE &rarr;</button>
+                </div>
+
+                <!-- STEP 2: Your Quote — Vehicle + Price -->
+                <div class="form-step" id="step-2">
+                    <h3 class="step-heading">SELECT VEHICLE &amp; SEE YOUR QUOTE</h3>
+
+                    <!-- Vehicle cards with live prices (loaded from API) -->
+                    <div class="vehicle-grid" id="booking-vehicle-grid">
+                        <!-- Populated by JS from /api/fleet -->
+                    </div>
+
+                    <!-- Big quote card -->
+                    <div class="quote-card">
+                        <div class="quote-label">YOUR INSTANT QUOTE</div>
+                        <div class="quote-amount" id="quote-amount">&mdash;</div>
+                        <div class="quote-details">
+                            <span id="quote-vehicle">Sedan</span> &bull; <span id="quote-distance">&mdash;</span> &bull;
+                            <span id="quote-duration">&mdash;</span>
+                        </div>
+                        <div id="quote-toll-line"
+                            style="display:none;font-size:0.8rem;color:#c8a84e;margin-top:0.35rem;"></div>
+                    </div>
+
+                    <div class="btn-row">
+                        <button type="button" class="btn btn-outline-dark" onclick="goToStep(1)">&larr; Change
+                            Route</button>
+                        <button type="button" class="btn btn-gold btn-book" onclick="goToStep(3)">&#10003; BOOK NOW
+                            &rarr;</button>
+                    </div>
+                    <p class="no-commit-note">No payment required now &mdash; pay at the time of service.</p>
+                </div>
+
+                <!-- STEP 3: Book Now — Contact + Confirm -->
+                <div class="form-step" id="step-3">
+                    <h3 class="step-heading">BOOK YOUR RIDE</h3>
+
+                    <p class="step-desc">Enter your details to confirm this booking.</p>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="customer_name">FULL NAME *</label>
+                            <input type="text" id="customer_name" name="customer_name" required
+                                placeholder="Gerry Jureidini">
+                        </div>
+                        <div class="form-group">
+                            <label for="phone">PHONE NUMBER *</label>
+                            <input type="tel" id="phone" name="phone" required placeholder="(941) 555-1234">
+                        </div>
+                    </div>
+
+                    <!-- Passenger Photo -->
+                    <div class="form-group" style="margin-top:1rem;">
+                        <label for="passenger_photo" style="font-size:0.85rem;">YOUR PHOTO <span
+                                style="color:#888;font-weight:400;">(helps driver identify you)</span></label>
+                        <input type="file" name="passenger_photo" id="passenger_photo" accept="image/*"
+                            style="padding:0.5rem;" onchange="previewPassengerPhoto(this)">
+                        <img id="pax-preview"
+                            style="display:none;width:80px;height:80px;border-radius:50%;object-fit:cover;margin-top:0.5rem;border:2px solid #c8a84e;">
+                    </div>
+
+                    <!-- Airport Pickup Toggle -->
+                    <div class="airport-toggle" style="margin-top:1.25rem;">
+                        <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;font-size:0.95rem;">
+                            <input type="checkbox" id="is_airport_pickup" name="is_airport_pickup" value="1"
+                                onchange="toggleAirportFields(this.checked)"
+                                style="width:18px;height:18px;accent-color:#c8a84e;">
+                            <span>&#9992; This is an <strong>airport pickup</strong></span>
+                        </label>
+                    </div>
+
+                    <!-- Airport Pickup Details (hidden by default) -->
+                    <div id="airport-fields"
+                        style="display:none;margin-top:1rem;padding:1rem;background:rgba(200,168,78,0.08);border:1px solid rgba(200,168,78,0.25);border-radius:10px;">
+                        <p style="color:#c8a84e;font-weight:600;margin-bottom:0.75rem;font-size:0.9rem;">&#128747;
+                            AIRPORT PICKUP DETAILS</p>
+                        <p style="color:#aaa;font-size:0.8rem;margin-bottom:1rem;">Help your driver find you — every
+                            airport is different. Share any identifiers you can see.</p>
+
+                        <!-- Flight Number -->
+                        <div class="form-group" style="margin-bottom:1rem;">
+                            <label for="flight_number">FLIGHT NUMBER</label>
+                            <div style="display:flex;gap:0.5rem;align-items:center;">
+                                <input type="text" id="flight_number" name="flight_number"
+                                    placeholder="e.g. AA1234, DL567, UA890" style="flex:1;text-transform:uppercase;"
+                                    maxlength="10">
+                                <button type="button" id="checkFlightBtn" onclick="checkFlightStatus()"
+                                    style="padding:0.65rem 1rem;background:#c8a84e;color:#0a0a1a;border:none;border-radius:8px;font-weight:700;font-size:0.8rem;cursor:pointer;white-space:nowrap;">
+                                    &#9992; Check Flight
+                                </button>
+                            </div>
+                            <div id="flight-status-preview"
+                                style="display:none;margin-top:0.75rem;padding:0.75rem 1rem;border-radius:8px;font-size:0.85rem;">
+                            </div>
+                            <div class="hint" style="font-size:0.78rem;color:#666;margin-top:0.3rem;">
+                                We'll track your flight and auto-adjust pickup if it's delayed.</div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="airport_exit">EXIT / TERMINAL</label>
+                                <input type="text" id="airport_exit" name="airport_exit"
+                                    placeholder="e.g. Exit B, Terminal 2, Arrivals">
+                            </div>
+                            <div class="form-group">
+                                <label for="airport_door_number">DOOR NUMBER</label>
+                                <input type="text" id="airport_door_number" name="airport_door_number"
+                                    placeholder="e.g. Door 3, Gate 5">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="airport_door_color">DOOR / ZONE COLOR</label>
+                                <select id="airport_door_color" name="airport_door_color"
+                                    style="padding:0.65rem;border-radius:8px;background:#1e1e3a;color:#fff;border:1px solid #333;">
+                                    <option value="">Select color (if applicable)</option>
+                                    <option value="Red">&#128308; Red</option>
+                                    <option value="Blue">&#128309; Blue</option>
+                                    <option value="Green">&#128994; Green</option>
+                                    <option value="Orange">&#128992; Orange</option>
+                                    <option value="Yellow">&#128993; Yellow</option>
+                                    <option value="Purple">&#128995; Purple</option>
+                                    <option value="White">&#9898; White</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="airport_notes">ADDITIONAL NOTES</label>
+                                <input type="text" id="airport_notes" name="airport_notes"
+                                    placeholder="e.g. Near Starbucks, wearing red hat, luggage carousel 4">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="final-summary" class="price-summary">
+                        <div><span>Pickup:</span> <span id="fin-pickup">&mdash;</span></div>
+                        <div><span>Drop-off:</span> <span id="fin-dropoff">&mdash;</span></div>
+                        <div><span>Departure:</span> <span id="fin-time">&mdash;</span></div>
+                        <div><span>Vehicle:</span> <span id="fin-vehicle">&mdash;</span></div>
+                        <div><span>Distance:</span> <span id="fin-distance">&mdash;</span></div>
+                        <div id="fin-airport-row" style="display:none;"><span>&#9992; Airport:</span> <span
+                                id="fin-airport-info"></span></div>
+                        <div class="price-total"><span>Your Quote:</span> <span id="fin-price">&mdash;</span></div>
+                    </div>
+
+                    <p class="payment-note">Payment will be collected at the time of service. By booking, you agree to
+                        our cancellation policy.</p>
+
+                    <div class="btn-row">
+                        <button type="button" class="btn btn-outline-dark" onclick="goToStep(2)">&larr; Back</button>
+                        <button type="submit" class="btn btn-gold btn-book">&#10003; CONFIRM BOOKING</button>
+                    </div>
+                </div>
+            </form>
+
+            <!-- Founder branding -->
+            <div class="booking-branding">
+                <div class="branding-tagline">DRIVING YOU FROM A TO B</div>
+                <div class="branding-founder">
+                    <strong>GERRY JUREIDINI</strong><br>
+                    <span>Founder, Driver</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== SERVICES / VEHICLES ========== -->
+    <section id="services" class="section section-dark">
+        <div class="container">
+            <h2 class="section-title light">Our Fleet</h2>
+            <p class="section-sub light">Professional vehicles for every occasion.</p>
+            <div class="fleet-grid" id="fleet-showcase"></div>
+        </div>
+    </section>
+
+    <!-- ========== WHY CHOOSE US ========== -->
+    <section id="why-us" class="section">
+        <div class="container">
+            <h2 class="section-title" style="text-align:center;">Why Riders Choose G&amp;M</h2>
+            <p class="section-sub" style="text-align:center;">Trusted by hundreds of passengers across Florida.</p>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">&#128337;</div>
+                    <div class="stat-number">24/7</div>
+                    <div class="stat-label">Available Around the Clock</div>
+                    <p class="stat-desc">Early morning flights, late-night arrivals — we're always here when you need
+                        us.</p>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">&#9992;</div>
+                    <div class="stat-number">6+</div>
+                    <div class="stat-label">Airports Served</div>
+                    <p class="stat-desc">SRQ, TPA, MCO, FLL, PBI, MIA — all Florida airports with door-to-door service.
+                    </p>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">&#128176;</div>
+                    <div class="stat-number">$0</div>
+                    <div class="stat-label">Upfront Payment</div>
+                    <p class="stat-desc">Get your quote instantly, book for free. Pay only at the time of ride.</p>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">&#128100;</div>
+                    <div class="stat-number">1</div>
+                    <div class="stat-label">Dedicated Driver</div>
+                    <p class="stat-desc">Your personal chauffeur — no ride sharing, no strangers. Just you &amp; your
+                        driver.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== HOW IT WORKS ========== -->
+    <section class="section section-dark">
+        <div class="container">
+            <h2 class="section-title light" style="text-align:center;">How It Works</h2>
+            <p class="section-sub light" style="text-align:center;">From quote to ride in 3 simple steps.</p>
+            <div class="steps-grid">
+                <div class="step-card">
+                    <div class="step-number">1</div>
+                    <h3>Enter Your Route</h3>
+                    <p>Type your pickup and drop-off addresses. Our system calculates the distance and estimates travel
+                        time instantly.</p>
+                </div>
+                <div class="step-connector">&#10230;</div>
+                <div class="step-card">
+                    <div class="step-number">2</div>
+                    <h3>Choose Your Vehicle</h3>
+                    <p>Pick from Sedan, SUV, or Luxury. See real-time prices for each option — no hidden fees or surge
+                        pricing.</p>
+                </div>
+                <div class="step-connector">&#10230;</div>
+                <div class="step-card">
+                    <div class="step-number">3</div>
+                    <h3>Confirm &amp; Ride</h3>
+                    <p>Enter your name and phone. Your driver gets notified instantly and will text you an ETA. That's
+                        it!</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== POPULAR ROUTES ========== -->
+    <section id="routes" class="section">
+        <div class="container">
+            <h2 class="section-title" style="text-align:center;">Popular Routes</h2>
+            <p class="section-sub" style="text-align:center;">Flat-rate door-to-door service across Florida. No surge
+                pricing, ever.</p>
+            <div class="routes-grid">
+                <a href="/car-service-sarasota-to-tampa-airport-tpa" class="route-card"
+                    style="text-decoration:none;color:inherit;">
+                    <div class="route-icon">&#9992;</div>
+                    <h4>Sarasota &rarr; Tampa Airport (TPA)</h4>
+                    <div class="route-detail">~65 miles &bull; ~1 hr 15 min</div>
+                    <div class="route-price">From <strong>$165</strong></div>
+                </a>
+                <a href="/car-service-sarasota-to-srq-airport" class="route-card"
+                    style="text-decoration:none;color:inherit;">
+                    <div class="route-icon">&#9992;</div>
+                    <h4>Sarasota &rarr; SRQ Airport</h4>
+                    <div class="route-detail">~8 miles &bull; ~15 min</div>
+                    <div class="route-price">From <strong>$35</strong></div>
+                </a>
+                <a href="/car-service-sarasota-to-orlando" class="route-card"
+                    style="text-decoration:none;color:inherit;">
+                    <div class="route-icon">&#128663;</div>
+                    <h4>Sarasota &rarr; Orlando</h4>
+                    <div class="route-detail">~130 miles &bull; ~2 hrs</div>
+                    <div class="route-price">From <strong>$275</strong></div>
+                </a>
+                <a href="/car-service-sarasota-to-orlando-mco" class="route-card"
+                    style="text-decoration:none;color:inherit;">
+                    <div class="route-icon">&#9992;</div>
+                    <h4>Sarasota &rarr; Orlando MCO</h4>
+                    <div class="route-detail">~140 miles &bull; ~2 hrs 15 min</div>
+                    <div class="route-price">From <strong>$295</strong></div>
+                </a>
+                <a href="/car-service-sarasota-to-fort-lauderdale" class="route-card"
+                    style="text-decoration:none;color:inherit;">
+                    <div class="route-icon">&#128663;</div>
+                    <h4>Sarasota &rarr; Fort Lauderdale</h4>
+                    <div class="route-detail">~230 miles &bull; ~3 hrs 30 min</div>
+                    <div class="route-price">From <strong>$475</strong></div>
+                </a>
+                <a href="/car-service-sarasota-to-miami" class="route-card" style="text-decoration:none;color:inherit;">
+                    <div class="route-icon">&#128663;</div>
+                    <h4>Sarasota &rarr; Miami</h4>
+                    <div class="route-detail">~260 miles &bull; ~4 hrs</div>
+                    <div class="route-price">From <strong>$535</strong></div>
+                </a>
+                <a href="/car-service-sarasota-to-palm-beach" class="route-card"
+                    style="text-decoration:none;color:inherit;">
+                    <div class="route-icon">&#128663;</div>
+                    <h4>Sarasota &rarr; Palm Beach</h4>
+                    <div class="route-detail">~195 miles &bull; ~3 hrs</div>
+                    <div class="route-price">From <strong>$405</strong></div>
+                </a>
+                <a href="/car-service-siesta-key-to-tampa-airport-tpa" class="route-card"
+                    style="text-decoration:none;color:inherit;">
+                    <div class="route-icon">&#128663;</div>
+                    <h4>Siesta Key &rarr; TPA Airport</h4>
+                    <div class="route-detail">~75 miles &bull; ~1 hr 25 min</div>
+                    <div class="route-price">From <strong>$185</strong></div>
+                </a>
+            </div>
+            <div style="text-align:center;margin-top:2rem;">
+                <a href="#book-now" class="btn btn-gold" style="font-size:1.05rem;padding:0.85rem 2.5rem;">GET YOUR
+                    EXACT QUOTE &rarr;</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== TESTIMONIALS ========== -->
+    <section class="section section-dark">
+        <div class="container">
+            <h2 class="section-title light" style="text-align:center;">What Our Riders Say</h2>
+            <p class="section-sub light" style="text-align:center;">Real reviews from real passengers.</p>
+            <div class="testimonials-grid">
+                <div class="testimonial-card">
+                    <div class="testimonial-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                    <p class="testimonial-text">"Gerry was on time, professional, and made the drive to Tampa Airport
+                        stress-free. Car was spotless. Will definitely book again!"</p>
+                    <div class="testimonial-author">
+                        <strong>Michael R.</strong>
+                        <span>Sarasota &rarr; TPA</span>
+                    </div>
+                </div>
+                <div class="testimonial-card">
+                    <div class="testimonial-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                    <p class="testimonial-text">"Best car service in Sarasota! Booked a ride to Orlando for a family
+                        trip. The SUV was comfortable and pricing was very fair. Highly recommend."</p>
+                    <div class="testimonial-author">
+                        <strong>Sarah K.</strong>
+                        <span>Lakewood Ranch &rarr; Orlando</span>
+                    </div>
+                </div>
+                <div class="testimonial-card">
+                    <div class="testimonial-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                    <p class="testimonial-text">"I use G&amp;M for all my airport runs. The instant quote feature is so
+                        convenient, and Gerry always texts when he's on the way. True professional."</p>
+                    <div class="testimonial-author">
+                        <strong>David L.</strong>
+                        <span>Venice &rarr; SRQ Airport</span>
+                    </div>
+                </div>
+                <div class="testimonial-card">
+                    <div class="testimonial-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                    <p class="testimonial-text">"Needed a last-minute ride from Siesta Key to Fort Lauderdale. Gerry
+                        accommodated us on short notice and the ride was incredibly smooth. A+ service."</p>
+                    <div class="testimonial-author">
+                        <strong>Jennifer M.</strong>
+                        <span>Siesta Key &rarr; Fort Lauderdale</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== RECENT ACTIVITY / SOCIAL PROOF ========== -->
+    {% if recent_rides %}
+    <section class="section" style="background:#0d0d22;">
+        <div class="container" style="max-width:900px;">
+            <h2 class="section-title light" style="text-align:center;">&#128640; Recent Activity</h2>
+            <p class="section-sub light" style="text-align:center;">Real rides completed by G&amp;M drivers.</p>
+            <div style="display:flex;flex-direction:column;gap:0.6rem;margin-top:1.5rem;">
+                {% for r in recent_rides %}
+                <div
+                    style="display:flex;align-items:center;gap:1rem;background:#12122a;border:1px solid rgba(200,168,78,0.12);border-radius:10px;padding:0.8rem 1.2rem;">
+                    <span style="font-size:1.4rem;">{% if r.vehicle_type == 'suv' %}&#128661;{% elif r.vehicle_type ==
+                        'luxury' %}&#128662;{% else %}&#128663;{% endif %}</span>
+                    <div style="flex:1;min-width:0;">
+                        <div style="color:#e0e0e0;font-size:0.9rem;font-weight:600;">{{ r.customer_name.split(' ')[0] }}
+                            {{ r.customer_name.split(' ')[-1][0] }}. rode {{ r.vehicle_type|title }}</div>
+                        <div
+                            style="color:#888;font-size:0.8rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                            {{ r.pickup_location.split(',')[0] }} &rarr; {{ r.dropoff_location.split(',')[0] if
+                            r.dropoff_location else 'Drop-off' }}</div>
+                    </div>
+                    <span style="color:#666;font-size:0.75rem;white-space:nowrap;">{{ r.pickup_time.strftime('%b %d')
+                        }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- ========== CTA BANNER ========== -->
+    <section class="cta-banner">
+        <div class="container" style="text-align:center;">
+            <h2 style="font-family:'Playfair Display',serif;font-size:2rem;color:#fff;margin-bottom:0.5rem;">Ready to
+                Book Your Ride?</h2>
+            <p style="color:#ddd;font-size:1.1rem;margin-bottom:1.5rem;">Get an instant quote in seconds — no account
+                needed, no upfront payment.</p>
+            <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
+                <a href="#book-now" class="btn btn-gold" style="font-size:1.05rem;padding:0.85rem 2.5rem;">GET A FREE
+                    QUOTE</a>
+                <a href="tel:+19415551234" class="btn"
+                    style="font-size:1.05rem;padding:0.85rem 2.5rem;border:2px solid #c8a84e;color:#c8a84e;border-radius:8px;text-decoration:none;">&#9742;
+                    CALL NOW</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== ABOUT ========== -->
+    <section id="about" class="section">
+        <div class="container about-grid">
+            <div class="about-text">
+                <h2 class="section-title">G&amp;M Car Service<br>At Your Service 24/7</h2>
+                <p>With our user-friendly interface, booking a ride has never been easier. Simply enter your pickup and
+                    drop-off locations, choose your preferred vehicle type, and relax as your driver takes care of the
+                    rest.</p>
+                <ul class="feature-list">
+                    <li>&#10003; Easy booking process</li>
+                    <li>&#10003; Track your driver in real-time</li>
+                    <li>&#10003; Safe and secure payments</li>
+                    <li>&#10003; 24/7 customer support</li>
+                    <li>&#10003; Sarasota County &amp; surrounding airports</li>
+                </ul>
+                <p class="founder">— <strong>Gerry Jureidini</strong>, Founder &amp; Driver</p>
+            </div>
+            <div class="about-cta">
+                <div class="cta-card">
+                    <h3>Ready to ride?</h3>
+                    <p>Get a free instant quote — no commitment required.</p>
+                    <a href="#book-now" class="btn btn-gold">GET A QUOTE</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== FAQ ========== -->
+    <section id="faq" class="section section-dark">
+        <div class="container">
+            <h2 class="section-title light">Frequently Asked Questions</h2>
+            <p class="section-sub light">Everything you need to know about our car service.</p>
+            <div class="faq-list">
+                <details class="faq-item">
+                    <summary>How much does a ride from Sarasota to Tampa Airport (TPA) cost?</summary>
+                    <p>A sedan ride from Sarasota to Tampa International Airport starts at approximately $165. Use our
+                        <a href="#book-now">instant quote tool</a> for an exact fare based on your pickup location. SUV
+                        and luxury options are also available.
+                    </p>
+                </details>
+                <details class="faq-item">
+                    <summary>Do you provide service to Sarasota-Bradenton Airport (SRQ)?</summary>
+                    <p>Yes! We provide 24/7 airport transfers to and from SRQ. Enter your address in our quote tool to
+                        get an instant fare estimate.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>What vehicles do you offer?</summary>
+                    <p>We offer three vehicle types: <strong>Sedan</strong> (up to 4 passengers, from $15 + $2.50/mile),
+                        <strong>SUV</strong> (up to 6 passengers, from $20 + $3.00/mile), and <strong>Luxury</strong>
+                        (up to 4 passengers, from $30 + $4.00/mile).
+                    </p>
+                </details>
+                <details class="faq-item">
+                    <summary>How do I book a ride?</summary>
+                    <p>Enter your pickup and drop-off addresses on our website to get an instant quote. Choose your
+                        vehicle, then provide your name and phone number to confirm. No upfront payment is required
+                        &mdash; pay at the time of service.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>What areas do you serve?</summary>
+                    <p>We serve all of Sarasota County including Sarasota, Siesta Key, Longboat Key, Lakewood Ranch,
+                        Venice, and North Port. We also provide long-distance rides to <strong>Orlando</strong>,
+                        <strong>Fort Lauderdale</strong>, <strong>Palm Beach</strong>, and <strong>Miami</strong>, plus
+                        airport transfers to Tampa (TPA), St. Pete-Clearwater (PIE), Orlando (MCO), Fort Lauderdale
+                        (FLL), Palm Beach (PBI), and Miami (MIA).
+                    </p>
+                </details>
+                <details class="faq-item">
+                    <summary>Is your service available 24/7?</summary>
+                    <p>Yes, G&amp;M Car Service operates around the clock, 7 days a week including holidays. Early
+                        morning airport runs and late-night pickups are no problem.</p>
+                </details>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== SERVICE AREAS ========== -->
+    {% include 'partials/service_areas.html' %}
+
+    <!-- ========== FOOTER ========== -->
+    <footer class="footer">
+        <div class="container footer-inner">
+            <div>
+                <strong>G&amp;M Car Service</strong><br>
+                Sarasota County, Florida<br>
+                <a href="tel:+19415551234">&#9742; (941) 555-1234</a>
+            </div>
+            <div class="footer-links">
+                <a href="#book-now">Get a Quote</a>
+                <a href="#services">Vehicles</a>
+                <a href="#routes">Routes</a>
+                <a href="#faq">FAQ</a>
+                <a href="#about">About</a>
+                <a href="/admin">Admin</a>
+            </div>
+            <div class="footer-copy">
+                &copy; 2026 G&amp;M Car Service. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <script>
+        /* ---- Vehicle Pricing (loaded from API) ---- */
+        let PRICING_TIERS = {}; // { sedan: [{min_miles, max_miles, base_fare, per_mile, min_fare, label}], ... }
+        const VEHICLE_LABELS = { sedan: 'Sedan', suv: 'SUV', luxury: 'Luxury' };
+        const METERS_PER_MILE = 1609.34;
+        let currentMiles = 0;
+        let distanceText = '—';
+        let durationText = '—';
+        let selectedVehicle = 'sedan';
+        let currentTollFee = 0;
+        let map, directionsService, directionsRenderer;
+
+        /* ---- Florida Toll Schedule ---- */
+        const FL_TOLLS = [
+            { pattern: /sunshine skyway/i, fee: 2.25, name: 'Sunshine Skyway Bridge' },
+            { pattern: /florida.s turnpike|fl turnpike|flor.*turnpike/i, fee: 0.065, perMile: true, name: 'Florida Turnpike' },
+            { pattern: /homestead ext/i, fee: 0.065, perMile: true, name: 'Homestead Extension' },
+            { pattern: /sawgrass expy|sawgrass expressway/i, fee: 1.50, name: 'Sawgrass Expressway' },
+            { pattern: /veterans expy|veterans expressway/i, fee: 3.00, name: 'Veterans Expressway' },
+            { pattern: /selmon expy|selmon expressway/i, fee: 2.39, name: 'Selmon Expressway' },
+            { pattern: /beachline|bee line/i, fee: 2.00, name: 'Beachline Expressway' },
+        ];
+
+        /* Fetch tier pricing from backend */
+        fetch('/api/pricing')
+            .then(r => r.json())
+            .then(data => { PRICING_TIERS = data; })
+            .catch(() => {
+                // Fallback if API fails
+                PRICING_TIERS = {
+                    sedan: [{ min_miles: 0, max_miles: null, base_fare: 15, per_mile: 2.50, min_fare: 25 }],
+                    suv: [{ min_miles: 0, max_miles: null, base_fare: 20, per_mile: 3.00, min_fare: 35 }],
+                    luxury: [{ min_miles: 0, max_miles: null, base_fare: 30, per_mile: 4.00, min_fare: 50 }],
+                };
+            });
+
+        /* ---- Booking Agent: Availability Check ---- */
+        function checkAvailabilityAndProceed() {
+            const form = document.getElementById('booking-form');
+            const fields = ['pickup_location', 'dropoff_location', 'pickup_date', 'pickup_time'];
+            for (const f of fields) {
+                const el = form.querySelector(`[name="${f}"]`);
+                if (!el.value.trim()) { el.focus(); el.reportValidity(); return; }
+            }
+
+            const banner = document.getElementById('avail-banner');
+            const btn = document.getElementById('btn-get-quote');
+            const pickup = document.getElementById('pickup_location').value;
+            const dropoff = document.getElementById('dropoff_location').value;
+            const date = document.getElementById('pickup_date').value;
+            const time = document.getElementById('pickup_time').value;
+
+            // Show checking state
+            btn.disabled = true;
+            btn.textContent = 'Checking availability...';
+            banner.style.display = 'block';
+            banner.style.background = '#1a1a2e';
+            banner.style.border = '1px solid #3a3a5a';
+            banner.style.color = '#ccc';
+            banner.innerHTML = '&#9203; Checking driver availability for your selected time...';
+
+            fetch('/api/check-availability', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    pickup: pickup,
+                    dropoff: dropoff,
+                    datetime: date + 'T' + time,
+                    trip_duration_min: null,
+                    trip_distance_miles: currentMiles > 0 ? currentMiles : null,
+                }),
+            })
+                .then(r => r.json())
+                .then(data => {
+                    btn.disabled = false;
+                    btn.textContent = 'GET MY QUOTE →';
+
+                    // Store trip duration from scheduler
+                    if (data.trip_duration_min) {
+                        document.getElementById('trip_duration_min').value = data.trip_duration_min;
+                    }
+
+                    if (data.available) {
+                        banner.style.background = '#0a2a1a';
+                        banner.style.border = '1px solid #4ade80';
+                        banner.style.color = '#4ade80';
+                        banner.innerHTML = '&#9989; Driver is available for this time! Proceed to get your quote.';
+                        // Auto-proceed to step 2 after a brief confirmation
+                        setTimeout(() => goToStep(2), 800);
+                    } else {
+                        banner.style.background = '#2a1a0a';
+                        banner.style.border = '1px solid #fbbf24';
+                        banner.style.color = '#fbbf24';
+                        let msg = '&#9888; ' + (data.conflict_reason || 'This time is not available.');
+                        if (data.suggested_times && data.suggested_times.length > 0) {
+                            msg += '<div style="margin-top:0.75rem;color:#e0e0e0;font-size:0.9rem;">';
+                            msg += '<strong>Available times:</strong><br>';
+                            msg += '<div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.5rem;">';
+                            data.suggested_times.forEach(t => {
+                                msg += `<button type="button" class="avail-suggest-btn" onclick="applySuggestedTime('${t}')" `
+                                    + 'style="background:#c8a84e;color:#0a0a1a;border:none;padding:0.4rem 0.8rem;border-radius:6px;'
+                                    + 'font-weight:700;cursor:pointer;font-size:0.85rem;">'
+                                    + t + '</button>';
+                            });
+                            msg += '</div></div>';
+                        }
+                        banner.innerHTML = msg;
+                    }
+                })
+                .catch(() => {
+                    btn.disabled = false;
+                    btn.textContent = 'GET MY QUOTE →';
+                    // If the check fails, allow proceeding anyway (server-side will re-check)
+                    banner.style.background = '#1a1a2e';
+                    banner.style.border = '1px solid #3a3a5a';
+                    banner.style.color = '#aaa';
+                    banner.innerHTML = '&#9888; Could not verify availability. You can still proceed — we\'ll confirm your booking.';
+                    setTimeout(() => goToStep(2), 1500);
+                });
+        }
+
+        function applySuggestedTime(timeStr) {
+            // Parse "HH:MM AM/PM" to 24h time input value
+            const parts = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
+            if (!parts) return;
+            let hours = parseInt(parts[1]);
+            const mins = parts[2];
+            const ampm = parts[3].toUpperCase();
+            if (ampm === 'PM' && hours !== 12) hours += 12;
+            if (ampm === 'AM' && hours === 12) hours = 0;
+            const val = String(hours).padStart(2, '0') + ':' + mins;
+            document.getElementById('pickup_time').value = val;
+
+            // Re-check availability with new time
+            const banner = document.getElementById('avail-banner');
+            banner.innerHTML = '&#9203; Checking new time...';
+            banner.style.background = '#1a1a2e';
+            banner.style.border = '1px solid #3a3a5a';
+            banner.style.color = '#ccc';
+            setTimeout(() => checkAvailabilityAndProceed(), 300);
+        }
+
+        /* ---- Multi-step navigation ---- */
+        function goToStep(n) {
+            // Validate step 1: only journey fields (no name/phone yet)
+            if (n === 2) {
+                const form = document.getElementById('booking-form');
+                const fields = ['pickup_location', 'dropoff_location', 'pickup_date', 'pickup_time'];
+                for (const f of fields) {
+                    const el = form.querySelector(`[name="${f}"]`);
+                    if (!el.value.trim()) { el.focus(); el.reportValidity(); return; }
+                }
+                // Auto-detect airport pickup from pickup location
+                autoDetectAirport();
+            }
+            // Validate step 3: name & phone
+            if (n === 3) {
+                // no validation needed here — name/phone are in step 3 itself
+            }
+
+            document.querySelectorAll('.form-step').forEach(s => s.classList.remove('form-step-active'));
+            document.getElementById('step-' + n).classList.add('form-step-active');
+
+            document.querySelectorAll('.step-tab').forEach(s => {
+                const sn = parseInt(s.dataset.step);
+                s.classList.toggle('active', sn === n);
+                s.classList.toggle('done', sn < n);
+            });
+
+            if (n === 2) updateQuote();
+            if (n === 3) updateFinalSummary();
+        }
+
+        /* ---- Airport pickup helpers ---- */
+        const AIRPORT_KEYWORDS = ['airport', 'srq', 'tpa', 'mco', 'fll', 'pbi', 'mia', 'terminal', 'jfk', 'lax', 'ord', 'atl', 'dfw', 'sfo'];
+
+        function autoDetectAirport() {
+            const pickup = (document.getElementById('pickup_location').value || '').toLowerCase();
+            const isAirport = AIRPORT_KEYWORDS.some(kw => pickup.includes(kw));
+            const cb = document.getElementById('is_airport_pickup');
+            if (isAirport && !cb.checked) {
+                cb.checked = true;
+                toggleAirportFields(true);
+            }
+        }
+
+        function toggleAirportFields(show) {
+            document.getElementById('airport-fields').style.display = show ? 'block' : 'none';
+            if (!show) {
+                document.getElementById('airport_exit').value = '';
+                document.getElementById('airport_door_number').value = '';
+                document.getElementById('airport_door_color').value = '';
+                document.getElementById('airport_notes').value = '';
+                document.getElementById('flight_number').value = '';
+                document.getElementById('flight-status-preview').style.display = 'none';
+            }
+        }
+
+        function checkFlightStatus() {
+            const flightNum = document.getElementById('flight_number').value.trim().toUpperCase();
+            const preview = document.getElementById('flight-status-preview');
+            const btn = document.getElementById('checkFlightBtn');
+            if (!flightNum || flightNum.length < 3) {
+                preview.style.display = 'block';
+                preview.style.background = 'rgba(220,53,69,0.12)';
+                preview.style.border = '1px solid rgba(220,53,69,0.3)';
+                preview.innerHTML = '<span style="color:#dc3545;">Enter a valid flight number (e.g. AA1234)</span>';
+                return;
+            }
+            btn.disabled = true;
+            btn.textContent = 'Checking...';
+            preview.style.display = 'block';
+            preview.style.background = 'rgba(200,168,78,0.08)';
+            preview.style.border = '1px solid rgba(200,168,78,0.25)';
+            preview.innerHTML = '<span style="color:#c8a84e;">&#8987; Checking flight status...</span>';
+
+            fetch('/api/flight/' + encodeURIComponent(flightNum))
+                .then(r => r.json())
+                .then(data => {
+                    btn.disabled = false;
+                    btn.textContent = '✈ Check Flight';
+                    if (data.error) {
+                        preview.style.background = 'rgba(220,53,69,0.12)';
+                        preview.style.border = '1px solid rgba(220,53,69,0.3)';
+                        preview.innerHTML = '<span style="color:#dc3545;">' + data.error + '</span>';
+                        return;
+                    }
+                    const statusColors = {
+                        scheduled: '#c8a84e', active: '#007bff', landed: '#28a745',
+                        cancelled: '#dc3545', delayed: '#fd7e14', diverted: '#dc3545'
+                    };
+                    const c = statusColors[data.status] || '#c8a84e';
+                    let html = '<div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;">';
+                    html += '<span style="font-weight:700;color:' + c + ';font-size:1rem;">&#9992; ' + data.flight_number + '</span>';
+                    html += '<span style="background:' + c + '22;color:' + c + ';padding:2px 10px;border-radius:12px;font-size:0.8rem;font-weight:600;text-transform:uppercase;">' + data.status + '</span>';
+                    if (data.delay_minutes > 0) html += '<span style="color:#fd7e14;font-weight:600;">Delayed ' + data.delay_minutes + ' min</span>';
+                    html += '</div>';
+                    html += '<div style="margin-top:0.5rem;font-size:0.8rem;color:#aaa;">';
+                    html += data.airline + ' &bull; ' + data.departure_iata + ' &rarr; ' + data.arrival_iata;
+                    if (data.arrival_terminal) html += ' &bull; Terminal ' + data.arrival_terminal;
+                    if (data.arrival_gate) html += ' &bull; Gate ' + data.arrival_gate;
+                    html += '</div>';
+                    preview.style.background = c + '12';
+                    preview.style.border = '1px solid ' + c + '40';
+                    preview.innerHTML = html;
+                })
+                .catch(() => {
+                    btn.disabled = false;
+                    btn.textContent = '✈ Check Flight';
+                    preview.style.background = 'rgba(220,53,69,0.12)';
+                    preview.style.border = '1px solid rgba(220,53,69,0.3)';
+                    preview.innerHTML = '<span style="color:#dc3545;">Failed to check flight. Try again.</span>';
+                });
+        }
+
+        function previewPassengerPhoto(input) {
+            const preview = document.getElementById('pax-preview');
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = e => { preview.src = e.target.result; preview.style.display = 'block'; };
+                reader.readAsDataURL(input.files[0]);
+            } else {
+                preview.style.display = 'none';
+            }
+        }
+
+        /* ---- Step tab clicks ---- */
+        document.querySelectorAll('.step-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                const target = parseInt(tab.dataset.step);
+                const currentActive = document.querySelector('.step-tab.active');
+                const current = parseInt(currentActive.dataset.step);
+                // Only allow going back or to done steps
+                if (target < current) goToStep(target);
+            });
+        });
+
+        /* ---- Vehicle card selection (delegated — cards built dynamically) ---- */
+        function bindVehicleCards() {
+            document.querySelectorAll('.vehicle-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    if (card.classList.contains('coming-soon')) return; // can't select coming-soon
+                    document.querySelectorAll('.vehicle-card').forEach(c => c.classList.remove('selected'));
+                    card.classList.add('selected');
+                    selectedVehicle = card.dataset.vehicle;
+                    document.getElementById('vehicle_type').value = selectedVehicle;
+                    updateQuote();
+                });
+            });
+        }
+
+        /* ---- Load fleet from API & build cards ---- */
+        const VEHICLE_ICONS = { sedan: '&#128663;', suv: '&#128656;', luxury: '&#127942;' };
+        const VEHICLE_DESC = {
+            sedan: 'Comfortable rides for everyday travel. Airport runs, business meetings, and more.',
+            suv: 'Spacious and powerful. Perfect for families, groups, or extra luggage.',
+            luxury: 'Premium experience for special occasions. Travel in style and comfort.',
+        };
+        const VEHICLE_PAX = { sedan: 'Up to 4 passengers', suv: 'Up to 6 passengers', luxury: 'Up to 4 passengers, premium' };
+        let FLEET_DATA = [];
+
+        fetch('/api/fleet')
+            .then(r => r.json())
+            .then(fleet => {
+                FLEET_DATA = fleet;
+                buildFleetShowcase(fleet);
+                buildBookingVehicleCards(fleet);
+                bindVehicleCards();
+            });
+
+        function buildFleetShowcase(fleet) {
+            const grid = document.getElementById('fleet-showcase');
+            if (!grid) return;
+            grid.innerHTML = fleet.map(v => {
+                const active = v.is_active;
+                const drv = v.driver;
+                return `<div class="fleet-card${active ? '' : ' fleet-card-soon'}">
+                    ${v.photo_url
+                        ? `<img src="${v.photo_url}" alt="${v.name}" style="width:100%;height:180px;object-fit:cover;border-radius:var(--radius) var(--radius) 0 0;margin-bottom:1rem;">`
+                        : `<div class="fleet-icon">${VEHICLE_ICONS[v.vehicle_type] || '&#128663;'}</div>`}
+                    <h3>${v.name}</h3>
+                    ${v.license_plate ? `<div style="margin:0.5rem 0;"><span style="background:#fff;color:#111;font-weight:700;font-size:0.95rem;padding:0.25rem 0.6rem;border-radius:4px;font-family:monospace;letter-spacing:2px;border:2px solid #333;">${v.license_plate}</span></div>` : ''}
+                    ${drv ? `<div style="display:flex;align-items:center;gap:0.5rem;justify-content:center;margin:0.75rem 0;">
+                        ${drv.photo_url ? `<img src="${drv.photo_url}" alt="${drv.name}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid #c8a84e;">` : ''}
+                        <span style="color:#c8a84e;font-weight:600;font-size:0.9rem;">Your Driver: ${drv.name}</span>
+                    </div>` : ''}
+                    ${active
+                        ? `<p>${VEHICLE_DESC[v.vehicle_type] || ''}</p>`
+                        : `<p style="color:#fbbf24;font-weight:600;margin-top:0.5rem;">&#128680; Coming Soon</p><p style="color:#aaa;font-size:0.85rem;">This vehicle option will be available shortly.</p>`}
+                </div>`;
+            }).join('');
+        }
+
+        function buildBookingVehicleCards(fleet) {
+            const grid = document.getElementById('booking-vehicle-grid');
+            if (!grid) return;
+            let first = true;
+            grid.innerHTML = fleet.map(v => {
+                const active = v.is_active;
+                const sel = active && first ? ' selected' : '';
+                if (active && first) { first = false; selectedVehicle = v.vehicle_type; }
+                const drv = v.driver;
+                return `<label class="vehicle-card${sel}${active ? '' : ' coming-soon'}" data-vehicle="${v.vehicle_type}" ${!active ? 'style="opacity:0.55;pointer-events:auto;cursor:default;"' : ''}>
+                    <input type="radio" name="vehicle_radio" value="${v.vehicle_type}" ${sel ? 'checked' : ''} ${!active ? 'disabled' : ''}>
+                    ${v.photo_url
+                        ? `<img src="${v.photo_url}" alt="${v.name}" style="width:100%;height:100px;object-fit:cover;border-radius:8px;margin-bottom:0.5rem;">`
+                        : `<div class="vehicle-icon">${VEHICLE_ICONS[v.vehicle_type] || '&#128663;'}</div>`}
+                    <h4>${v.name}</h4>
+                    ${drv ? `<div style="display:flex;align-items:center;gap:0.4rem;justify-content:center;margin:0.3rem 0;">
+                        ${drv.photo_url ? `<img src="${drv.photo_url}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;border:1.5px solid #c8a84e;">` : ''}
+                        <span style="color:#c8a84e;font-size:0.8rem;font-weight:600;">${drv.name}</span>
+                    </div>` : ''}
+                    ${active
+                        ? `<p>${VEHICLE_PAX[v.vehicle_type] || ''}</p>
+                           <div class="vehicle-price" id="price-${v.vehicle_type}">&mdash;</div>`
+                        : `<p style="color:#fbbf24;font-weight:600;">Coming Soon</p>`}
+                </label>`;
+            }).join('');
+            // Set hidden field
+            const hiddenField = document.getElementById('vehicle_type');
+            if (hiddenField) hiddenField.value = selectedVehicle;
+        }
+
+        function getEstimate(type) {
+            const vType = type || selectedVehicle;
+            const tiers = PRICING_TIERS[vType];
+            if (!tiers || tiers.length === 0) return 0;
+            // Find matching tier for current distance
+            let tier = tiers[0]; // default to first
+            for (const t of tiers) {
+                if (currentMiles >= t.min_miles && (t.max_miles === null || currentMiles <= t.max_miles)) {
+                    tier = t; break;
+                }
+            }
+            const raw = tier.base_fare + tier.per_mile * currentMiles;
+            return Math.max(raw, tier.min_fare) + currentTollFee;
+        }
+
+        /* Update all vehicle prices + the big quote card */
+        function updateQuote() {
+            // Show price on every vehicle card
+            ['sedan', 'suv', 'luxury'].forEach(type => {
+                const el = document.getElementById('price-' + type);
+                if (el) {
+                    el.textContent = currentMiles > 0 ? '$' + getEstimate(type).toFixed(2) : '—';
+                }
+            });
+
+            // Big quote card
+            document.getElementById('quote-vehicle').textContent = VEHICLE_LABELS[selectedVehicle] || selectedVehicle;
+            document.getElementById('quote-distance').textContent = distanceText;
+            document.getElementById('quote-duration').textContent = durationText;
+            document.getElementById('quote-amount').textContent = currentMiles > 0 ? '$' + getEstimate().toFixed(2) : '—';
+
+            // Toll line
+            const tollLine = document.getElementById('quote-toll-line');
+            if (tollLine) {
+                if (currentTollFee > 0) {
+                    tollLine.style.display = 'block';
+                    tollLine.textContent = 'Includes $' + currentTollFee.toFixed(2) + ' in tolls';
+                } else {
+                    tollLine.style.display = 'none';
+                }
+            }
+        }
+
+        function updateFinalSummary() {
+            document.getElementById('fin-pickup').textContent = document.getElementById('pickup_location').value;
+            document.getElementById('fin-dropoff').textContent = document.getElementById('dropoff_location').value;
+            const date = document.getElementById('pickup_date').value;
+            const time = document.getElementById('pickup_time').value;
+            document.getElementById('fin-time').textContent = date + ' ' + time;
+            document.getElementById('fin-vehicle').textContent = VEHICLE_LABELS[selectedVehicle] || selectedVehicle;
+            document.getElementById('fin-distance').textContent = distanceText;
+            document.getElementById('fin-price').textContent = currentMiles > 0 ? '$' + getEstimate().toFixed(2) : '—';
+
+            // Airport summary
+            const airRow = document.getElementById('fin-airport-row');
+            if (document.getElementById('is_airport_pickup').checked) {
+                const parts = [];
+                const exit = document.getElementById('airport_exit').value.trim();
+                const door = document.getElementById('airport_door_number').value.trim();
+                const color = document.getElementById('airport_door_color').value;
+                const notes = document.getElementById('airport_notes').value.trim();
+                if (exit) parts.push(exit);
+                if (door) parts.push(door);
+                if (color) parts.push(color + ' zone');
+                if (notes) parts.push(notes);
+                document.getElementById('fin-airport-info').textContent = parts.join(' • ') || 'Airport pickup';
+                airRow.style.display = '';
+            } else {
+                airRow.style.display = 'none';
+            }
+        }
+
+        /* ---- Google Maps: Autocomplete + Map + Route ---- */
+        let pickupAutocomplete, dropoffAutocomplete;
+
+        function initAutocomplete() {
+            // Init map centered on Sarasota County
+            map = new google.maps.Map(document.getElementById('route-map'), {
+                center: { lat: 27.3364, lng: -82.5307 },
+                zoom: 11,
+                mapTypeControl: true,
+                streetViewControl: true,
+                styles: [
+                    { elementType: 'geometry', stylers: [{ color: '#1a1a2e' }] },
+                    { elementType: 'labels.text.fill', stylers: [{ color: '#c8a84e' }] },
+                    { elementType: 'labels.text.stroke', stylers: [{ color: '#0a0a1a' }] },
+                    { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#2a2a4a' }] },
+                    { featureType: 'road', elementType: 'geometry.stroke', stylers: [{ color: '#3a3a5a' }] },
+                    { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#0e1a2e' }] },
+                ]
+            });
+
+            directionsService = new google.maps.DirectionsService();
+            directionsRenderer = new google.maps.DirectionsRenderer({
+                map: map,
+                polylineOptions: { strokeColor: '#c8a84e', strokeWeight: 4 },
+                suppressMarkers: false,
+            });
+
+            const options = { componentRestrictions: { country: 'us' }, fields: ['formatted_address', 'geometry'] };
+            pickupAutocomplete = new google.maps.places.Autocomplete(document.getElementById('pickup_location'), options);
+            dropoffAutocomplete = new google.maps.places.Autocomplete(document.getElementById('dropoff_location'), options);
+            pickupAutocomplete.addListener('place_changed', tryCalcDistance);
+            dropoffAutocomplete.addListener('place_changed', tryCalcDistance);
+        }
+
+        function tryCalcDistance() {
+            const pickup = document.getElementById('pickup_location').value;
+            const dropoff = document.getElementById('dropoff_location').value;
+            if (!pickup || !dropoff) return;
+
+            // Get distance
+            new google.maps.DistanceMatrixService().getDistanceMatrix({
+                origins: [pickup],
+                destinations: [dropoff],
+                travelMode: google.maps.TravelMode.DRIVING,
+                unitSystem: google.maps.UnitSystem.IMPERIAL,
+            }, handleDistanceResponse);
+
+            // Draw route on the map + detect tolls
+            directionsService.route({
+                origin: pickup,
+                destination: dropoff,
+                travelMode: google.maps.TravelMode.DRIVING,
+            }, function (result, status) {
+                if (status === 'OK') {
+                    directionsRenderer.setDirections(result);
+                    detectTolls(result);
+                }
+            });
+        }
+
+        function handleDistanceResponse(response, status) {
+            if (status !== 'OK' || !response.rows[0].elements[0] ||
+                response.rows[0].elements[0].status !== 'OK') {
+                return;
+            }
+            const el = response.rows[0].elements[0];
+            currentMiles = el.distance.value / METERS_PER_MILE;
+            distanceText = el.distance.text;
+            durationText = el.duration.text;
+
+            document.getElementById('miles').value = currentMiles.toFixed(2);
+            document.getElementById('est-distance').textContent = distanceText;
+            document.getElementById('est-duration').textContent = durationText;
+        }
+
+        /* ---- Toll Detection from Directions result ---- */
+        function detectTolls(result) {
+            currentTollFee = 0;
+            const tollNames = [];
+            if (!result.routes || !result.routes[0]) return;
+
+            // Collect all step instructions
+            const legs = result.routes[0].legs;
+            const allInstructions = [];
+            let tollSegmentMiles = 0;
+
+            for (const leg of legs) {
+                for (const step of leg.steps) {
+                    const html = step.html_instructions || '';
+                    allInstructions.push(html);
+
+                    // Check each known FL toll
+                    for (const toll of FL_TOLLS) {
+                        if (toll.pattern.test(html)) {
+                            if (toll.perMile) {
+                                // Per-mile toll roads — estimate from step distance
+                                const stepMiles = (step.distance ? step.distance.value : 0) / METERS_PER_MILE;
+                                const segmentToll = stepMiles * toll.fee;
+                                currentTollFee += segmentToll;
+                            } else {
+                                currentTollFee += toll.fee;
+                            }
+                            if (!tollNames.includes(toll.name)) tollNames.push(toll.name);
+                        }
+                    }
+                }
+            }
+
+            // Also check the route-level warnings for "toll" keyword
+            const warnings = (result.routes[0].warnings || []).join(' ');
+            if (/toll/i.test(warnings) && currentTollFee === 0) {
+                // Generic toll detected but none matched our table — add a small default
+                currentTollFee = 2.00;
+                tollNames.push('Toll road');
+            }
+
+            currentTollFee = Math.round(currentTollFee * 100) / 100;
+            document.getElementById('toll_fee').value = currentTollFee.toFixed(2);
+
+            // Update toll indicator
+            const tollBar = document.getElementById('toll-indicator');
+            if (tollBar) {
+                if (currentTollFee > 0) {
+                    tollBar.style.display = 'flex';
+                    tollBar.innerHTML = `<span>&#128678; Tolls: <strong>$${currentTollFee.toFixed(2)}</strong></span><span style="color:#999;font-size:0.78rem;">${tollNames.join(', ')}</span>`;
+                } else {
+                    tollBar.style.display = 'none';
+                }
+            }
+        }
+
+        /* ---- Current Location (GPS) ---- */
+        function useCurrentLocation() {
+            const btn = document.getElementById('gps-btn');
+            const input = document.getElementById('pickup_location');
+
+            if (!navigator.geolocation) {
+                alert('Geolocation is not supported by your browser.');
+                return;
+            }
+
+            // Show loading state
+            btn.style.opacity = '0.4';
+            btn.style.pointerEvents = 'none';
+            input.value = 'Locating...';
+
+            navigator.geolocation.getCurrentPosition(
+                function (position) {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    const latlng = { lat: lat, lng: lng };
+
+                    // Reverse-geocode with Google Maps Geocoder
+                    new google.maps.Geocoder().geocode({ location: latlng }, function (results, status) {
+                        btn.style.opacity = '0.8';
+                        btn.style.pointerEvents = 'auto';
+
+                        if (status === 'OK' && results[0]) {
+                            input.value = results[0].formatted_address;
+                            // Trigger distance calculation if dropoff is already filled
+                            tryCalcDistance();
+                        } else {
+                            input.value = '';
+                            alert('Could not determine your address. Please type it manually.');
+                        }
+                    });
+                },
+                function (error) {
+                    btn.style.opacity = '0.8';
+                    btn.style.pointerEvents = 'auto';
+                    input.value = '';
+                    switch (error.code) {
+                        case error.PERMISSION_DENIED:
+                            alert('Location access was denied. Please allow location access or type your address.');
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            alert('Location information is unavailable. Please type your address.');
+                            break;
+                        default:
+                            alert('Could not get your location. Please type your address.');
+                    }
+                },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+            );
+        }
+
+        /* ---- Mobile nav toggle ---- */
+        document.querySelector('.nav-toggle').addEventListener('click', () => {
+            document.querySelector('.nav-links').classList.toggle('open');
+        });
+    </script>
+    <script
+        src="https://maps.googleapis.com/maps/api/js?key={{ config.get('GOOGLE_MAPS_API_KEY', '') }}&libraries=places&callback=initAutocomplete"
+        async defer></script>
+</body>
+
+</html>

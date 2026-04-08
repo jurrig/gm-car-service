@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0a0a1a">
+    <title>Booking Confirmed - G&amp;M Car Service</title>
+    <link rel="manifest" href="/manifest.json">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+    <header>
+        <h1>G&amp;M Car Service</h1>
+    </header>
+
+    <main id="app">
+        <div class="receipt">
+            <div class="receipt-header">
+                <h2>Booking Confirmation</h2>
+                <span class="badge badge-{{ booking.status | lower }}">{{ booking.status }}</span>
+            </div>
+
+            <div class="receipt-id">Booking #{{ booking.id }}</div>
+
+            <table class="receipt-details">
+                <tr>
+                    <th>Customer</th>
+                    <td>{{ booking.customer_name }}</td>
+                </tr>
+                <tr>
+                    <th>Phone</th>
+                    <td>{{ booking.phone }}</td>
+                </tr>
+                <tr>
+                    <th>Pickup</th>
+                    <td>{{ booking.pickup_location }}</td>
+                </tr>
+                <tr>
+                    <th>Drop-off</th>
+                    <td>{{ booking.dropoff_location }}</td>
+                </tr>
+                <tr>
+                    <th>Pickup Time</th>
+                    <td>{{ booking.pickup_time.strftime('%B %d, %Y at %I:%M %p') }}</td>
+                </tr>
+                <tr>
+                    <th>Vehicle</th>
+                    <td>{{ booking.vehicle_type | capitalize }}</td>
+                </tr>
+                <tr>
+                    <th>Passengers</th>
+                    <td>{{ booking.passengers }}</td>
+                </tr>
+            </table>
+
+            <div class="receipt-total">
+                <span>Estimated Price</span>
+                <span class="price">${{ '%.2f' | format(booking.estimated_price) }}</span>
+            </div>
+
+            <p class="receipt-note">
+                Thank you for choosing G&amp;M Car Service!<br>
+                You will receive a confirmation call shortly.
+            </p>
+
+            <a href="/" class="btn btn-gold">Book Another Ride</a>
+        </div>
+    </main>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+
+</html>

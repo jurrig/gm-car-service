@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0a0a1a">
+    <title>Driver Login - G&amp;M Car Service</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .login-wrap {
+            max-width: 360px;
+            margin: 15vh auto;
+            padding: 2rem;
+            background: #12122a;
+            border: 1px solid rgba(200, 168, 78, 0.2);
+            border-radius: 14px;
+            text-align: center;
+        }
+
+        .login-wrap h2 {
+            color: #c8a84e;
+            font-size: 1.3rem;
+            margin: 0 0 0.5rem 0;
+        }
+
+        .login-wrap p {
+            color: #888;
+            font-size: 0.85rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .login-wrap input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #333;
+            border-radius: 8px;
+            background: #0a0a1a;
+            color: #e0e0e0;
+            font-size: 1.2rem;
+            text-align: center;
+            letter-spacing: 0.5rem;
+            margin-bottom: 1rem;
+            font-family: monospace;
+        }
+
+        .login-wrap button {
+            width: 100%;
+            padding: 0.7rem;
+            border: none;
+            border-radius: 8px;
+            background: #c8a84e;
+            color: #0a0a1a;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        .login-error {
+            color: #dc3545;
+            font-size: 0.85rem;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+
+<body style="background:#0a0a1a; color:#e0e0e0; font-family:'Inter',sans-serif;">
+    <div class="login-wrap">
+        <h2>&#128663; Driver Portal</h2>
+        <p>Enter your PIN to view today's rides.</p>
+        {% if error %}
+        <div class="login-error">{{ error }}</div>
+        {% endif %}
+        <form method="POST">
+            <input type="password" name="pin" placeholder="PIN" maxlength="10" required autofocus inputmode="numeric">
+            <button type="submit">Sign In</button>
+        </form>
+    </div>
+</body>
+
+</html>

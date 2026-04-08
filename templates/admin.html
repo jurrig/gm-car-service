@@ -1,0 +1,2309 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <meta name="theme-color" content="#0a0a1a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>Driver Dashboard - G&amp;M Car Service</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        /* ===== Driver Dashboard ===== */
+        .dash-body {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1.5rem;
+        }
+
+        .dash-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--dark2, #12122a);
+            border-radius: 10px;
+            padding: 1.2rem;
+            text-align: center;
+            border: 1px solid rgba(200, 168, 78, 0.15);
+        }
+
+        .stat-card .stat-num {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #c8a84e;
+        }
+
+        .stat-card .stat-label {
+            font-size: 0.8rem;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 0.25rem;
+        }
+
+        .filter-bar {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+        }
+
+        .filter-btn {
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            border: 1px solid #333;
+            background: transparent;
+            color: #ccc;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+
+        .filter-btn:hover,
+        .filter-btn.active {
+            background: #c8a84e;
+            color: #0a0a1a;
+            border-color: #c8a84e;
+            font-weight: 600;
+        }
+
+        .ride-cards {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .ride-card {
+            background: var(--dark2, #12122a);
+            border-radius: 12px;
+            border: 1px solid rgba(200, 168, 78, 0.1);
+            overflow: hidden;
+            transition: border-color 0.3s;
+        }
+
+        .ride-card:hover {
+            border-color: rgba(200, 168, 78, 0.35);
+        }
+
+        .ride-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .ride-id {
+            font-weight: 700;
+            color: #c8a84e;
+        }
+
+        .ride-time {
+            color: #999;
+            font-size: 0.85rem;
+        }
+
+        .ride-card-body {
+            padding: 1rem 1.25rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+        }
+
+        .ride-field label {
+            display: block;
+            font-size: 0.7rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.15rem;
+        }
+
+        .ride-field span {
+            color: #e0e0e0;
+            font-size: 0.95rem;
+        }
+
+        .ride-field.full {
+            grid-column: 1 / -1;
+        }
+
+        .ride-route {
+            grid-column: 1 / -1;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            background: rgba(200, 168, 78, 0.05);
+            border-radius: 8px;
+        }
+
+        .route-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .route-dot.pickup {
+            background: #28a745;
+        }
+
+        .route-dot.dropoff {
+            background: #dc3545;
+        }
+
+        .route-line {
+            width: 2px;
+            height: 20px;
+            background: #444;
+            flex-shrink: 0;
+            margin-left: 4px;
+        }
+
+        .route-text {
+            flex: 1;
+        }
+
+        .route-addr {
+            color: #e0e0e0;
+            font-size: 0.9rem;
+        }
+
+        .route-label {
+            font-size: 0.7rem;
+            color: #888;
+            text-transform: uppercase;
+        }
+
+        .ride-nav-link {
+            grid-column: 1 / -1;
+        }
+
+        .ride-nav-link a {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #c8a84e;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+            padding: 0.5rem 1rem;
+            border: 1px solid rgba(200, 168, 78, 0.3);
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .ride-nav-link a:hover {
+            background: rgba(200, 168, 78, 0.1);
+        }
+
+        .ride-card-footer {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            padding: 1rem 1.25rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .btn-action {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .btn-action:hover {
+            opacity: 0.85;
+            transform: translateY(-1px);
+        }
+
+        .btn-accept {
+            background: #28a745;
+            color: #fff;
+        }
+
+        .btn-enroute {
+            background: #007bff;
+            color: #fff;
+        }
+
+        .btn-arrived {
+            background: #17a2b8;
+            color: #fff;
+        }
+
+        .btn-done {
+            background: #6f42c1;
+            color: #fff;
+        }
+
+        .btn-noshow {
+            background: #6c757d;
+            color: #fff;
+        }
+
+        .btn-del {
+            background: #dc3545;
+            color: #fff;
+        }
+
+        .eta-input {
+            width: 80px;
+            padding: 0.4rem 0.5rem;
+            border: 1px solid #444;
+            border-radius: 6px;
+            background: #1a1a3a;
+            color: #fff;
+            font-size: 0.85rem;
+            text-align: center;
+        }
+
+        .badge-accepted {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .badge-en-route,
+        .badge-enroute {
+            background: #cce5ff;
+            color: #004085;
+        }
+
+        .badge-arrived {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .badge-no-show,
+        .badge-noshow {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+
+        .empty-dash {
+            text-align: center;
+            padding: 4rem 1rem;
+            color: #666;
+        }
+
+        .empty-dash .empty-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        @media (max-width: 600px) {
+            .ride-card-body {
+                grid-template-columns: 1fr;
+            }
+
+            .dash-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* ===== Voice Control ===== */
+        .voice-fab {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            border: 2px solid #c8a84e;
+            background: #12122a;
+            color: #c8a84e;
+            font-size: 1.8rem;
+            cursor: pointer;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            transition: all 0.3s;
+        }
+
+        .voice-fab:hover {
+            background: #c8a84e;
+            color: #0a0a1a;
+        }
+
+        .voice-fab.listening {
+            background: #dc3545;
+            border-color: #dc3545;
+            color: #fff;
+            animation: pulse-mic 1.2s infinite;
+        }
+
+        @keyframes pulse-mic {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.5);
+            }
+
+            50% {
+                box-shadow: 0 0 0 16px rgba(220, 53, 69, 0);
+            }
+        }
+
+        .voice-toast {
+            position: fixed;
+            bottom: 7.5rem;
+            right: 1.5rem;
+            max-width: 320px;
+            background: #1e1e3a;
+            border: 1px solid rgba(200, 168, 78, 0.3);
+            border-radius: 12px;
+            padding: 1rem 1.25rem;
+            color: #e0e0e0;
+            font-size: 0.9rem;
+            z-index: 1001;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s;
+            pointer-events: none;
+        }
+
+        .voice-toast.show {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        .voice-toast .vt-heard {
+            color: #c8a84e;
+            font-weight: 600;
+            margin-bottom: 0.35rem;
+        }
+
+        .voice-toast .vt-action {
+            color: #28a745;
+        }
+
+        .voice-toast .vt-error {
+            color: #dc3545;
+        }
+
+        .voice-help {
+            position: fixed;
+            bottom: 7.5rem;
+            right: 1.5rem;
+            max-width: 320px;
+            background: #1e1e3a;
+            border: 1px solid rgba(200, 168, 78, 0.3);
+            border-radius: 12px;
+            padding: 1rem 1.25rem;
+            color: #ccc;
+            font-size: 0.8rem;
+            z-index: 999;
+            display: none;
+            line-height: 1.7;
+        }
+
+        .voice-help strong {
+            color: #c8a84e;
+        }
+
+        /* ===== CAR MODE TOGGLE ===== */
+        .car-mode-toggle {
+            background: none;
+            border: 1px solid #555;
+            color: #ccc;
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+
+        .car-mode-toggle:hover {
+            border-color: #c8a84e;
+            color: #c8a84e;
+        }
+
+        .car-mode-toggle.active {
+            background: #c8a84e;
+            color: #0a0a1a;
+            border-color: #c8a84e;
+            font-weight: 600;
+        }
+
+        /* ===== INFOTAINMENT / CAR MODE ===== */
+        body.car-mode {
+            font-size: 20px !important;
+            -webkit-text-size-adjust: none;
+        }
+
+        body.car-mode * {
+            transition: none !important;
+            animation: none !important;
+        }
+
+        body.car-mode header {
+            padding: 0.75rem 1rem;
+        }
+
+        body.car-mode header h1 {
+            font-size: 1.4rem;
+        }
+
+        body.car-mode .admin-nav {
+            font-size: 1rem;
+        }
+
+        body.car-mode .dash-body {
+            padding: 1rem;
+            max-width: 100%;
+        }
+
+        body.car-mode .dash-stats {
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        body.car-mode .stat-card {
+            padding: 0.75rem;
+            border-radius: 12px;
+        }
+
+        body.car-mode .stat-card .stat-num {
+            font-size: 2.5rem;
+        }
+
+        body.car-mode .stat-card .stat-label {
+            font-size: 0.9rem;
+        }
+
+        body.car-mode .filter-bar {
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        body.car-mode .filter-btn {
+            font-size: 1.05rem;
+            padding: 0.75rem 1.5rem;
+            min-height: 52px;
+            border-radius: 26px;
+        }
+
+        body.car-mode .ride-cards {
+            gap: 1rem;
+        }
+
+        body.car-mode .ride-card {
+            border-radius: 16px;
+            border-width: 2px;
+        }
+
+        body.car-mode .ride-card-header {
+            padding: 1rem 1.25rem;
+            font-size: 1.1rem;
+        }
+
+        body.car-mode .ride-id {
+            font-size: 1.3rem;
+        }
+
+        body.car-mode .badge {
+            font-size: 1rem;
+            padding: 0.4rem 1rem;
+            border-radius: 16px;
+        }
+
+        body.car-mode .ride-time {
+            font-size: 1.05rem;
+        }
+
+        body.car-mode .ride-card-body {
+            padding: 1rem 1.25rem;
+            gap: 0.75rem;
+        }
+
+        body.car-mode .route-addr {
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        body.car-mode .route-label {
+            font-size: 0.8rem;
+        }
+
+        body.car-mode .route-dot {
+            width: 14px;
+            height: 14px;
+        }
+
+        body.car-mode .route-line {
+            height: 28px;
+            width: 3px;
+        }
+
+        body.car-mode .ride-field label {
+            font-size: 0.85rem;
+        }
+
+        body.car-mode .ride-field span {
+            font-size: 1.15rem;
+        }
+
+        body.car-mode .ride-nav-link a {
+            font-size: 1.1rem;
+            padding: 0.85rem 1.25rem;
+            min-height: 56px;
+            border-radius: 12px;
+            border-width: 2px;
+        }
+
+        body.car-mode .ride-card-footer {
+            padding: 1rem 1.25rem;
+            gap: 0.75rem;
+        }
+
+        body.car-mode .btn-action {
+            font-size: 1.1rem;
+            padding: 0.85rem 1.5rem;
+            min-height: 56px;
+            min-width: 56px;
+            border-radius: 12px;
+            gap: 0.5rem;
+        }
+
+        body.car-mode .eta-input {
+            width: 100px;
+            font-size: 1.1rem;
+            padding: 0.7rem;
+            min-height: 52px;
+            border-radius: 10px;
+        }
+
+        body.car-mode .voice-fab {
+            width: 80px;
+            height: 80px;
+            font-size: 2.2rem;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            border-width: 3px;
+        }
+
+        body.car-mode .voice-toast {
+            font-size: 1.1rem;
+            padding: 1.2rem 1.5rem;
+            max-width: 400px;
+            bottom: 8rem;
+            border-radius: 16px;
+        }
+
+        body.car-mode .voice-help {
+            font-size: 1rem;
+            line-height: 2;
+            max-width: 400px;
+            bottom: 8rem;
+        }
+
+        /* Landscape car screens — side-by-side layout */
+        @media (min-width: 900px) {
+            body.car-mode .ride-card-body {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            body.car-mode .ride-card-footer {
+                justify-content: flex-start;
+            }
+        }
+
+        /* Extra-wide car screens (Tesla, etc.) */
+        @media (min-width: 1200px) {
+            body.car-mode .ride-cards {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 1rem;
+            }
+        }
+
+        /* Portrait infotainment (phone docked) */
+        @media (max-width: 600px) {
+            body.car-mode .dash-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            body.car-mode .ride-card-body {
+                grid-template-columns: 1fr;
+            }
+
+            body.car-mode .btn-action {
+                flex: 1;
+                justify-content: center;
+            }
+        }
+
+        /* ===== Next Ride Hero Card ===== */
+        .next-ride-banner {
+            background: linear-gradient(135deg, rgba(200, 168, 78, 0.12), rgba(200, 168, 78, 0.04));
+            border: 1px solid rgba(200, 168, 78, 0.3);
+            border-left: 6px solid #c8a84e;
+            border-radius: 12px;
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+            transition: background 0.5s, border-color 0.5s;
+        }
+
+        .next-ride-banner.urgency-warning {
+            background: linear-gradient(135deg, rgba(253, 126, 20, 0.15), rgba(253, 126, 20, 0.05));
+            border-left-color: #fd7e14;
+            border-color: rgba(253, 126, 20, 0.4);
+        }
+
+        .next-ride-banner.urgency-danger {
+            background: linear-gradient(135deg, rgba(220, 53, 69, 0.18), rgba(220, 53, 69, 0.06));
+            border-left-color: #dc3545;
+            border-color: rgba(220, 53, 69, 0.5);
+        }
+
+        .next-ride-banner.urgency-overdue {
+            background: linear-gradient(135deg, rgba(220, 53, 69, 0.25), rgba(220, 53, 69, 0.1));
+            border-left-color: #dc3545;
+            border-color: #dc3545;
+            animation: pulse-hero 1.5s infinite;
+        }
+
+        @keyframes pulse-hero {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4);
+            }
+
+            50% {
+                box-shadow: 0 0 20px 4px rgba(220, 53, 69, 0.25);
+            }
+        }
+
+        .next-ride-banner .nrb-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .next-ride-banner .nrb-countdown {
+            font-size: 1.8rem;
+            font-weight: 700;
+            font-family: 'Courier New', monospace;
+            color: #c8a84e;
+            min-width: 120px;
+            transition: color 0.3s;
+        }
+
+        .next-ride-banner .nrb-countdown.text-warning {
+            color: #fd7e14;
+        }
+
+        .next-ride-banner .nrb-countdown.text-danger {
+            color: #dc3545;
+        }
+
+        .nrb-badge {
+            display: inline-block;
+            background: #c8a84e;
+            color: #0a0a1a;
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 0.2rem 0.6rem;
+            border-radius: 4px;
+            margin-bottom: 0.3rem;
+        }
+
+        .next-ride-banner .nrb-info {
+            font-size: 0.9rem;
+            color: #ccc;
+            min-width: 0;
+        }
+
+        .next-ride-banner .nrb-info strong {
+            color: #fff;
+        }
+
+        .nrb-fare {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #c8a84e;
+            margin-top: 0.25rem;
+        }
+
+        .next-ride-banner .nrb-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            min-width: 140px;
+        }
+
+        .next-ride-banner .nrb-actions a,
+        .next-ride-banner .nrb-actions button {
+            width: 100%;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        /* ===== Timeline View ===== */
+        .timeline-section {
+            margin-bottom: 2rem;
+        }
+
+        .timeline-section h2 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #c8a84e;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .timeline-bar {
+            position: relative;
+            background: #12122a;
+            border: 1px solid rgba(200, 168, 78, 0.15);
+            border-radius: 10px;
+            height: 80px;
+            overflow: visible;
+            margin-bottom: 0.5rem;
+        }
+
+        .timeline-hours {
+            display: flex;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+        }
+
+        .timeline-hour {
+            flex: 1;
+            border-right: 1px solid rgba(255, 255, 255, 0.04);
+            position: relative;
+        }
+
+        .timeline-hour-label {
+            position: absolute;
+            bottom: -18px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.65rem;
+            color: #555;
+        }
+
+        .timeline-now {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #dc3545;
+            z-index: 5;
+        }
+
+        .timeline-now::after {
+            content: 'NOW';
+            position: absolute;
+            top: -16px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.6rem;
+            color: #dc3545;
+            font-weight: 700;
+        }
+
+        .tl-ride {
+            position: absolute;
+            top: 8px;
+            height: 50px;
+            min-width: 36px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #fff;
+            cursor: pointer;
+            z-index: 3;
+            padding: 0 6px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: opacity 0.2s;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .tl-ride:hover {
+            opacity: 0.85;
+        }
+
+        .tl-ride.status-pending {
+            background: rgba(200, 168, 78, 0.6);
+        }
+
+        .tl-ride.status-confirmed {
+            background: rgba(0, 123, 255, 0.5);
+        }
+
+        .tl-ride.status-accepted {
+            background: rgba(40, 167, 69, 0.6);
+        }
+
+        .tl-ride.status-en-route {
+            background: rgba(0, 123, 255, 0.7);
+        }
+
+        .tl-ride.status-arrived {
+            background: rgba(23, 162, 184, 0.6);
+        }
+
+        .tl-ride.status-completed {
+            background: rgba(111, 66, 193, 0.4);
+        }
+
+        .tl-ride.status-no-show {
+            background: rgba(108, 117, 125, 0.4);
+        }
+
+        /* ===== Earnings Bar ===== */
+        .earnings-bar {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 0.5rem;
+        }
+
+        .earning-chip {
+            background: #12122a;
+            border: 1px solid rgba(200, 168, 78, 0.15);
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+            color: #ccc;
+        }
+
+        .earning-chip strong {
+            color: #c8a84e;
+            font-size: 1.1rem;
+        }
+
+        /* ===== Edit Modal ===== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-box {
+            background: #12122a;
+            border: 1px solid rgba(200, 168, 78, 0.3);
+            border-radius: 14px;
+            width: 95%;
+            max-width: 520px;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 1.5rem;
+        }
+
+        .modal-box h3 {
+            color: #c8a84e;
+            font-size: 1.1rem;
+            margin: 0 0 1rem 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-box h3 button {
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .modal-box .mf-group {
+            margin-bottom: 0.85rem;
+        }
+
+        .modal-box .mf-group label {
+            display: block;
+            font-size: 0.75rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.2rem;
+        }
+
+        .modal-box .mf-group input,
+        .modal-box .mf-group select,
+        .modal-box .mf-group textarea {
+            width: 100%;
+            padding: 0.55rem 0.75rem;
+            border-radius: 6px;
+            border: 1px solid #333;
+            background: #0a0a1a;
+            color: #e0e0e0;
+            font-size: 0.9rem;
+            font-family: inherit;
+        }
+
+        .modal-box .mf-group textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .modal-box .mf-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+        }
+
+        .modal-box .mf-actions {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .modal-box .mf-actions button {
+            flex: 1;
+            padding: 0.6rem;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        .btn-save-edit {
+            background: #c8a84e;
+            color: #0a0a1a;
+        }
+
+        .btn-cancel-edit {
+            background: #333;
+            color: #ccc;
+        }
+
+        /* ===== Filter count badges ===== */
+        .filter-count {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 18px;
+            height: 18px;
+            border-radius: 9px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            margin-left: 4px;
+            background: rgba(255, 255, 255, 0.15);
+            color: inherit;
+        }
+
+        .filter-btn.active .filter-count {
+            background: rgba(10, 10, 26, 0.25);
+        }
+
+        /* ===== Edit button on ride card ===== */
+        .btn-edit {
+            background: #1a1a3a;
+            color: #c8a84e;
+            border: 1px solid rgba(200, 168, 78, 0.3);
+        }
+
+        /* ===== Driver Notes ===== */
+        .driver-notes {
+            grid-column: 1 / -1;
+            background: rgba(200, 168, 78, 0.06);
+            border: 1px solid rgba(200, 168, 78, 0.15);
+            border-radius: 6px;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.85rem;
+            color: #ccc;
+        }
+
+        .driver-notes strong {
+            color: #c8a84e;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+        }
+
+        /* ===== Quick-SMS Tray ===== */
+        .btn-sms {
+            background: #1a1a3a;
+            color: #28a745;
+            border: 1px solid rgba(40, 167, 69, 0.3);
+        }
+
+        .sms-tray {
+            display: none;
+            grid-column: 1 / -1;
+            background: rgba(40, 167, 69, 0.05);
+            border: 1px solid rgba(40, 167, 69, 0.2);
+            border-radius: 8px;
+            padding: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .sms-tray.open {
+            display: block;
+        }
+
+        .sms-tray-title {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #28a745;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .sms-tray-btns {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .sms-quick-btn {
+            padding: 0.4rem 0.8rem;
+            border-radius: 16px;
+            border: 1px solid rgba(40, 167, 69, 0.3);
+            background: #12122a;
+            color: #ccc;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .sms-quick-btn:hover {
+            background: #28a745;
+            color: #fff;
+            border-color: #28a745;
+        }
+
+        .sms-custom-row {
+            display: flex;
+            gap: 0.4rem;
+        }
+
+        .sms-custom-input {
+            flex: 1;
+            padding: 0.4rem 0.6rem;
+            border-radius: 6px;
+            border: 1px solid #333;
+            background: #0a0a1a;
+            color: #e0e0e0;
+            font-size: 0.85rem;
+            font-family: inherit;
+        }
+
+        .sms-send-btn {
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            border: none;
+            background: #28a745;
+            color: #fff;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .sms-send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+
+<body style="background: #0a0a1a; color: #e0e0e0; font-family: 'Inter', sans-serif;">
+    <header>
+        <h1>G&amp;M Car Service</h1>
+        <nav class="admin-nav">
+            <span>&#128663; Driver Dashboard</span>
+            <div style="display:flex; gap:0.75rem; align-items:center;">
+                <a href="{{ url_for('admin_pricing') }}"
+                    style="color:#c8a84e; text-decoration:none; font-weight:600;">&#9881; Pricing</a>
+                <a href="{{ url_for('admin_fleet') }}"
+                    style="color:#c8a84e; text-decoration:none; font-weight:600;">&#128664; Fleet</a>
+                <a href="{{ url_for('admin_settings') }}"
+                    style="color:#c8a84e; text-decoration:none; font-weight:600;">&#128273; Settings</a>
+                <a href="{{ url_for('admin_expenses') }}"
+                    style="color:#c8a84e; text-decoration:none; font-weight:600;">&#128176; Expenses</a>
+                <button class="car-mode-toggle" id="carModeBtn" title="Toggle car infotainment mode">&#128663; Car
+                    Mode</button>
+                <a href="{{ url_for('admin_logout') }}">Logout</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="dash-body">
+        <!-- ===== Next Ride Hero Card ===== -->
+        {% if next_ride %}
+        <div class="next-ride-banner" id="next-ride-banner">
+            <div class="nrb-left">
+                <div class="nrb-countdown" id="nrb-countdown">--:--</div>
+                <div class="nrb-info">
+                    <span class="nrb-badge">Up Next</span>
+                    <strong>#{{ next_ride.id }} {{ next_ride.customer_name }}</strong>
+                    <a href="tel:{{ next_ride.phone }}"
+                        style="color:#c8a84e;text-decoration:none;font-size:0.85rem;">&nbsp;&#9742; {{ next_ride.phone
+                        }}</a><br>
+                    <span style="color:#999;">{{ next_ride.pickup_time.strftime('%I:%M %p') }}</span> &bull;
+                    {{ next_ride.pickup_location[:50] }}{% if next_ride.pickup_location|length > 50 %}...{% endif %}
+                    &rarr; {{ next_ride.dropoff_location[:40] }}{% if next_ride.dropoff_location|length > 40 %}...{%
+                    endif %}
+                    <div class="nrb-fare">${{ '%.2f' | format(next_ride.estimated_price) }} &bull; {{
+                        next_ride.vehicle_type | capitalize }} &bull; {{ next_ride.passengers }} pax</div>
+                </div>
+            </div>
+            <div class="nrb-actions">
+                <a href="https://www.google.com/maps/dir/?api=1&destination={{ next_ride.pickup_location | urlencode }}&travelmode=driving"
+                    target="_blank" rel="noopener" class="btn-action btn-enroute"
+                    style="text-decoration:none;">&#128205; Navigate</a>
+                {% if next_ride.status == 'Pending' %}
+                <form method="POST" action="{{ url_for('admin_confirm', booking_id=next_ride.id) }}" style="margin:0;">
+                    <button type="submit" class="btn-action btn-accept" style="width:100%;">&#10003; Confirm</button>
+                </form>
+                {% elif next_ride.status in ['Confirmed', 'Accepted'] %}
+                <form method="POST" action="{{ url_for('admin_onmyway', booking_id=next_ride.id) }}" style="margin:0;">
+                    <button type="submit" class="btn-action btn-enroute" style="width:100%;">&#128663; On My
+                        Way</button>
+                </form>
+                {% elif next_ride.status == 'En Route' %}
+                <form method="POST" action="{{ url_for('admin_arrived', booking_id=next_ride.id) }}" style="margin:0;">
+                    <button type="submit" class="btn-action btn-arrived" style="width:100%;">&#128205; Arrived</button>
+                </form>
+                {% endif %}
+                <a href="tel:{{ next_ride.phone }}" class="btn-action btn-accept" style="text-decoration:none;">&#9742;
+                    Call</a>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- ===== Stats + Earnings ===== -->
+        {% set pending_count = bookings | selectattr('status', 'equalto', 'Pending') | list | length %}
+        {% set confirmed_count = bookings | selectattr('status', 'equalto', 'Confirmed') | list | length %}
+        {% set accepted_count = bookings | selectattr('status', 'equalto', 'Accepted') | list | length %}
+        {% set enroute_count = bookings | selectattr('status', 'equalto', 'En Route') | list | length %}
+        {% set arrived_count = bookings | selectattr('status', 'equalto', 'Arrived') | list | length %}
+        {% set completed_count = bookings | selectattr('status', 'equalto', 'Completed') | list | length %}
+        <div class="dash-stats">
+            <div class="stat-card">
+                <div class="stat-num">{{ pending_count + confirmed_count }}</div>
+                <div class="stat-label">Pending</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-num">{{ accepted_count + enroute_count + arrived_count }}</div>
+                <div class="stat-label">Active</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-num">{{ today_rides | length }}</div>
+                <div class="stat-label">Today</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-num">{{ completed_count }}</div>
+                <div class="stat-label">Completed</div>
+            </div>
+        </div>
+
+        <div class="earnings-bar">
+            <div class="earning-chip">Today: <strong>${{ '%.2f' | format(today_earnings) }}</strong></div>
+            <div class="earning-chip">This Week: <strong>${{ '%.2f' | format(week_earnings) }}</strong></div>
+            <div class="earning-chip">All Time: <strong>${{ '%.2f' | format(total_earnings) }}</strong></div>
+        </div>
+
+        <!-- ===== Today's Timeline ===== -->
+        {% if today_rides %}
+        <div class="timeline-section">
+            <h2>&#128197; Today's Schedule</h2>
+            <div class="timeline-bar" id="timeline-bar">
+                <div class="timeline-hours" id="timeline-hours"></div>
+                <div class="timeline-now" id="timeline-now"></div>
+                <!-- Rides rendered by JS -->
+            </div>
+            <div style="height:20px;"></div>
+        </div>
+        {% endif %}
+
+        <!-- ===== Filter Tabs with counts ===== -->
+        <div class="filter-bar">
+            <button class="filter-btn active" data-filter="all">All <span class="filter-count">{{ bookings | length
+                    }}</span></button>
+            <button class="filter-btn" data-filter="Pending">Pending <span class="filter-count">{{ pending_count
+                    }}</span></button>
+            <button class="filter-btn" data-filter="Confirmed">Confirmed <span class="filter-count">{{
+                    confirmed_count }}</span></button>
+            <button class="filter-btn" data-filter="Accepted">Accepted <span class="filter-count">{{ accepted_count
+                    }}</span></button>
+            <button class="filter-btn" data-filter="En Route">En Route <span class="filter-count">{{ enroute_count
+                    }}</span></button>
+            <button class="filter-btn" data-filter="Arrived">Arrived <span class="filter-count">{{ arrived_count
+                    }}</span></button>
+            <button class="filter-btn" data-filter="Completed">Completed <span class="filter-count">{{
+                    completed_count }}</span></button>
+            <button class="filter-btn" id="checkAllFlightsBtn" onclick="checkAllFlights(this)"
+                style="margin-left:auto;border-color:rgba(0,123,255,0.4);color:#7bb8f5;">&#9992; Check All
+                Flights</button>
+        </div>
+
+        <!-- ===== Ride Cards ===== -->
+        {% if bookings %}
+        <div class="ride-cards">
+            {% for b in bookings %}
+            <div class="ride-card" data-status="{{ b.status }}">
+                <div class="ride-card-header">
+                    <div style="display:flex;align-items:center;gap:0.75rem;">
+                        {% if b.passenger_photo %}
+                        <img src="{{ url_for('static', filename='uploads/' + b.passenger_photo) }}" alt="Passenger"
+                            style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid #c8a84e;">
+                        {% endif %}
+                        <div>
+                            <span class="ride-id">#{{ b.id }}</span>
+                            &nbsp;{{ b.customer_name }}
+                            &nbsp;<a href="tel:{{ b.phone }}" style="color:#c8a84e; text-decoration:none;"
+                                title="Call rider">&#9742; {{ b.phone }}</a>
+                        </div>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:0.75rem;">
+                        <span class="badge badge-{{ b.status | lower | replace(' ', '-') }}">{{ b.status }}</span>
+                        <span class="ride-time">{{ b.pickup_time.strftime('%b %d, %I:%M %p') }}</span>
+                    </div>
+                </div>
+
+                <div class="ride-card-body">
+                    {% if b.is_airport_pickup %}
+                    <!-- Airport Pickup Banner -->
+                    <div
+                        style="background:rgba(200,168,78,0.12);border:1px solid rgba(200,168,78,0.3);border-radius:8px;padding:0.75rem 1rem;margin-bottom:0.75rem;">
+                        <div style="color:#c8a84e;font-weight:700;font-size:0.9rem;margin-bottom:0.4rem;">&#9992;
+                            AIRPORT PICKUP</div>
+                        <div style="display:flex;flex-wrap:wrap;gap:0.5rem 1.5rem;font-size:0.85rem;">
+                            {% if b.airport_exit %}
+                            <span><strong>Exit/Terminal:</strong> {{ b.airport_exit }}</span>
+                            {% endif %}
+                            {% if b.airport_door_number %}
+                            <span><strong>Door:</strong> {{ b.airport_door_number }}</span>
+                            {% endif %}
+                            {% if b.airport_door_color %}
+                            <span><strong>Color Zone:</strong>
+                                <span
+                                    style="display:inline-block;width:12px;height:12px;border-radius:50%;background:{{ b.airport_door_color }};vertical-align:middle;margin-right:4px;border:1px solid #555;"></span>
+                                {{ b.airport_door_color }}</span>
+                            {% endif %}
+                            {% if b.airport_notes %}
+                            <span><strong>Notes:</strong> {{ b.airport_notes }}</span>
+                            {% endif %}
+                        </div>
+
+                        {% if b.flight_number %}
+                        <!-- Flight Tracking -->
+                        <div style="margin-top:0.75rem;padding-top:0.6rem;border-top:1px solid rgba(200,168,78,0.2);">
+                            <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;">
+                                <span style="font-weight:700;color:#fff;">&#9992; {{ b.flight_number }}</span>
+                                {% if b.flight_status %}
+                                {% set fcolors =
+                                {'scheduled':'#c8a84e','active':'#007bff','landed':'#28a745','cancelled':'#dc3545','delayed':'#fd7e14','diverted':'#dc3545'}
+                                %}
+                                {% set fc = fcolors.get(b.flight_status, '#c8a84e') %}
+                                <span
+                                    style="background:{{ fc }}22;color:{{ fc }};padding:2px 10px;border-radius:12px;font-size:0.75rem;font-weight:600;text-transform:uppercase;">{{
+                                    b.flight_status }}</span>
+                                {% if b.flight_arrival %}
+                                <span style="color:#aaa;font-size:0.8rem;">ETA: {{ b.flight_arrival.strftime('%I:%M
+                                    %p')
+                                    }}</span>
+                                {% endif %}
+                                {% else %}
+                                <span style="color:#888;font-size:0.8rem;">Not checked yet</span>
+                                {% endif %}
+                                <button type="button" class="btn-action" onclick="checkFlight({{ b.id }}, this)"
+                                    style="background:#1a1a3a;color:#c8a84e;border:1px solid rgba(200,168,78,0.3);font-size:0.75rem;padding:0.3rem 0.75rem;">
+                                    &#128260; Refresh
+                                </button>
+                                <button type="button" class="btn-action" onclick="checkTraffic({{ b.id }}, this)"
+                                    style="background:#1a1a3a;color:#fd7e14;border:1px solid rgba(253,126,20,0.3);font-size:0.75rem;padding:0.3rem 0.75rem;">
+                                    &#128663; Check Traffic
+                                </button>
+                            </div>
+
+                            {% if b.traffic_duration_min and b.traffic_duration_min > 75 %}
+                            <!-- LEAVE EARLY Traffic Alert -->
+                            <div
+                                style="margin-top:0.6rem;padding:0.6rem 0.85rem;background:rgba(253,126,20,0.12);border:1px solid rgba(253,126,20,0.4);border-radius:8px;">
+                                <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
+                                    <span style="font-size:1.2rem;">&#128680;</span>
+                                    <span style="color:#fd7e14;font-weight:700;font-size:0.85rem;">LEAVE
+                                        EARLY</span>
+                                    <span style="color:#e0e0e0;font-size:0.8rem;">
+                                        Drive to airport is <strong style="color:#fd7e14;">{{ '%.0f' |
+                                            format(b.traffic_duration_min) }} min</strong>
+                                        due to traffic (normally ~60 min)
+                                    </span>
+                                    {% if b.traffic_alert_sent %}
+                                    <span
+                                        style="background:rgba(40,167,69,0.15);color:#28a745;padding:2px 8px;border-radius:10px;font-size:0.7rem;font-weight:600;">SMS
+                                        SENT</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% elif b.traffic_duration_min %}
+                            <!-- Normal traffic indicator -->
+                            <div style="margin-top:0.5rem;font-size:0.78rem;color:#888;">
+                                &#128663; Drive to airport: {{ '%.0f' | format(b.traffic_duration_min) }} min
+                                (traffic
+                                OK)
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                    <!-- Route visual -->
+                    <div class="ride-route">
+                        <div style="display:flex; flex-direction:column; align-items:center;">
+                            <div class="route-dot pickup"></div>
+                            <div class="route-line"></div>
+                            <div class="route-dot dropoff"></div>
+                        </div>
+                        <div class="route-text">
+                            <div><span class="route-label">Pickup</span><br><span class="route-addr">{{
+                                    b.pickup_location }}</span></div>
+                            <div style="margin-top:0.5rem;"><span class="route-label">Drop-off</span><br><span
+                                    class="route-addr">{{ b.dropoff_location }}</span></div>
+                        </div>
+                    </div>
+
+                    <div class="ride-field">
+                        <label>Vehicle</label>
+                        <span>{{ b.vehicle_type | capitalize }}</span>
+                    </div>
+                    <div class="ride-field">
+                        <label>Passengers</label>
+                        <span>{{ b.passengers }}</span>
+                    </div>
+                    <div class="ride-field">
+                        <label>Fare</label>
+                        <span style="color:#c8a84e; font-weight:700;">${{ '%.2f' | format(b.estimated_price)
+                            }}</span>
+                    </div>
+                    <div class="ride-field">
+                        <label>Booked</label>
+                        <span>{{ b.created_at.strftime('%b %d, %I:%M %p') if b.created_at else '—' }}</span>
+                    </div>
+
+                    {% if b.driver_notes %}
+                    <div class="driver-notes">
+                        <strong>&#128221; Notes:</strong> {{ b.driver_notes }}
+                    </div>
+                    {% endif %}
+
+                    <!-- Driver Assignment -->
+                    <div class="ride-field">
+                        <label>Driver</label>
+                        <select onchange="assignDriver({{ b.id }}, this.value)"
+                            style="background:#0a0a1a;color:#e0e0e0;border:1px solid #333;border-radius:6px;padding:0.3rem 0.5rem;font-size:0.85rem;">
+                            <option value="">— Unassigned —</option>
+                            {% for d in drivers %}
+                            <option value="{{ d.id }}" {% if b.assigned_driver_id==d.id %}selected{% endif %}>{{ d.name
+                                }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Navigate to Pickup link -->
+                    <div class="ride-nav-link">
+                        <a href="https://www.google.com/maps/dir/?api=1&destination={{ b.pickup_location | urlencode }}&travelmode=driving"
+                            target="_blank" rel="noopener">
+                            &#128205; Navigate to Pickup
+                        </a>
+                        &nbsp;&nbsp;
+                        <a href="https://www.google.com/maps/dir/?api=1&origin={{ b.pickup_location | urlencode }}&destination={{ b.dropoff_location | urlencode }}&travelmode=driving"
+                            target="_blank" rel="noopener">
+                            &#128663; Full Trip Route
+                        </a>
+                    </div>
+                </div>
+
+                <!-- ===== Action Buttons ===== -->
+                <div class="ride-card-footer">
+                    {% if b.status == 'Pending' %}
+                    <form method="POST" action="{{ url_for('admin_confirm', booking_id=b.id) }}"
+                        style="display:inline;">
+                        <button class="btn-action btn-accept" type="submit">&#10003; Confirm</button>
+                    </form>
+                    <form method="POST" action="{{ url_for('admin_accept', booking_id=b.id) }}"
+                        style="display:inline-flex; align-items:center; gap:0.35rem;">
+                        <input type="text" name="eta" value="15 min" class="eta-input" title="ETA to send rider">
+                        <button class="btn-action btn-enroute" type="submit">&#128232; Accept &amp; Notify
+                            Rider</button>
+                    </form>
+                    {% endif %}
+
+                    {% if b.status == 'Confirmed' %}
+                    <form method="POST" action="{{ url_for('admin_accept', booking_id=b.id) }}"
+                        style="display:inline-flex; align-items:center; gap:0.35rem;">
+                        <input type="text" name="eta" value="15 min" class="eta-input" title="ETA to send rider">
+                        <button class="btn-action btn-enroute" type="submit">&#128232; Accept &amp; Notify
+                            Rider</button>
+                    </form>
+                    {% endif %}
+
+                    {% if b.status == 'Accepted' %}
+                    <form method="POST" action="{{ url_for('admin_onmyway', booking_id=b.id) }}"
+                        style="display:inline;">
+                        <button class="btn-action btn-enroute" type="submit">&#128663; On My Way (SMS
+                            rider)</button>
+                    </form>
+                    {% endif %}
+
+                    {% if b.status == 'En Route' %}
+                    <form method="POST" action="{{ url_for('admin_arrived', booking_id=b.id) }}"
+                        style="display:inline;">
+                        <button class="btn-action btn-arrived" type="submit">&#128205; I've Arrived (SMS
+                            rider)</button>
+                    </form>
+                    {% endif %}
+
+                    {% if b.status in ['Accepted', 'En Route', 'Arrived', 'Confirmed'] %}
+                    <form method="POST" action="{{ url_for('admin_complete', booking_id=b.id) }}"
+                        style="display:inline;">
+                        <button class="btn-action btn-done" type="submit">&#9745; Complete</button>
+                    </form>
+                    <!-- Odometer Snap -->
+                    <label class="btn-action"
+                        style="background:#1a1a3a;color:#c8a84e;border:1px solid rgba(200,168,78,0.3);cursor:pointer;display:inline-flex;align-items:center;gap:4px;font-size:0.78rem;padding:0.35rem 0.6rem;border-radius:6px;"
+                        title="Snap odometer for IRS proof">
+                        &#128247; Odo
+                        <input type="file" accept="image/*" capture="environment" style="display:none;"
+                            onchange="uploadOdometer({{ b.id }}, this)">
+                    </label>
+                    <form method="POST" action="{{ url_for('admin_noshow', booking_id=b.id) }}" style="display:inline;">
+                        <button class="btn-action btn-noshow" type="submit">&#128683; No-Show</button>
+                    </form>
+                    {% endif %}
+
+                    <button type="button" class="btn-action btn-edit" onclick="openEditModal({{ b.id }})">&#9998;
+                        Edit</button>
+                    <button type="button" class="btn-action btn-sms" onclick="toggleSmsTray({{ b.id }})">&#128172;
+                        Text</button>
+
+                    <form method="POST" action="{{ url_for('admin_delete', booking_id=b.id) }}"
+                        onsubmit="return confirm('Delete booking #{{ b.id }}?');"
+                        style="display:inline; margin-left:auto;">
+                        <button class="btn-action btn-del" type="submit">&#10005;</button>
+                    </form>
+
+                    <!-- Quick-SMS Tray -->
+                    <div class="sms-tray" id="sms-tray-{{ b.id }}" data-bid="{{ b.id }}"
+                        data-name="{{ b.customer_name.split(' ')[0] }}" data-pickup="{{ b.pickup_location[:40] }}"
+                        data-time="{{ b.pickup_time.strftime('%b %d at %I:%M %p') }}">
+                        <div class="sms-tray-title">&#128172; Quick Text to {{ b.customer_name.split(' ')[0] }}</div>
+                        <div class="sms-tray-btns">
+                            <button class="sms-quick-btn" data-tpl="5min">&#128337; 5 Mins Away</button>
+                            <button class="sms-quick-btn" data-tpl="gate">&#128274; Gate Code</button>
+                            <button class="sms-quick-btn" data-tpl="confirm">&#9989; Confirm</button>
+                            <button class="sms-quick-btn" data-tpl="here">&#128205; I'm Here</button>
+                            <button class="sms-quick-btn" data-tpl="late">&#9200; Running Late</button>
+                        </div>
+                        <div class="sms-custom-row">
+                            <input type="text" class="sms-custom-input" id="sms-custom-{{ b.id }}"
+                                placeholder="Type a custom message...">
+                            <button class="sms-send-btn" onclick="sendCustomSms({{ b.id }}, this)">Send</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-dash">
+            <div class="empty-icon">&#128663;</div>
+            <p>No bookings yet. Rides will appear here when passengers book.</p>
+        </div>
+        {% endif %}
+    </main>
+
+    <!-- Voice Control Button -->
+    <button class="voice-fab" id="voiceBtn" title="Hold or tap to use voice commands">&#127908;</button>
+
+    <!-- Voice Feedback Toast -->
+    <div class="voice-toast" id="voiceToast">
+        <div class="vt-heard" id="vt-heard"></div>
+        <div id="vt-action"></div>
+    </div>
+
+    <!-- Voice Help Panel -->
+    <div class="voice-help" id="voiceHelp">
+        <strong>Voice Commands:</strong><br>
+        "Accept ride 1" — Accept &amp; notify rider<br>
+        "On my way to 1" — Mark en route + SMS<br>
+        "Arrived at 1" — Mark arrived + SMS<br>
+        "Complete ride 1" — Mark completed<br>
+        "No show 1" — Mark no-show<br>
+        "Navigate to 1" — Open pickup in Maps<br>
+        "Call rider 1" — Call the rider<br>
+        "Show pending" — Filter to pending<br>
+        "Show all" — Show all rides<br>
+        "Help" — Show this panel
+    </div>
+
+    <script>
+        // Filter tabs
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const filter = btn.dataset.filter;
+                document.querySelectorAll('.ride-card').forEach(card => {
+                    if (filter === 'all' || card.dataset.status === filter) {
+                        card.style.display = '';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            });
+        });
+
+        // ===== Car Mode Toggle =====
+        const carModeBtn = document.getElementById('carModeBtn');
+        const isCarMode = localStorage.getItem('gm-car-mode') === '1';
+        if (isCarMode) {
+            document.body.classList.add('car-mode');
+            carModeBtn.classList.add('active');
+        }
+        carModeBtn.addEventListener('click', () => {
+            document.body.classList.toggle('car-mode');
+            const on = document.body.classList.contains('car-mode');
+            carModeBtn.classList.toggle('active', on);
+            localStorage.setItem('gm-car-mode', on ? '1' : '0');
+            if (on) speak('Car mode activated.');
+        });
+
+        // Auto-refresh every 30 seconds
+        setTimeout(() => location.reload(), 30000);
+
+        // ===== Voice Control =====
+        const voiceBtn = document.getElementById('voiceBtn');
+        const voiceToast = document.getElementById('voiceToast');
+        const vtHeard = document.getElementById('vt-heard');
+        const vtAction = document.getElementById('vt-action');
+        const voiceHelp = document.getElementById('voiceHelp');
+
+        // Build a map of booking IDs to their action URLs from the page
+        const rideCards = document.querySelectorAll('.ride-card');
+        const rides = {};
+        rideCards.forEach(card => {
+            const idEl = card.querySelector('.ride-id');
+            if (!idEl) return;
+            const id = idEl.textContent.replace('#', '').trim();
+            const phoneEl = card.querySelector('a[href^="tel:"]');
+            const navLink = card.querySelector('.ride-nav-link a');
+            const forms = card.querySelectorAll('.ride-card-footer form');
+            const actions = {};
+            forms.forEach(f => {
+                const action = f.getAttribute('action');
+                if (action.includes('/accept/')) actions.accept = f;
+                else if (action.includes('/onmyway/')) actions.onmyway = f;
+                else if (action.includes('/arrived/')) actions.arrived = f;
+                else if (action.includes('/complete/')) actions.complete = f;
+                else if (action.includes('/noshow/')) actions.noshow = f;
+                else if (action.includes('/confirm/')) actions.confirm = f;
+            });
+            rides[id] = {
+                card,
+                phone: phoneEl ? phoneEl.getAttribute('href') : null,
+                navLink: navLink ? navLink.getAttribute('href') : null,
+                actions,
+                status: card.dataset.status
+            };
+        });
+
+        function showToast(heard, actionText, isError) {
+            vtHeard.textContent = heard ? '"' + heard + '"' : '';
+            vtAction.textContent = actionText;
+            vtAction.className = isError ? 'vt-error' : 'vt-action';
+            voiceToast.classList.add('show');
+            setTimeout(() => voiceToast.classList.remove('show'), 4000);
+        }
+
+        function speak(text) {
+            if ('speechSynthesis' in window) {
+                const u = new SpeechSynthesisUtterance(text);
+                u.rate = 1.1;
+                u.pitch = 1;
+                speechSynthesis.speak(u);
+            }
+        }
+
+        function extractId(text) {
+            // Match patterns: "ride 3", "booking 3", "number 3", or just a bare number
+            const m = text.match(/(?:ride|booking|number|#)?\s*(\d+)/i);
+            return m ? m[1] : null;
+        }
+
+        function processCommand(transcript) {
+            const t = transcript.toLowerCase().trim();
+
+            // Help
+            if (t.includes('help') || t.includes('commands')) {
+                voiceHelp.style.display = voiceHelp.style.display === 'block' ? 'none' : 'block';
+                showToast(transcript, 'Showing voice commands', false);
+                speak('Here are the available commands.');
+                return;
+            }
+
+            // Filter commands
+            if (t.includes('show all') || t.includes('all rides')) {
+                document.querySelector('.filter-btn[data-filter="all"]').click();
+                showToast(transcript, 'Showing all rides', false);
+                speak('Showing all rides.');
+                return;
+            }
+            const filters = ['pending', 'accepted', 'en route', 'arrived', 'completed'];
+            for (const f of filters) {
+                if (t.includes('show ' + f) || t.includes('filter ' + f)) {
+                    const filterVal = f === 'en route' ? 'En Route' : f.charAt(0).toUpperCase() + f.slice(1);
+                    const btn = document.querySelector('.filter-btn[data-filter="' + filterVal + '"]');
+                    if (btn) btn.click();
+                    showToast(transcript, 'Filtered to ' + f, false);
+                    speak('Showing ' + f + ' rides.');
+                    return;
+                }
+            }
+
+            // Ride-specific commands
+            const id = extractId(t);
+            if (!id) {
+                showToast(transcript, 'Could not understand. Say "help" for commands.', true);
+                speak('Sorry, I did not understand. Say help for commands.');
+                return;
+            }
+
+            const ride = rides[id];
+            if (!ride) {
+                showToast(transcript, 'Ride #' + id + ' not found', true);
+                speak('Ride ' + id + ' not found.');
+                return;
+            }
+
+            // Accept
+            if (t.includes('accept')) {
+                if (ride.actions.accept) {
+                    showToast(transcript, 'Accepting ride #' + id + '...', false);
+                    speak('Accepting ride ' + id + '.');
+                    ride.actions.accept.submit();
+                } else {
+                    showToast(transcript, 'Ride #' + id + ' cannot be accepted (status: ' + ride.status + ')', true);
+                    speak('Ride ' + id + ' cannot be accepted right now.');
+                }
+                return;
+            }
+
+            // On my way
+            if (t.includes('on my way') || t.includes('en route') || t.includes('heading')) {
+                if (ride.actions.onmyway) {
+                    showToast(transcript, 'On my way to ride #' + id + '!', false);
+                    speak('Marked on my way. Rider notified.');
+                    ride.actions.onmyway.submit();
+                } else {
+                    showToast(transcript, 'Cannot go en route for ride #' + id, true);
+                    speak('This ride is not ready for en route.');
+                }
+                return;
+            }
+
+            // Arrived
+            if (t.includes('arrive') || t.includes('here') || t.includes('i am here')) {
+                if (ride.actions.arrived) {
+                    showToast(transcript, 'Arrived at ride #' + id, false);
+                    speak('Marked arrived. Rider notified.');
+                    ride.actions.arrived.submit();
+                } else {
+                    showToast(transcript, 'Cannot mark arrived for ride #' + id, true);
+                    speak('This ride is not en route yet.');
+                }
+                return;
+            }
+
+            // Complete
+            if (t.includes('complete') || t.includes('done') || t.includes('finish')) {
+                if (ride.actions.complete) {
+                    showToast(transcript, 'Completing ride #' + id, false);
+                    speak('Ride ' + id + ' completed.');
+                    ride.actions.complete.submit();
+                } else {
+                    showToast(transcript, 'Cannot complete ride #' + id, true);
+                    speak('This ride cannot be completed.');
+                }
+                return;
+            }
+
+            // No-show
+            if (t.includes('no show') || t.includes('no-show') || t.includes('noshow')) {
+                if (ride.actions.noshow) {
+                    showToast(transcript, 'Marking no-show for ride #' + id, false);
+                    speak('Ride ' + id + ' marked as no show.');
+                    ride.actions.noshow.submit();
+                } else {
+                    showToast(transcript, 'Cannot mark no-show for ride #' + id, true);
+                    speak('This ride cannot be marked no-show.');
+                }
+                return;
+            }
+
+            // Navigate
+            if (t.includes('navigate') || t.includes('directions') || t.includes('go to')) {
+                if (ride.navLink) {
+                    showToast(transcript, 'Opening navigation for ride #' + id, false);
+                    speak('Opening navigation.');
+                    window.open(ride.navLink, '_blank');
+                }
+                return;
+            }
+
+            // Call rider
+            if (t.includes('call')) {
+                if (ride.phone) {
+                    showToast(transcript, 'Calling rider #' + id, false);
+                    speak('Calling rider.');
+                    window.location.href = ride.phone;
+                }
+                return;
+            }
+
+            showToast(transcript, 'Unknown command for ride #' + id + '. Say "help".', true);
+            speak('Unknown command. Say help for the list of commands.');
+        }
+
+        // ===== Speech Recognition Setup =====
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'en-US';
+            recognition.interimResults = false;
+            recognition.continuous = false;
+
+            let listening = false;
+
+            voiceBtn.addEventListener('click', () => {
+                if (listening) {
+                    recognition.stop();
+                } else {
+                    recognition.start();
+                }
+            });
+
+            recognition.onstart = () => {
+                listening = true;
+                voiceBtn.classList.add('listening');
+                voiceBtn.innerHTML = '&#9899;';
+                showToast('', 'Listening... speak a command', false);
+            };
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                processCommand(transcript);
+            };
+
+            recognition.onerror = (event) => {
+                if (event.error !== 'aborted') {
+                    showToast('', 'Voice error: ' + event.error + '. Try again.', true);
+                }
+            };
+
+            recognition.onend = () => {
+                listening = false;
+                voiceBtn.classList.remove('listening');
+                voiceBtn.innerHTML = '&#127908;';
+            };
+        } else {
+            // Browser doesn't support speech recognition
+            voiceBtn.title = 'Voice not supported in this browser. Use Chrome.';
+            voiceBtn.style.opacity = '0.4';
+            voiceBtn.style.cursor = 'not-allowed';
+        }
+
+        // ===== Flight Tracking =====
+        function checkFlight(bookingId, btn) {
+            const origText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '&#8987; Checking...';
+            fetch('/admin/flight/check/' + bookingId, {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+                .then(r => r.json())
+                .then(data => {
+                    btn.disabled = false;
+                    btn.innerHTML = origText;
+                    if (data.error) {
+                        showToast('', data.error, true);
+                        speak('Flight check failed.');
+                        return;
+                    }
+                    let msg = data.flight_number + ' is ' + data.status;
+                    if (data.delay_minutes > 0) msg += ', delayed ' + data.delay_minutes + ' minutes';
+                    if (data.pickup_adjusted) msg += '. Pickup adjusted to ' + data.new_pickup;
+                    showToast('Flight ' + data.flight_number, msg, false);
+                    speak(msg);
+                    // Reload after 2s to reflect changes
+                    setTimeout(() => location.reload(), 2000);
+                })
+                .catch(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = origText;
+                    showToast('', 'Flight check request failed.', true);
+                });
+        }
+
+        function checkAllFlights(btn) {
+            const origText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '&#8987; Checking flights...';
+            fetch('/admin/flights/check-all', {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+                .then(r => r.json())
+                .then(data => {
+                    btn.disabled = false;
+                    btn.innerHTML = origText;
+                    const msg = 'Checked ' + data.checked + ' flight(s).';
+                    showToast('', msg, false);
+                    speak(msg);
+                    if (data.checked > 0) setTimeout(() => location.reload(), 2000);
+                })
+                .catch(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = origText;
+                    showToast('', 'Failed to check flights.', true);
+                });
+        }
+
+        function checkTraffic(bookingId, btn) {
+            const origText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '&#8987; Checking traffic...';
+            fetch('/admin/traffic/check/' + bookingId, {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+                .then(r => r.json())
+                .then(data => {
+                    btn.disabled = false;
+                    btn.innerHTML = origText;
+                    if (data.error) {
+                        showToast('', data.error, true);
+                        return;
+                    }
+                    let msg = 'Drive time: ' + Math.round(data.duration_in_traffic_min) + ' min';
+                    if (data.exceeds_threshold) {
+                        msg += ' ⚠️ LEAVE EARLY! Traffic is heavy.';
+                        if (data.alert_sent) msg += ' SMS alert sent.';
+                    } else {
+                        msg += ' — traffic is normal.';
+                    }
+                    showToast('Traffic Check', msg, data.exceeds_threshold);
+                    speak(msg);
+                    setTimeout(() => location.reload(), 2000);
+                })
+                .catch(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = origText;
+                    showToast('', 'Traffic check failed.', true);
+                });
+        }
+
+        // ===== Driver Assignment =====
+        function assignDriver(bookingId, driverId) {
+            fetch('/admin/assign-driver/' + bookingId, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ driver_id: driverId || null })
+            }).then(r => r.json()).then(d => {
+                if (!d.success) alert(d.error || 'Failed to assign driver');
+            }).catch(() => alert('Network error'));
+        }
+
+        // ===== Odometer Photo Upload =====
+        function uploadOdometer(bookingId, input) {
+            if (!input.files || !input.files[0]) return;
+            const fd = new FormData();
+            fd.append('odometer_photo', input.files[0]);
+            fetch('/admin/odometer/' + bookingId, { method: 'POST', body: fd })
+                .then(r => r.json())
+                .then(d => {
+                    if (d.success) {
+                        input.parentElement.style.borderColor = '#28a745';
+                        input.parentElement.innerHTML = '&#9989; Odo Saved';
+                    } else {
+                        alert(d.error || 'Upload failed');
+                    }
+                })
+                .catch(() => alert('Network error'));
+        }
+
+        // ===== Quick-SMS Tray =====
+        function toggleSmsTray(id) {
+            const tray = document.getElementById('sms-tray-' + id);
+            if (tray) tray.classList.toggle('open');
+        }
+
+        const smsTemplates = {
+            '5min': (n) => "Hi " + n + ", it's Gerry from G&M Car Service. Traffic is a bit slow \u2014 I'm about 5 minutes away.",
+            'gate': (n) => "Hi " + n + ", I'm at the gate. Could you please provide the entry code?",
+            'confirm': (n, p, t) => "G&M Car Service: Confirming your ride for " + t + ". See you then!",
+            'here': (n, p) => "Hi " + n + ", I've arrived at " + p + ". I'm outside waiting for you!",
+            'late': (n) => "Hi " + n + ", just a heads up \u2014 I'm running about 10 minutes behind. Be there soon!",
+        };
+
+        // Wire up all template buttons via event delegation
+        document.addEventListener('click', function (e) {
+            const btn = e.target.closest('.sms-quick-btn[data-tpl]');
+            if (!btn) return;
+            const tray = btn.closest('.sms-tray');
+            const bid = tray.dataset.bid;
+            const name = tray.dataset.name;
+            const pickup = tray.dataset.pickup;
+            const time = tray.dataset.time;
+            const tpl = btn.dataset.tpl;
+            const msgFn = smsTemplates[tpl];
+            if (msgFn) sendQuickSms(bid, btn, msgFn(name, pickup, time));
+        });
+
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: message }),
+            })
+                .then(r => r.json())
+            .then(data => {
+                btn.disabled = false;
+                btn.textContent = origText;
+                if (data.success) {
+                    showToast('', 'SMS sent!', false);
+                    speak('Text message sent.');
+                } else {
+                    showToast('', data.error || 'SMS failed', true);
+                }
+            })
+            .catch(() => {
+                btn.disabled = false;
+                btn.textContent = origText;
+                showToast('', 'SMS request failed.', true);
+            });
+        }
+
+        function sendCustomSms(bookingId, btn) {
+            const input = document.getElementById('sms-custom-' + bookingId);
+            const msg = (input.value || '').trim();
+            if (!msg) { showToast('', 'Type a message first.', true); return; }
+            sendQuickSms(bookingId, btn, msg);
+            input.value = '';
+        }
+
+        // ===== Edit Booking Modal =====
+        function openEditModal(id) {
+            fetch('/admin/edit/' + id)
+                .then(r => r.json())
+                .then(data => {
+                    document.getElementById('edit-id').value = data.id;
+                    document.getElementById('edit-customer_name').value = data.customer_name;
+                    document.getElementById('edit-phone').value = data.phone;
+                    document.getElementById('edit-pickup_location').value = data.pickup_location;
+                    document.getElementById('edit-dropoff_location').value = data.dropoff_location;
+                    document.getElementById('edit-pickup_date').value = data.pickup_date;
+                    document.getElementById('edit-pickup_time').value = data.pickup_time;
+                    document.getElementById('edit-passengers').value = data.passengers;
+                    document.getElementById('edit-vehicle_type').value = data.vehicle_type;
+                    document.getElementById('edit-estimated_price').value = data.estimated_price;
+                    document.getElementById('edit-driver_notes').value = data.driver_notes;
+                    document.getElementById('edit-modal-title').textContent = 'Edit Booking #' + data.id;
+                    document.getElementById('editModal').classList.add('active');
+                })
+                .catch(() => showToast('', 'Failed to load booking', true));
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').classList.remove('active');
+        }
+
+        function saveEdit() {
+            const id = document.getElementById('edit-id').value;
+            const payload = {
+                customer_name: document.getElementById('edit-customer_name').value,
+                phone: document.getElementById('edit-phone').value,
+                pickup_location: document.getElementById('edit-pickup_location').value,
+                dropoff_location: document.getElementById('edit-dropoff_location').value,
+                pickup_date: document.getElementById('edit-pickup_date').value,
+                pickup_time: document.getElementById('edit-pickup_time').value,
+                passengers: document.getElementById('edit-passengers').value,
+                vehicle_type: document.getElementById('edit-vehicle_type').value,
+                estimated_price: document.getElementById('edit-estimated_price').value,
+                driver_notes: document.getElementById('edit-driver_notes').value,
+            };
+            fetch('/admin/edit/' + id, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        showToast('', 'Booking #' + id + ' updated!', false);
+                        closeEditModal();
+                        setTimeout(() => location.reload(), 800);
+                    } else {
+                        showToast('', 'Save failed.', true);
+                    }
+                })
+                .catch(() => showToast('', 'Save request failed.', true));
+        }
+
+        // Close modal on overlay click
+        document.addEventListener('DOMContentLoaded', function () {
+            const overlay = document.getElementById('editModal');
+            if (overlay) {
+                overlay.addEventListener('click', function (e) {
+                    if (e.target === overlay) closeEditModal();
+                });
+            }
+        });
+
+        // ===== Today's Timeline =====
+        (function buildTimeline() {
+            const bar = document.getElementById('timeline-bar');
+            if (!bar) return;
+
+            const hoursDiv = document.getElementById('timeline-hours');
+            const nowMarker = document.getElementById('timeline-now');
+
+            // Today's rides data from server
+            const todayRides = [
+                {% for b in today_rides %}
+                {
+            id: { { b.id } },
+            name: { { b.customer_name | tojson } },
+            pickup_hour: { { b.pickup_time.hour } },
+            pickup_min: { { b.pickup_time.minute } },
+            duration: { { b.trip_duration_min or 60 } },
+            status: { { b.status | tojson } },
+        },
+        {% endfor %}
+            ];
+
+        if (todayRides.length === 0) return;
+
+        // Determine hour range (min hour - 1 to max hour + 2, clamped to 0-24)
+        let minH = 24, maxH = 0;
+        todayRides.forEach(r => {
+            const startH = r.pickup_hour;
+            const endH = r.pickup_hour + Math.ceil(r.duration / 60);
+            if (startH < minH) minH = startH;
+            if (endH > maxH) maxH = endH;
+        });
+        minH = Math.max(0, minH - 1);
+        maxH = Math.min(24, maxH + 2);
+        const totalHours = maxH - minH;
+
+        // Draw hour markers
+        for (let h = minH; h < maxH; h++) {
+            const div = document.createElement('div');
+            div.className = 'timeline-hour';
+            const label = document.createElement('span');
+            label.className = 'timeline-hour-label';
+            const ampm = h === 0 ? '12a' : h < 12 ? h + 'a' : h === 12 ? '12p' : (h - 12) + 'p';
+            label.textContent = ampm;
+            div.appendChild(label);
+            hoursDiv.appendChild(div);
+        }
+
+        // Position NOW marker
+        const now = new Date();
+        const nowH = now.getHours() + now.getMinutes() / 60;
+        if (nowH >= minH && nowH <= maxH) {
+            const pct = ((nowH - minH) / totalHours) * 100;
+            nowMarker.style.left = pct + '%';
+        } else {
+            nowMarker.style.display = 'none';
+        }
+
+        // Place ride blocks
+        let lane = 0;
+        const lanes = []; // track end times per lane for overlap
+        todayRides.forEach(r => {
+            const startH = r.pickup_hour + r.pickup_min / 60;
+            const endH = startH + r.duration / 60;
+            const leftPct = ((startH - minH) / totalHours) * 100;
+            const widthPct = Math.max(((endH - startH) / totalHours) * 100, 3);
+
+            const el = document.createElement('div');
+            el.className = 'tl-ride status-' + r.status.toLowerCase().replace(/\s+/g, '-');
+            el.style.left = leftPct + '%';
+            el.style.width = widthPct + '%';
+            el.textContent = '#' + r.id + ' ' + r.name.split(' ')[0];
+            el.title = '#' + r.id + ' ' + r.name + ' at ' +
+                (r.pickup_hour > 12 ? (r.pickup_hour - 12) : r.pickup_hour) + ':' +
+                (r.pickup_min < 10 ? '0' : '') + r.pickup_min +
+                (r.pickup_hour >= 12 ? ' PM' : ' AM') +
+                ' (' + r.status + ')';
+            el.onclick = function () {
+                const card = document.querySelector('.ride-card .ride-id');
+                // scroll to the card
+                const cards = document.querySelectorAll('.ride-card');
+                cards.forEach(c => {
+                    const idEl = c.querySelector('.ride-id');
+                    if (idEl && idEl.textContent.trim() === '#' + r.id) {
+                        c.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        c.style.borderColor = '#c8a84e';
+                        setTimeout(() => c.style.borderColor = '', 2000);
+                    }
+                });
+            };
+            bar.appendChild(el);
+        });
+        }) ();
+
+        // ===== Next Ride Live Countdown (second-precision with urgency) =====
+        {% if next_ride %}
+        (function countdownTimer() {
+            const target = new Date('{{ next_ride.pickup_time.isoformat() }}').getTime();
+            const el = document.getElementById('nrb-countdown');
+            const banner = document.getElementById('next-ride-banner');
+
+            function update() {
+                const now = Date.now();
+                const diff = target - now;
+
+                // Remove previous urgency classes
+                el.classList.remove('text-warning', 'text-danger');
+                banner.classList.remove('urgency-warning', 'urgency-danger', 'urgency-overdue');
+
+                if (diff <= 0) {
+                    el.textContent = 'DEPART NOW';
+                    el.classList.add('text-danger');
+                    banner.classList.add('urgency-overdue');
+                    return;
+                }
+
+                const h = Math.floor(diff / 3600000);
+                const m = Math.floor((diff % 3600000) / 60000);
+                const s = Math.floor((diff % 60000) / 1000);
+
+                if (h > 0) {
+                    el.textContent = h + 'h ' + m + 'm ' + s + 's';
+                } else if (m > 0) {
+                    el.textContent = m + 'm ' + s + 's';
+                } else {
+                    el.textContent = s + 's';
+                }
+
+                // Urgency tiers
+                if (diff < 600000) {        // < 10 min — red
+                    el.classList.add('text-danger');
+                    banner.classList.add('urgency-danger');
+                } else if (diff < 1800000) { // < 30 min — yellow/orange
+                    el.classList.add('text-warning');
+                    banner.classList.add('urgency-warning');
+                }
+            }
+            update();
+            setInterval(update, 1000);
+        })();
+        {% endif %}
+    </script>
+
+    <!-- ===== Edit Booking Modal ===== -->
+    <div class="modal-overlay" id="editModal">
+        <div class="modal-box">
+            <h3><span id="edit-modal-title">Edit Booking</span><button onclick="closeEditModal()">&times;</button></h3>
+            <input type="hidden" id="edit-id">
+            <div class="mf-row">
+                <div class="mf-group">
+                    <label>Customer Name</label>
+                    <input type="text" id="edit-customer_name">
+                </div>
+                <div class="mf-group">
+                    <label>Phone</label>
+                    <input type="tel" id="edit-phone">
+                </div>
+            </div>
+            <div class="mf-group">
+                <label>Pickup Location</label>
+                <input type="text" id="edit-pickup_location">
+            </div>
+            <div class="mf-group">
+                <label>Drop-off Location</label>
+                <input type="text" id="edit-dropoff_location">
+            </div>
+            <div class="mf-row">
+                <div class="mf-group">
+                    <label>Pickup Date</label>
+                    <input type="date" id="edit-pickup_date">
+                </div>
+                <div class="mf-group">
+                    <label>Pickup Time</label>
+                    <input type="time" id="edit-pickup_time">
+                </div>
+            </div>
+            <div class="mf-row">
+                <div class="mf-group">
+                    <label>Passengers</label>
+                    <input type="number" id="edit-passengers" min="1" max="10">
+                </div>
+                <div class="mf-group">
+                    <label>Vehicle</label>
+                    <select id="edit-vehicle_type">
+                        <option value="sedan">Sedan</option>
+                        <option value="suv">SUV</option>
+                        <option value="luxury">Luxury</option>
+                    </select>
+                </div>
+            </div>
+            <div class="mf-group">
+                <label>Fare ($)</label>
+                <input type="number" id="edit-estimated_price" step="0.01" min="0">
+            </div>
+            <div class="mf-group">
+                <label>Driver Notes (private)</label>
+                <textarea id="edit-driver_notes"
+                    placeholder="Gate code, special instructions, wheelchair, etc."></textarea>
+            </div>
+            <div class="mf-actions">
+                <button class="btn-cancel-edit" onclick="closeEditModal()">Cancel</button>
+                <button class="btn-save-edit" onclick="saveEdit()">&#10003; Save Changes</button>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

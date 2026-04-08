@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0a0a1a">
+    <title>Settings - G&amp;M Car Service Admin</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .settings-body {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        .settings-card {
+            background: #12122a;
+            border: 1px solid rgba(200, 168, 78, 0.15);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .settings-card h2 {
+            font-family: 'Playfair Display', serif;
+            color: #fff;
+            font-size: 1.3rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .settings-card .card-desc {
+            color: #888;
+            font-size: 0.85rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .setting-row {
+            margin-bottom: 1.25rem;
+        }
+
+        .setting-row label {
+            display: block;
+            font-size: 0.75rem;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.35rem;
+        }
+
+        .setting-row input {
+            width: 100%;
+            padding: 0.65rem 0.85rem;
+            background: #1a1a3a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 0.95rem;
+            font-family: 'Inter', monospace;
+        }
+
+        .setting-row input:focus {
+            outline: none;
+            border-color: #c8a84e;
+        }
+
+        .setting-row input::placeholder {
+            color: #555;
+        }
+
+        .setting-row .hint {
+            font-size: 0.78rem;
+            color: #666;
+            margin-top: 0.3rem;
+        }
+
+        .setting-row .hint a {
+            color: #c8a84e;
+        }
+
+        .btn-save {
+            background: #c8a84e;
+            color: #0a0a1a;
+            border: none;
+            padding: 0.7rem 2rem;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-save:hover {
+            background: #b8982e;
+        }
+
+        .key-status {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
+            vertical-align: middle;
+        }
+
+        .key-active {
+            background: rgba(40, 167, 69, 0.15);
+            color: #28a745;
+        }
+
+        .key-missing {
+            background: rgba(220, 53, 69, 0.15);
+            color: #dc3545;
+        }
+    </style>
+</head>
+
+<body style="background:#0a0a1a; color:#e0e0e0; font-family:'Inter', sans-serif;">
+    <header>
+        <h1>G&amp;M Car Service</h1>
+        <nav class="admin-nav">
+            <span>&#9881; Settings</span>
+            <div style="display:flex; gap:0.75rem; align-items:center;">
+                <a href="{{ url_for('admin_dashboard') }}"
+                    style="color:#c8a84e; text-decoration:none; font-weight:600;">&#128663; Dashboard</a>
+                <a href="{{ url_for('admin_pricing') }}"
+                    style="color:#c8a84e; text-decoration:none; font-weight:600;">&#128176; Pricing</a>
+                <a href="{{ url_for('admin_fleet') }}"
+                    style="color:#c8a84e; text-decoration:none; font-weight:600;">&#128664; Fleet</a>
+                <a href="{{ url_for('admin_logout') }}">Logout</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="settings-body">
+        <h1 style="font-family:'Playfair Display',serif; font-size:1.8rem; margin-bottom:1.5rem;">&#9881; API Keys &amp;
+            Settings</h1>
+
+        <form method="POST" action="{{ url_for('admin_settings_save') }}">
+
+            <!-- Flight Tracking -->
+            <div class="settings-card">
+                <h2>&#9992; Flight Tracking
+                    {% if settings.aviationstack_api_key %}
+                    <span class="key-status key-active">&#10003; Active</span>
+                    {% else %}
+                    <span class="key-status key-missing">Not Set</span>
+                    {% endif %}
+                </h2>
+                <p class="card-desc">Track incoming flights for airport pickups. Auto-detects delays and adjusts pickup
+                    times.</p>
+
+                <div class="setting-row">
+                    <label for="aviationstack_api_key">AviationStack API Key</label>
+                    <input type="text" id="aviationstack_api_key" name="aviationstack_api_key"
+                        value="{{ settings.aviationstack_api_key }}" placeholder="Enter your AviationStack API key">
+                    <div class="hint">
+                        Free tier: 100 requests/month.
+                        <a href="https://aviationstack.com/signup/free" target="_blank" rel="noopener">Get a free key
+                            &rarr;</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SMS / Twilio -->
+            <div class="settings-card">
+                <h2>&#128172; SMS Notifications (Twilio)
+                    {% if settings.twilio_sid %}
+                    <span class="key-status key-active">&#10003; Active</span>
+                    {% else %}
+                    <span class="key-status key-missing">Not Set</span>
+                    {% endif %}
+                </h2>
+                <p class="card-desc">Send rider SMS notifications when rides are accepted, driver en route, and arrival.
+                </p>
+
+                <div class="setting-row">
+                    <label for="twilio_sid">Twilio Account SID</label>
+                    <input type="text" id="twilio_sid" name="twilio_sid" value="{{ settings.twilio_sid }}"
+                        placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
+                </div>
+                <div class="setting-row">
+                    <label for="twilio_token">Twilio Auth Token</label>
+                    <input type="password" id="twilio_token" name="twilio_token" value="{{ settings.twilio_token }}"
+                        placeholder="Your Twilio auth token">
+                </div>
+                <div class="setting-row">
+                    <label for="twilio_phone">Twilio Phone Number</label>
+                    <input type="text" id="twilio_phone" name="twilio_phone" value="{{ settings.twilio_phone }}"
+                        placeholder="+1234567890">
+                    <div class="hint">
+                        <a href="https://www.twilio.com/try-twilio" target="_blank" rel="noopener">Get a Twilio account
+                            &rarr;</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Driver / Traffic Alerts -->
+            <div class="settings-card">
+                <h2>&#128663; Driver &amp; Traffic Alerts</h2>
+                <p class="card-desc">Configure your home location for traffic monitoring. The agent checks Google Maps
+                    traffic 2 hours before each flight and sends you a "Leave Early" SMS if the drive exceeds 1 hr 15
+                    min.</p>
+
+                <div class="setting-row">
+                    <label for="driver_home_address">Driver Home Address</label>
+                    <input type="text" id="driver_home_address" name="driver_home_address"
+                        value="{{ settings.driver_home_address }}" placeholder="North Port, FL">
+                    <div class="hint">Your starting point for traffic calculations. Default: North Port, FL</div>
+                </div>
+                <div class="setting-row">
+                    <label for="driver_phone">Driver Phone Number (for alerts)</label>
+                    <input type="text" id="driver_phone" name="driver_phone" value="{{ settings.driver_phone }}"
+                        placeholder="+1234567890">
+                    <div class="hint">Receives "Leave Early" SMS alerts when Skyway / I-75 traffic is heavy.</div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-save">&#128190; Save All Settings</button>
+        </form>
+    </main>
+</body>
+
+</html>

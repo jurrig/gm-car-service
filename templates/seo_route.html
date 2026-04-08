@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0a0a1a">
+    <title>Car Service {{ origin_city.name }} to {{ route.dest_name }} | From ${{ route.price_sedan }} | G&amp;M Car
+        Service</title>
+    <meta name="description"
+        content="Private car service from {{ origin_city.name }} to {{ route.dest_name }}. From ${{ route.price_sedan }} (sedan). {{ route.miles }} miles, ~{{ route.duration }}. Sedan, SUV &amp; luxury. No surge pricing. Book online 24/7.">
+    <meta name="keywords"
+        content="car service {{ origin_city.name }} to {{ route.dest_name }}, {{ origin_city.name }} {{ route.dest_name }} transportation, {% if route.is_airport %}airport ride {{ origin_city.name }}, airport shuttle {{ route.dest_name }},{% endif %} private driver {{ origin_city.name }}, chauffeur {{ origin_city.name }} Florida">
+    <link rel="canonical" href="https://gmcarservice.com/car-service-{{ route.origin }}-to-{{ route.dest }}">
+
+    <!-- Open Graph -->
+    <meta property="og:title"
+        content="Car Service {{ origin_city.name }} to {{ route.dest_name }} — From ${{ route.price_sedan }}">
+    <meta property="og:description"
+        content="Private car service from {{ origin_city.name }} to {{ route.dest_name }}. {{ route.miles }} mi, ~{{ route.duration }}. Sedan, SUV &amp; luxury. Book 24/7.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://gmcarservice.com/car-service-{{ route.origin }}-to-{{ route.dest }}">
+    <meta property="og:site_name" content="G&M Car Service">
+
+    <link rel="manifest" href="/manifest.json">
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <!-- LocalBusiness Schema -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "LocalBusiness",
+        "@id": "https://gmcarservice.com",
+        "name": "G&M Car Service",
+        "description": "Private chauffeur and airport transportation service in Sarasota County, Florida.",
+        "url": "https://gmcarservice.com",
+        "telephone": "+1-941-555-1234",
+        "founder": { "@type": "Person", "name": "Gerry Jureidini" },
+        "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Sarasota",
+            "addressRegion": "FL",
+            "addressCountry": "US"
+        },
+        "geo": {
+            "@type": "GeoCoordinates",
+            "latitude": {{ origin_city.lat }},
+            "longitude": {{ origin_city.lng }}
+        },
+        "openingHoursSpecification": {
+            "@type": "OpeningHoursSpecification",
+            "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"],
+            "opens": "00:00",
+            "closes": "23:59"
+        },
+        "priceRange": "$$",
+        "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": "4.9",
+            "reviewCount": "127",
+            "bestRating": "5"
+        }
+    }
+    </script>
+
+    <!-- Service Schema for this route -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Service",
+        "name": "Car Service from {{ origin_city.name }} to {{ route.dest_name }}",
+        "description": "Private {{ 'airport transfer' if route.is_airport else 'car service' }} from {{ origin_city.name }}, FL to {{ route.dest_name }}. Professional chauffeur, sedan/SUV/luxury vehicles. Available 24/7.",
+        "serviceType": "{{ 'Airport Transfer' if route.is_airport else 'Private Car Service' }}",
+        "provider": {
+            "@type": "LocalBusiness",
+            "@id": "https://gmcarservice.com",
+            "name": "G&M Car Service"
+        },
+        "areaServed": {
+            "@type": "City",
+            "name": "{{ origin_city.name }}, FL"
+        },
+        "offers": [
+            {
+                "@type": "Offer",
+                "name": "Sedan",
+                "price": "{{ route.price_sedan }}",
+                "priceCurrency": "USD",
+                "description": "Sedan car service from {{ origin_city.name }} to {{ route.dest_name }} — {{ route.miles }} miles, ~{{ route.duration }}"
+            },
+            {
+                "@type": "Offer",
+                "name": "SUV",
+                "price": "{{ price_suv }}",
+                "priceCurrency": "USD",
+                "description": "SUV car service from {{ origin_city.name }} to {{ route.dest_name }} — {{ route.miles }} miles, ~{{ route.duration }}"
+            },
+            {
+                "@type": "Offer",
+                "name": "Luxury",
+                "price": "{{ price_luxury }}",
+                "priceCurrency": "USD",
+                "description": "Luxury car service from {{ origin_city.name }} to {{ route.dest_name }} — {{ route.miles }} miles, ~{{ route.duration }}"
+            }
+        ]
+    }
+    </script>
+
+    <!-- BreadcrumbList Schema -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://gmcarservice.com/" },
+            { "@type": "ListItem", "position": 2, "name": "{{ origin_city.name }}", "item": "https://gmcarservice.com/car-service-{{ origin_city.slug }}" },
+            { "@type": "ListItem", "position": 3, "name": "{{ origin_city.name }} to {{ route.dest_name }}" }
+        ]
+    }
+    </script>
+</head>
+
+<body>
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <a href="/" class="nav-brand">G&amp;M <span>Car Service</span></a>
+        <div class="nav-links">
+            <a href="/#book-now">Get a Quote</a>
+            <a href="/#services">Vehicles</a>
+            <a href="/#routes">Routes</a>
+            <a href="/#about">About</a>
+            <a href="tel:+19415551234" class="nav-phone">&#9742; (941) 555-1234</a>
+        </div>
+        <button class="nav-toggle" aria-label="Menu">&#9776;</button>
+    </nav>
+
+    <!-- HERO -->
+    <section class="seo-hero">
+        <div class="seo-hero-overlay"></div>
+        <div class="container seo-hero-content">
+            <nav class="seo-breadcrumb">
+                <a href="/">Home</a> &rsaquo;
+                <a href="/car-service-{{ origin_city.slug }}">{{ origin_city.name }}</a> &rsaquo;
+                <span>{{ route.dest_name }}</span>
+            </nav>
+            <p class="seo-hero-subtitle">{% if route.is_airport %}&#9992; AIRPORT TRANSFER{% else %}&#128663; PRIVATE
+                CAR SERVICE{% endif %}</p>
+            <h1>{{ origin_city.name }} to {{ route.dest_name }}</h1>
+            <p class="seo-hero-desc">Professional door-to-door car service. {{ route.miles }} miles &bull; ~{{
+                route.duration }} &bull; Available 24/7</p>
+        </div>
+    </section>
+
+    <!-- PRICE CARDS -->
+    <section class="section" style="margin-top:-3rem;position:relative;z-index:2;">
+        <div class="container">
+            <div class="seo-price-grid">
+                <div class="seo-price-card">
+                    <div class="seo-price-icon">&#128663;</div>
+                    <h3>Sedan</h3>
+                    <div class="seo-price-amount">${{ route.price_sedan }}</div>
+                    <p>Up to 4 passengers</p>
+                    <a href="/#book-now" class="btn btn-gold" style="width:100%;">Book Sedan</a>
+                </div>
+                <div class="seo-price-card seo-price-featured">
+                    <div class="seo-price-badge">POPULAR</div>
+                    <div class="seo-price-icon">&#128656;</div>
+                    <h3>SUV</h3>
+                    <div class="seo-price-amount">${{ price_suv }}</div>
+                    <p>Up to 6 passengers</p>
+                    <a href="/#book-now" class="btn btn-gold" style="width:100%;">Book SUV</a>
+                </div>
+                <div class="seo-price-card">
+                    <div class="seo-price-icon">&#127775;</div>
+                    <h3>Luxury</h3>
+                    <div class="seo-price-amount">${{ price_luxury }}</div>
+                    <p>Up to 4 passengers</p>
+                    <a href="/#book-now" class="btn btn-gold" style="width:100%;">Book Luxury</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ROUTE DETAILS -->
+    <section class="section section-dark">
+        <div class="container">
+            <div class="seo-details-grid">
+                <div class="seo-detail-col">
+                    <h2>{{ origin_city.name }} to {{ route.dest_name }} — What to Expect</h2>
+                    <p>G&amp;M Car Service provides private, door-to-door transportation from {{ origin_city.name }},
+                        Florida to {{ route.dest_name }}. Our professional chauffeur will pick you up at your exact
+                        address and drive you directly to your destination — no stops, no shared rides, no surprises.
+                    </p>
+
+                    {% if route.is_airport %}
+                    <h3 style="margin-top:1.5rem;">&#9992; Airport Pickup &amp; Drop-off</h3>
+                    <p>We monitor your flight status for arrivals. Your driver will be waiting at the designated pickup
+                        area with your name. For departures, we ensure you arrive with plenty of time to spare. Our
+                        booking form lets you send your exit label, door color, and door number so your driver can find
+                        you easily.</p>
+                    {% endif %}
+
+                    <h3 style="margin-top:1.5rem;">&#128336; Trip Details</h3>
+                    <ul style="list-style:none;padding:0;margin:0;">
+                        <li style="padding:0.5rem 0;border-bottom:1px solid rgba(255,255,255,0.06);">
+                            <strong style="color:#c8a84e;">Distance:</strong> ~{{ route.miles }} miles
+                        </li>
+                        <li style="padding:0.5rem 0;border-bottom:1px solid rgba(255,255,255,0.06);">
+                            <strong style="color:#c8a84e;">Drive Time:</strong> ~{{ route.duration }}
+                        </li>
+                        <li style="padding:0.5rem 0;border-bottom:1px solid rgba(255,255,255,0.06);">
+                            <strong style="color:#c8a84e;">Starting At:</strong> ${{ route.price_sedan }} (sedan)
+                        </li>
+                        <li style="padding:0.5rem 0;border-bottom:1px solid rgba(255,255,255,0.06);">
+                            <strong style="color:#c8a84e;">Availability:</strong> 24/7, 365 days
+                        </li>
+                        <li style="padding:0.5rem 0;">
+                            <strong style="color:#c8a84e;">Payment:</strong> Pay at time of service — no upfront charge
+                        </li>
+                    </ul>
+                </div>
+                <div class="seo-detail-col">
+                    <div class="seo-cta-box">
+                        <h3>Get Your Exact Quote</h3>
+                        <p>Enter your address for a precise fare — prices may vary slightly based on your exact pickup
+                            location.</p>
+                        <a href="/#book-now" class="btn btn-gold"
+                            style="width:100%;font-size:1.05rem;padding:0.85rem;">INSTANT QUOTE &rarr;</a>
+                        <div style="margin-top:1.25rem;text-align:center;">
+                            <p style="color:#aaa;font-size:0.85rem;">Or call us directly:</p>
+                            <a href="tel:+19415551234"
+                                style="color:#c8a84e;font-size:1.3rem;font-weight:700;text-decoration:none;">&#9742;
+                                (941) 555-1234</a>
+                        </div>
+                    </div>
+
+                    <div class="seo-trust-badges">
+                        <div class="seo-trust-item">&#10003; No Surge Pricing</div>
+                        <div class="seo-trust-item">&#10003; No Shared Rides</div>
+                        <div class="seo-trust-item">&#10003; Professional Driver</div>
+                        <div class="seo-trust-item">&#10003; SMS Notifications</div>
+                        <div class="seo-trust-item">&#10003; Flight Monitoring</div>
+                        <div class="seo-trust-item">&#10003; Free Cancellation</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- RELATED ROUTES -->
+    {% if related_routes %}
+    <section class="section">
+        <div class="container">
+            <h2 class="section-title" style="text-align:center;">Other Routes from {{ origin_city.name }}</h2>
+            <p class="section-sub" style="text-align:center;">More popular destinations from {{ origin_city.name }}.</p>
+            <div class="routes-grid">
+                {% for r in related_routes %}
+                <a href="/car-service-{{ r.origin }}-to-{{ r.dest }}" class="route-card"
+                    style="text-decoration:none;color:inherit;">
+                    <div class="route-icon">{% if r.is_airport %}&#9992;{% else %}&#128663;{% endif %}</div>
+                    <h4>{{ origin_city.name }} &rarr; {{ r.dest_name }}</h4>
+                    <div class="route-detail">~{{ r.miles }} miles &bull; ~{{ r.duration }}</div>
+                    <div class="route-price">From <strong>${{ r.price_sedan }}</strong></div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- SERVICE AREAS FOOTER -->
+    {% include 'partials/service_areas.html' %}
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="container footer-inner">
+            <div>
+                <strong>G&amp;M Car Service</strong><br>
+                Sarasota County, Florida<br>
+                <a href="tel:+19415551234">&#9742; (941) 555-1234</a>
+            </div>
+            <div class="footer-links">
+                <a href="/#book-now">Get a Quote</a>
+                <a href="/#services">Vehicles</a>
+                <a href="/#routes">Routes</a>
+                <a href="/#faq">FAQ</a>
+                <a href="/#about">About</a>
+            </div>
+            <div class="footer-copy">
+                &copy; 2026 G&amp;M Car Service. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        document.querySelector('.nav-toggle').addEventListener('click', () => {
+            document.querySelector('.nav-links').classList.toggle('open');
+        });
+    </script>
+</body>
+
+</html>

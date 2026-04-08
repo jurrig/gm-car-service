@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fleet &amp; Drivers — G&amp;M Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0a0a1a;
+            color: #e0e0e0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        a {
+            color: #c8a84e;
+        }
+
+        header {
+            background: #12122a;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #c8a84e;
+        }
+
+        header h1 {
+            font-size: 1.4rem;
+            color: #c8a84e;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+
+        .section-title {
+            color: #c8a84e;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .section-sub {
+            color: #aaa;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+        }
+
+        /* Vehicle Cards */
+        .vehicle-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .v-card {
+            background: #1a1a2e;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #2a2a4a;
+        }
+
+        .v-card-img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            background: #2a2a4a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .v-card-img img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+
+        .v-card-img .placeholder {
+            font-size: 4rem;
+            opacity: 0.3;
+        }
+
+        .v-card-body {
+            padding: 1rem 1.25rem;
+        }
+
+        .v-card-body h3 {
+            color: #fff;
+            font-size: 1.1rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .v-card-meta {
+            font-size: 0.85rem;
+            color: #aaa;
+            margin-bottom: 0.5rem;
+        }
+
+        .v-card-meta span {
+            display: inline-block;
+            margin-right: 1rem;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .badge-active {
+            background: #1a4a2a;
+            color: #4ade80;
+        }
+
+        .badge-soon {
+            background: #4a3a1a;
+            color: #fbbf24;
+        }
+
+        .v-card-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+        }
+
+        .v-card-actions button,
+        .v-card-actions .btn {
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .btn-edit {
+            background: #c8a84e;
+            color: #0a0a1a;
+        }
+
+        .btn-del {
+            background: #3a1a1a;
+            color: #f87171;
+        }
+
+        /* Plate display */
+        .plate {
+            background: #fff;
+            color: #111;
+            font-weight: 700;
+            font-size: 1rem;
+            padding: 0.3rem 0.7rem;
+            border-radius: 4px;
+            display: inline-block;
+            font-family: monospace;
+            letter-spacing: 2px;
+            border: 2px solid #333;
+        }
+
+        /* Driver section */
+        .driver-list {
+            margin-bottom: 2rem;
+        }
+
+        .driver-row {
+            background: #1a1a2e;
+            border-radius: 10px;
+            padding: 1rem 1.25rem;
+            margin-bottom: 0.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #2a2a4a;
+        }
+
+        .driver-info h4 {
+            color: #fff;
+            font-size: 1rem;
+        }
+
+        .driver-info p {
+            color: #aaa;
+            font-size: 0.85rem;
+        }
+
+        .driver-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        /* Add buttons */
+        .btn-add {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: #c8a84e;
+            color: #0a0a1a;
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Modal */
+        .modal-bg {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-bg.show {
+            display: flex;
+        }
+
+        .modal {
+            background: #1a1a2e;
+            border-radius: 12px;
+            padding: 2rem;
+            width: 95%;
+            max-width: 500px;
+            border: 1px solid #c8a84e;
+        }
+
+        .modal h3 {
+            color: #c8a84e;
+            margin-bottom: 1rem;
+        }
+
+        .modal label {
+            display: block;
+            color: #ccc;
+            font-size: 0.85rem;
+            margin-bottom: 0.3rem;
+            margin-top: 0.75rem;
+        }
+
+        .modal input,
+        .modal select {
+            width: 100%;
+            padding: 0.6rem 0.8rem;
+            border-radius: 6px;
+            border: 1px solid #3a3a5a;
+            background: #12122a;
+            color: #fff;
+            font-size: 0.9rem;
+        }
+
+        .modal input[type="file"] {
+            padding: 0.4rem;
+        }
+
+        .modal .toggle-row {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-top: 0.75rem;
+        }
+
+        .modal .toggle-row label {
+            margin: 0;
+        }
+
+        .modal .btn-row {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+        }
+
+        .modal .btn-save {
+            flex: 1;
+            background: #c8a84e;
+            color: #0a0a1a;
+            padding: 0.7rem;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .modal .btn-cancel {
+            flex: 1;
+            background: #2a2a4a;
+            color: #e0e0e0;
+            padding: 0.7rem;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .photo-preview {
+            margin-top: 0.5rem;
+            max-width: 100%;
+            max-height: 150px;
+            border-radius: 8px;
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>G&amp;M Car Service</h1>
+        <div class="nav-links">
+            <a href="{{ url_for('admin_dashboard') }}">&#128663; Dashboard</a>
+            <a href="{{ url_for('admin_pricing') }}">&#9881; Pricing</a>
+            <a href="{{ url_for('admin_fleet') }}" style="color:#fff;">&#128664; Fleet</a>
+            <a href="{{ url_for('admin_logout') }}">Logout</a>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- ===== VEHICLES ===== -->
+        <h2 class="section-title">&#128664; Fleet Vehicles</h2>
+        <p class="section-sub">Upload photos, set license plates, and mark vehicles as active or "Coming Soon" for
+            riders.</p>
+        <button class="btn-add" onclick="openVehicleModal()">&#10010; Add Vehicle</button>
+
+        <div class="vehicle-grid">
+            {% for v in vehicles %}
+            <div class="v-card">
+                <div class="v-card-img">
+                    {% if v.photo_filename %}
+                    <img src="{{ url_for('static', filename='uploads/' + v.photo_filename) }}" alt="{{ v.name }}">
+                    {% else %}
+                    <span class="placeholder">&#128663;</span>
+                    {% endif %}
+                </div>
+                <div class="v-card-body">
+                    <h3>{{ v.name }}</h3>
+                    <div class="v-card-meta">
+                        <span>{{ vehicle_labels.get(v.vehicle_type, v.vehicle_type) }}</span>
+                        {% if v.driver %}<span>&#128100; {{ v.driver.name }}</span>{% endif %}
+                    </div>
+                    {% if v.license_plate %}
+                    <div style="margin-bottom:0.5rem;"><span class="plate">{{ v.license_plate }}</span></div>
+                    {% endif %}
+                    {% if v.is_active %}
+                    <span class="badge badge-active">&#9679; Active</span>
+                    {% else %}
+                    <span class="badge badge-soon">&#9679; Coming Soon</span>
+                    {% endif %}
+                    <div class="v-card-actions">
+                        <button class="btn btn-edit"
+                            onclick='editVehicle({{ v.id }}, {{ v.vehicle_type|tojson }}, {{ v.name|tojson }}, {{ v.license_plate|tojson }}, {{ v.is_active|tojson }}, {{ (v.driver_id or "")|tojson }})'>Edit</button>
+                        <form method="POST" action="{{ url_for('admin_fleet_delete', vehicle_id=v.id) }}"
+                            onsubmit="return confirm('Delete this vehicle?')">
+                            <button type="submit" class="btn btn-del">Delete</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- ===== DRIVERS ===== -->
+        <h2 class="section-title" style="margin-top:2rem;">&#128100; Drivers</h2>
+        <p class="section-sub">Manage drivers. Assign drivers to vehicles above.</p>
+        <button class="btn-add" onclick="openDriverModal()">&#10010; Add Driver</button>
+
+        <div class="driver-list">
+            {% for d in drivers %}
+            <div class="driver-row">
+                <div style="display:flex;align-items:center;gap:1rem;">
+                    {% if d.photo_filename %}
+                    <img src="{{ url_for('static', filename='uploads/' + d.photo_filename) }}" alt="{{ d.name }}"
+                        style="width:56px;height:56px;border-radius:50%;object-fit:cover;border:2px solid #c8a84e;">
+                    {% else %}
+                    <div
+                        style="width:56px;height:56px;border-radius:50%;background:#2a2a4a;display:flex;align-items:center;justify-content:center;font-size:1.5rem;border:2px solid #3a3a5a;">
+                        &#128100;</div>
+                    {% endif %}
+                    <div class="driver-info">
+                        <h4>{{ d.name }} {% if not d.is_active %}<span class="badge badge-soon">Inactive</span>{% endif
+                            %}
+                        </h4>
+                        <p>&#128222; {{ d.phone or '—' }} &nbsp; &#9993; {{ d.email or '—' }}</p>
+                        <p style="font-size:0.8rem; color:#666;">Commission: <strong style="color:#c8a84e;">{{
+                                (d.commission_rate * 100)|int }}%</strong> &nbsp; Zelle: {{ d.zelle_info or '—' }}
+                            &nbsp; Vehicles: {{ d.vehicles|length }}</p>
+                    </div>
+                </div>
+                <div class="driver-actions">
+                    <button class="btn btn-edit"
+                        onclick='editDriver({{ d.id }}, {{ d.name|tojson }}, {{ d.phone|tojson }}, {{ (d.email or "")|tojson }}, {{ d.is_active|tojson }}, {{ d.commission_rate }}, {{ (d.zelle_info or "")|tojson }}, {{ (d.pin or "")|tojson }})'>Edit</button>
+                    <form method="POST" action="{{ url_for('admin_driver_delete', driver_id=d.id) }}"
+                        onsubmit="return confirm('Delete this driver? Their vehicles will be unassigned.')">
+                        <button type="submit" class="btn btn-del">Delete</button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- ===== Vehicle Modal ===== -->
+    <div class="modal-bg" id="vehicleModal">
+        <div class="modal">
+            <h3 id="vehicleModalTitle">Add Vehicle</h3>
+            <form method="POST" action="{{ url_for('admin_fleet_save') }}" enctype="multipart/form-data">
+                <input type="hidden" name="vehicle_id" id="v_id">
+
+                <label>Vehicle Type</label>
+                <select name="vehicle_type" id="v_type" required>
+                    {% for vt in vehicle_types %}
+                    <option value="{{ vt }}">{{ vehicle_labels[vt] }}</option>
+                    {% endfor %}
+                </select>
+
+                <label>Vehicle Name / Description</label>
+                <input type="text" name="name" id="v_name" placeholder="e.g. 2023 Lincoln Town Car" required>
+
+                <label>License Plate</label>
+                <input type="text" name="license_plate" id="v_plate" placeholder="e.g. ABC 1234"
+                    style="text-transform:uppercase;">
+
+                <label>Photo</label>
+                <input type="file" name="photo" id="v_photo" accept="image/*" onchange="previewPhoto(this)">
+                <img class="photo-preview" id="v_preview">
+
+                <label>Assign Driver</label>
+                <select name="driver_id" id="v_driver">
+                    <option value="">— None —</option>
+                    {% for d in drivers %}
+                    <option value="{{ d.id }}">{{ d.name }}</option>
+                    {% endfor %}
+                </select>
+
+                <div class="toggle-row">
+                    <input type="checkbox" name="is_active" value="1" id="v_active" checked>
+                    <label for="v_active">Active (unchecked = "Coming Soon" for riders)</label>
+                </div>
+
+                <div class="btn-row">
+                    <button type="submit" class="btn-save">Save Vehicle</button>
+                    <button type="button" class="btn-cancel" onclick="closeModal('vehicleModal')">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== Driver Modal ===== -->
+    <div class="modal-bg" id="driverModal">
+        <div class="modal">
+            <h3 id="driverModalTitle">Add Driver</h3>
+            <form method="POST" action="{{ url_for('admin_driver_save') }}" enctype="multipart/form-data">
+                <input type="hidden" name="driver_id" id="d_id">
+
+                <label>Full Name</label>
+                <input type="text" name="name" id="d_name" required>
+
+                <label>Phone</label>
+                <input type="tel" name="phone" id="d_phone">
+
+                <label>Email</label>
+                <input type="email" name="email" id="d_email">
+
+                <label>Commission Rate (%)</label>
+                <input type="number" name="commission_rate" id="d_commission" min="0" max="100" step="5" value="60"
+                    placeholder="60" style="width:100px;">
+                <span style="font-size:0.75rem;color:#888;margin-top:-0.5rem;display:block;">Driver keeps this % of the
+                    fare. 100 = owner-operator.</span>
+
+                <label>Zelle Email or Phone</label>
+                <input type="text" name="zelle_info" id="d_zelle" placeholder="driver@email.com or 941-555-0000">
+
+                <label>PIN (for driver portal login)</label>
+                <input type="text" name="pin" id="d_pin" placeholder="4-digit PIN" maxlength="10">
+
+                <label>Driver Photo</label>
+                <input type="file" name="driver_photo" id="d_photo" accept="image/*"
+                    onchange="previewDriverPhoto(this)">
+                <img class="photo-preview" id="d_preview">
+
+                <div class="toggle-row">
+                    <input type="checkbox" name="is_active" value="1" id="d_active" checked>
+                    <label for="d_active">Active</label>
+                </div>
+
+                <div class="btn-row">
+                    <button type="submit" class="btn-save">Save Driver</button>
+                    <button type="button" class="btn-cancel" onclick="closeModal('driverModal')">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function openVehicleModal() {
+            document.getElementById('vehicleModalTitle').textContent = 'Add Vehicle';
+            document.getElementById('v_id').value = '';
+            document.getElementById('v_type').value = 'sedan';
+            document.getElementById('v_name').value = '';
+            document.getElementById('v_plate').value = '';
+            document.getElementById('v_driver').value = '';
+            document.getElementById('v_active').checked = true;
+            document.getElementById('v_photo').value = '';
+            document.getElementById('v_preview').style.display = 'none';
+            document.getElementById('vehicleModal').classList.add('show');
+        }
+
+        function editVehicle(id, type, name, plate, active, driverId) {
+            document.getElementById('vehicleModalTitle').textContent = 'Edit Vehicle';
+            document.getElementById('v_id').value = id;
+            document.getElementById('v_type').value = type;
+            document.getElementById('v_name').value = name;
+            document.getElementById('v_plate').value = plate;
+            document.getElementById('v_driver').value = driverId || '';
+            document.getElementById('v_active').checked = active;
+            document.getElementById('v_photo').value = '';
+            document.getElementById('v_preview').style.display = 'none';
+            document.getElementById('vehicleModal').classList.add('show');
+        }
+
+        function openDriverModal() {
+            document.getElementById('driverModalTitle').textContent = 'Add Driver';
+            document.getElementById('d_id').value = '';
+            document.getElementById('d_name').value = '';
+            document.getElementById('d_phone').value = '';
+            document.getElementById('d_email').value = '';
+            document.getElementById('d_active').checked = true;
+            document.getElementById('d_commission').value = 60;
+            document.getElementById('d_zelle').value = '';
+            document.getElementById('d_pin').value = '';
+            document.getElementById('d_photo').value = '';
+            document.getElementById('d_preview').style.display = 'none';
+            document.getElementById('driverModal').classList.add('show');
+        }
+
+        function editDriver(id, name, phone, email, active, commission, zelle, pin) {
+            document.getElementById('driverModalTitle').textContent = 'Edit Driver';
+            document.getElementById('d_id').value = id;
+            document.getElementById('d_name').value = name;
+            document.getElementById('d_phone').value = phone;
+            document.getElementById('d_email').value = email;
+            document.getElementById('d_active').checked = active;
+            document.getElementById('d_commission').value = Math.round(commission * 100);
+            document.getElementById('d_zelle').value = zelle;
+            document.getElementById('d_pin').value = pin;
+            document.getElementById('d_photo').value = '';
+            document.getElementById('d_preview').style.display = 'none';
+            document.getElementById('driverModal').classList.add('show');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('show');
+        }
+
+        function previewPhoto(input) {
+            const preview = document.getElementById('v_preview');
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = e => { preview.src = e.target.result; preview.style.display = 'block'; };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function previewDriverPhoto(input) {
+            const preview = document.getElementById('d_preview');
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = e => { preview.src = e.target.result; preview.style.display = 'block'; };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // Close modal on backdrop click
+        document.querySelectorAll('.modal-bg').forEach(bg => {
+            bg.addEventListener('click', e => { if (e.target === bg) bg.classList.remove('show'); });
+        });
+    </script>
+</body>
+
+</html>

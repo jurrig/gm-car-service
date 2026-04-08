@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0a0a1a">
+    <title>My Rides - G&amp;M Car Service</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        body {
+            background: #0a0a1a;
+            color: #e0e0e0;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .dp-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.2rem;
+            border-bottom: 1px solid rgba(200, 168, 78, 0.15);
+        }
+
+        .dp-header h1 {
+            font-size: 1.1rem;
+            color: #c8a84e;
+            margin: 0;
+        }
+
+        .dp-header a {
+            color: #888;
+            font-size: 0.85rem;
+            text-decoration: none;
+        }
+
+        .dp-empty {
+            text-align: center;
+            padding: 4rem 1rem;
+            color: #666;
+        }
+
+        .dp-cards {
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .dp-card {
+            background: #12122a;
+            border: 1px solid rgba(200, 168, 78, 0.15);
+            border-radius: 12px;
+            padding: 1rem 1.2rem;
+        }
+
+        .dp-card .dp-time {
+            color: #c8a84e;
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 0.3rem;
+        }
+
+        .dp-card .dp-name {
+            font-size: 0.95rem;
+            color: #e0e0e0;
+            margin-bottom: 0.6rem;
+        }
+
+        .dp-card .dp-route {
+            font-size: 0.85rem;
+            color: #999;
+            line-height: 1.5;
+        }
+
+        .dp-card .dp-route span {
+            color: #c8a84e;
+        }
+
+        .dp-card .dp-meta {
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.6rem;
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .dp-card .dp-badge {
+            display: inline-block;
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-weight: 600;
+            margin-top: 0.5rem;
+        }
+
+        .dp-badge.pending {
+            background: rgba(200, 168, 78, 0.15);
+            color: #c8a84e;
+        }
+
+        .dp-badge.accepted {
+            background: rgba(52, 152, 219, 0.15);
+            color: #3498db;
+        }
+
+        .dp-badge.onmyway {
+            background: rgba(46, 204, 113, 0.15);
+            color: #2ecc71;
+        }
+
+        .dp-badge.arrived {
+            background: rgba(155, 89, 182, 0.15);
+            color: #9b59b6;
+        }
+
+        .dp-nav {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.8rem;
+            flex-wrap: wrap;
+        }
+
+        .dp-nav a {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 0.4rem 0.8rem;
+            border-radius: 8px;
+            background: rgba(200, 168, 78, 0.1);
+            color: #c8a84e;
+            font-size: 0.8rem;
+            text-decoration: none;
+            border: 1px solid rgba(200, 168, 78, 0.2);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="dp-header">
+        <h1>&#128663; {{ driver_name }}'s Rides</h1>
+        <div style="display:flex;align-items:center;gap:0.75rem;">
+            <button id="shiftBtn" onclick="toggleShift()"
+                style="background:rgba(200,168,78,0.1);color:#c8a84e;border:1px solid rgba(200,168,78,0.3);padding:0.35rem 0.8rem;border-radius:8px;font-size:0.8rem;font-weight:600;cursor:pointer;">
+                &#128338; Start Shift
+            </button>
+            <a href="{{ url_for('driver_logout') }}">Logout</a>
+        </div>
+    </div>
+
+    <!-- Shift Status Banner -->
+    <div id="shiftBanner"
+        style="display:none;background:rgba(40,167,69,0.1);border-bottom:1px solid rgba(40,167,69,0.3);padding:0.5rem 1.2rem;font-size:0.8rem;color:#28a745;text-align:center;">
+        &#9989; Shift active — positioning miles will be tracked when you end your shift.
+    </div>
+
+    {% if rides %}
+    <div class="dp-cards">
+        {% for r in rides %}
+        <div class="dp-card">
+            <div class="dp-time">{{ r.pickup_time.strftime('%I:%M %p') if r.pickup_time else 'TBD' }}</div>
+            <div class="dp-name">{{ r.customer_name }}{% if r.passengers %} &middot; {{ r.passengers }} pax{% endif %}
+            </div>
+            <div class="dp-route">
+                <span>FROM</span> {{ r.pickup_location }}<br>
+                <span>TO</span> {{ r.dropoff_location or 'TBD' }}
+            </div>
+            <div class="dp-meta">
+                {% if r.vehicle_type %}<span>&#128663; {{ r.vehicle_type|title }}</span>{% endif %}
+                {% if r.fare %}<span>&#128176; ${{ "%.2f"|format(r.fare) }}</span>{% endif %}
+                {% if r.flight_number %}<span>&#9992;&#65039; {{ r.flight_number }}</span>{% endif %}
+            </div>
+            <span class="dp-badge {{ r.status or 'pending' }}">{{ (r.status or 'pending')|upper }}</span>
+            {% if r.driver_notes %}
+            <div
+                style="margin-top:0.5rem; font-size:0.8rem; color:#999; border-top:1px solid #222; padding-top:0.4rem;">
+                &#128221; {{ r.driver_notes }}</div>
+            {% endif %}
+            <div class="dp-nav">
+                <a href="https://www.google.com/maps/dir/?api=1&destination={{ r.pickup_location|urlencode }}"
+                    target="_blank">&#128205; Navigate Pickup</a>
+                {% if r.dropoff_location %}
+                <a href="https://www.google.com/maps/dir/?api=1&destination={{ r.dropoff_location|urlencode }}"
+                    target="_blank">&#127937; Navigate Drop-off</a>
+                {% endif %}
+                {% if r.customer_phone %}
+                <a href="tel:{{ r.customer_phone }}">&#128222; Call</a>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="dp-empty">
+        <p style="font-size:2rem;">&#128524;</p>
+        <p>No rides assigned to you today.</p>
+    </div>
+    {% endif %}
+    <script>
+        let shiftActive = false;
+
+        // Check shift status on load
+        fetch('/driver/shift/status').then(r => r.json()).then(d => {
+            if (d.active) {
+                shiftActive = true;
+                document.getElementById('shiftBtn').innerHTML = '&#9632; End Shift';
+                document.getElementById('shiftBtn').style.color = '#dc3545';
+                document.getElementById('shiftBtn').style.borderColor = 'rgba(220,53,69,0.4)';
+                document.getElementById('shiftBanner').style.display = '';
+            }
+        });
+
+        function toggleShift() {
+            const btn = document.getElementById('shiftBtn');
+
+            if (!shiftActive) {
+                // Start shift — get GPS location
+                btn.textContent = '...';
+                getLocation(function (loc) {
+                    fetch('/driver/shift/start', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ location: loc })
+                    }).then(r => r.json()).then(d => {
+                        if (d.success) {
+                            shiftActive = true;
+                            btn.innerHTML = '&#9632; End Shift';
+                            btn.style.color = '#dc3545';
+                            btn.style.borderColor = 'rgba(220,53,69,0.4)';
+                            document.getElementById('shiftBanner').style.display = '';
+                        } else {
+                            alert(d.error || 'Could not start shift');
+                            btn.innerHTML = '&#128338; Start Shift';
+                        }
+                    });
+                });
+            } else {
+                // End shift — get GPS location
+                btn.textContent = '...';
+                getLocation(function (loc) {
+                    fetch('/driver/shift/end', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ location: loc })
+                    }).then(r => r.json()).then(d => {
+                        shiftActive = false;
+                        btn.innerHTML = '&#128338; Start Shift';
+                        btn.style.color = '#c8a84e';
+                        btn.style.borderColor = 'rgba(200,168,78,0.3)';
+                        document.getElementById('shiftBanner').style.display = 'none';
+                        if (d.success && d.miles > 0) {
+                            alert('Shift ended — ' + d.miles + ' positioning miles logged ($' + d.deduction + ' deduction)');
+                        } else if (d.success) {
+                            alert('Shift ended. No positioning miles calculated.');
+                        } else {
+                            alert(d.error || 'Error ending shift');
+                        }
+                    });
+                });
+            }
+        }
+
+        function getLocation(cb) {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    function (pos) { cb(pos.coords.latitude + ',' + pos.coords.longitude); },
+                    function () { cb(''); },
+                    { enableHighAccuracy: true, timeout: 8000 }
+                );
+            } else {
+                cb('');
+            }
+        }
+    </script>
+</body>
+
+</html>
