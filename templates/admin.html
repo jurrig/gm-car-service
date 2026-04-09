@@ -1437,6 +1437,11 @@
                             <button type="button" onclick="markPayment({{ b.id }})"
                                 style="margin-left:0.3rem;padding:0.15rem 0.5rem;background:#2ecc71;color:#fff;border:none;border-radius:6px;font-size:0.7rem;font-weight:700;cursor:pointer;"
                                 title="Mark as paid">&#10003; Paid</button>
+                            {% if b.payment_token and b.passenger_phone %}
+                            <button type="button" onclick="sendPaymentLink({{ b.id }})"
+                                style="margin-left:0.3rem;padding:0.15rem 0.5rem;background:#3498db;color:#fff;border:none;border-radius:6px;font-size:0.7rem;font-weight:700;cursor:pointer;"
+                                title="Send payment link via SMS">&#128279; Send Link</button>
+                            {% endif %}
                             {% endif %}
                             {% endif %}
                         </span>
@@ -1998,6 +2003,18 @@
             })
                 .then(r => r.json())
                 .then(d => { if (d.success) location.reload(); else alert('Failed'); })
+                .catch(() => alert('Network error'));
+        }
+
+        // ===== Send Payment Link SMS =====
+        function sendPaymentLink(bookingId) {
+            if (!confirm('Send payment link SMS to passenger?')) return;
+            fetch('/admin/payment/send-link/' + bookingId, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            })
+                .then(r => r.json())
+                .then(d => { if (d.success) alert('Payment link sent!'); else alert(d.error || 'Failed to send'); })
                 .catch(() => alert('Network error'));
         }
 

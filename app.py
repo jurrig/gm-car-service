@@ -514,8 +514,15 @@ def admin_arrived(booking_id):
         msg = (
             f"Hi {booking.customer_name}! Your G&M Car Service driver has arrived at {booking.pickup_location}.\n"
             f"We're waiting for you!\n"
-            f"— G&M Car Service"
         )
+        # For cash/zelle customers who haven't paid: include payment link with tip option
+        if booking.payment_status != 'paid' and booking.payment_method in ('cash', 'zelle') and booking.payment_token:
+            pay_url = request.host_url.rstrip('/') + url_for('pay_page', token=booking.payment_token)
+            msg += (
+                f"\nYour fare: ${booking.estimated_price:.2f}\n"
+                f"Pay or add a tip here: {pay_url}\n"
+            )
+        msg += "— G&M Car Service"
         send_rider_sms(booking, msg)
         booking.last_notified = datetime.now()
         db.session.commit()
@@ -603,6 +610,13 @@ def admin_complete(booking_id):
             db.session.add(payout)
 
     db.session.commit()
+
+    # Send payment reminder SMS for unpaid zelle customers on completion
+    if booking.payment_method == 'zelle' and booking.payment_status != 'paid' and booking.payment_token:
+        pay_url = request.host_url.rstrip('/') + url_for('pay_page', token=booking.payment_token)
+        total = booking.estimated_price + (booking.tip or 0)
+        send_rider_sms(booking, f'Your ride is complete! Total: ${total:.2f}. Pay & add tip here: {pay_url}')
+
     return redirect(url_for('admin_dashboard'))
 
 
@@ -1595,6 +1609,126 @@ def admin_mark_payment(booking_id):
         booking.payment_method = method
     db.session.commit()
     return jsonify({'success': True})
+
+
+@app.route('/admin/payment/send-link/<int:booking_id>', methods=['POST'])
+@csrf.exempt
+@admin_required
+def admin_send_payment_link(booking_id):
+    """Admin manually sends payment link SMS to passenger."""
+    booking = db.get_or_404(Booking, booking_id)
+    if not booking.payment_token:
+        return jsonify({'success': False, 'error': 'No payment token'}), 400
+    if not booking.passenger_phone:
+        return jsonify({'success': False, 'error': 'No phone number'}), 400
+    pay_url = request.host_url.rstrip('/') + url_for('pay_page', token=booking.payment_token)
+    total = booking.estimated_price + (booking.tip or 0)
+    send_rider_sms(booking, f'G&M Car Service — Pay & add tip: ${total:.2f}. {pay_url}')
+    return jsonify({'success': True})
+
+
+# --------------- Public Payment Page ---------------
+@app.route('/pay/<token>')
+def pay_page(token):
+    """Public passenger payment page — accessed via SMS link."""
+    booking = Booking.query.filter_by(payment_token=token).first_or_404()
+    return render_template('pay.html',
+        booking=booking,
+        zelle_id=ZELLE_BUSINESS_ID,
+        stripe_enabled=bool(stripe.api_key),
+    )
+
+
+@app.route('/pay/<token>/tip', methods=['POST'])
+@csrf.exempt
+@limiter.limit("30 per hour")
+def pay_save_tip(token):
+    """Save tip amount from passenger payment page."""
+    booking = Booking.query.filter_by(payment_token=token).first_or_404()
+    data = request.get_json(silent=True) or {}
+    tip = float(data.get('tip', 0))
+    tip = max(0, min(tip, 500))  # cap $0–$500
+    booking.tip = round(tip, 2)
+    db.session.commit()
+    return jsonify({'success': True, 'tip': booking.tip})
+
+
+@app.route('/pay/<token>/confirm', methods=['POST'])
+@csrf.exempt
+@limiter.limit("10 per hour")
+def pay_confirm(token):
+    """Passenger confirms cash or zelle payment."""
+    booking = Booking.query.filter_by(payment_token=token).first_or_404()
+    data = request.get_json(silent=True) or {}
+    method = data.get('method', 'cash')
+    if method in ('cash', 'zelle'):
+        booking.payment_method = method
+    if method == 'zelle':
+        booking.payment_status = 'pending'  # pending until admin verifies
+    elif method == 'cash':
+        booking.payment_status = 'pending'  # driver will collect
+    db.session.commit()
+    return jsonify({'success': True})
+
+
+@app.route('/pay/<token>/stripe')
+def pay_stripe_checkout(token):
+    """Create Stripe Checkout session from the passenger payment page (with tip)."""
+    booking = Booking.query.filter_by(payment_token=token).first_or_404()
+    if not stripe.api_key:
+        return redirect(url_for('pay_page', token=token))
+    if booking.payment_status == 'paid':
+        return redirect(url_for('pay_page', token=token))
+
+    total = booking.estimated_price + (booking.tip or 0)
+    desc = f'{booking.pickup_location.split(",")[0]} → {booking.dropoff_location.split(",")[0]}'
+    if booking.tip and booking.tip > 0:
+        desc += f' (includes ${booking.tip:.2f} tip)'
+
+    try:
+        checkout_session = stripe.checkout.Session.create(
+            payment_method_types=['card'],
+            line_items=[{
+                'price_data': {
+                    'currency': 'usd',
+                    'product_data': {
+                        'name': f'G&M Car Service — Booking #{booking.id}',
+                        'description': desc,
+                    },
+                    'unit_amount': int(round(total * 100)),
+                },
+                'quantity': 1,
+            }],
+            mode='payment',
+            success_url=request.host_url.rstrip('/') + url_for('pay_stripe_success', token=token) + '?session_id={CHECKOUT_SESSION_ID}',
+            cancel_url=request.host_url.rstrip('/') + url_for('pay_page', token=token),
+            metadata={'booking_id': str(booking.id)},
+        )
+        booking.stripe_session_id = checkout_session.id
+        booking.payment_method = 'stripe'
+        booking.payment_status = 'pending'
+        db.session.commit()
+        return redirect(checkout_session.url, code=303)
+    except Exception as e:
+        app.logger.warning('Stripe checkout from pay page failed: %s', e)
+        return redirect(url_for('pay_page', token=token))
+
+
+@app.route('/pay/<token>/success')
+def pay_stripe_success(token):
+    """Stripe Checkout success callback from pay page."""
+    booking = Booking.query.filter_by(payment_token=token).first_or_404()
+    session_id = request.args.get('session_id', '')
+    if stripe.api_key and session_id:
+        try:
+            sess = stripe.checkout.Session.retrieve(session_id)
+            if sess.payment_status == 'paid' and sess.metadata.get('booking_id') == str(booking.id):
+                booking.payment_status = 'paid'
+                booking.payment_method = 'stripe'
+                db.session.commit()
+        except Exception as e:
+            app.logger.warning('Pay page Stripe verify failed: %s', e)
+    return redirect(url_for('pay_page', token=token))
 
 
 if __name__ == '__main__':

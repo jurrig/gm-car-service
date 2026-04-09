@@ -1,7 +1,12 @@
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
+import secrets
 
 db = SQLAlchemy()
+
+
+def generate_token():
+    return secrets.token_urlsafe(16)
 
 
 class Booking(db.Model):
@@ -17,30 +22,30 @@ class Booking(db.Model):
     vehicle_type = db.Column(db.String(20), nullable=False, default='sedan')
     status = db.Column(db.String(20), nullable=False, default='Pending')
     estimated_price = db.Column(db.Float, nullable=False)
-    trip_distance_miles = db.Column(db.Float, nullable=True)  # pickup → dropoff distance
-    trip_duration_min = db.Column(db.Float, nullable=True)    # pickup → dropoff drive time
+    trip_distance_miles = db.Column(db.Float, nullable=True)
+    trip_duration_min = db.Column(db.Float, nullable=True)
     driver_eta = db.Column(db.String(50), nullable=True)
     accepted_at = db.Column(db.DateTime, nullable=True)
-    # Passenger identification (airport pickups)
     passenger_photo = db.Column(db.String(255), nullable=True)
     is_airport_pickup = db.Column(db.Boolean, default=False)
-    airport_exit = db.Column(db.String(100), nullable=True)      # e.g. "Exit B", "Terminal 2"
-    airport_door_color = db.Column(db.String(50), nullable=True)  # e.g. "Blue", "Red"
-    airport_door_number = db.Column(db.String(50), nullable=True) # e.g. "Door 3"
-    airport_notes = db.Column(db.String(500), nullable=True)      # free-text extra identifiers
-    flight_number = db.Column(db.String(20), nullable=True)       # e.g. "AA1234"
-    flight_status = db.Column(db.String(30), nullable=True)       # scheduled/active/landed/delayed/cancelled
-    flight_arrival = db.Column(db.DateTime, nullable=True)        # actual/estimated arrival from API
-    traffic_duration_min = db.Column(db.Float, nullable=True)     # current drive time to airport w/ traffic
-    traffic_alert_sent = db.Column(db.Boolean, default=False)     # already sent "Leave Early" alert?
-    driver_notes = db.Column(db.Text, nullable=True)              # driver's private notes about this ride
-    last_notified = db.Column(db.DateTime, nullable=True)         # last time we sent rider an SMS
+    airport_exit = db.Column(db.String(100), nullable=True)
+    airport_door_color = db.Column(db.String(50), nullable=True)
+    airport_door_number = db.Column(db.String(50), nullable=True)
+    airport_notes = db.Column(db.String(500), nullable=True)
+    flight_number = db.Column(db.String(20), nullable=True)
+    flight_status = db.Column(db.String(30), nullable=True)
+    flight_arrival = db.Column(db.DateTime, nullable=True)
+    traffic_duration_min = db.Column(db.Float, nullable=True)
+    traffic_alert_sent = db.Column(db.Boolean, default=False)
+    driver_notes = db.Column(db.Text, nullable=True)
+    last_notified = db.Column(db.DateTime, nullable=True)
     assigned_driver_id = db.Column(db.Integer, db.ForeignKey('drivers.id'), nullable=True)
-    toll_fee = db.Column(db.Float, nullable=True, default=0)       # toll portion of the fare
-    tip = db.Column(db.Float, nullable=True, default=0)            # tip from customer
-    payment_method = db.Column(db.String(20), nullable=False, default='cash')  # stripe, zelle, cash
-    payment_status = db.Column(db.String(20), nullable=False, default='unpaid')  # unpaid, pending, paid
-    stripe_session_id = db.Column(db.String(255), nullable=True)   # Stripe Checkout session
+    toll_fee = db.Column(db.Float, nullable=True, default=0)
+    tip = db.Column(db.Float, nullable=True, default=0)
+    payment_method = db.Column(db.String(20), nullable=False, default='cash')
+    payment_status = db.Column(db.String(20), nullable=False, default='unpaid')
+    payment_token = db.Column(db.String(32), nullable=True, default=generate_token)
+    stripe_session_id = db.Column(db.String(255), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     assigned_driver = db.relationship('Driver', backref='bookings', foreign_keys=[assigned_driver_id])

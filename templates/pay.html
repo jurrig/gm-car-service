@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0a0a1a">
+    <title>Pay — G&amp;M Car Service</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        body {
+            background: #0a0a1a;
+            color: #ddd;
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0;
+        }
+
+        .pay-page {
+            max-width: 480px;
+            margin: 0 auto;
+            padding: 1.5rem;
+        }
+
+        .pay-logo {
+            text-align: center;
+            color: #c8a84e;
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+        }
+
+        .ride-summary {
+            background: #13132a;
+            border: 1px solid #c8a84e33;
+            border-radius: 12px;
+            padding: 1.2rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .ride-summary h2 {
+            color: #c8a84e;
+            margin: 0 0 0.75rem;
+            font-size: 1.1rem;
+        }
+
+        .ride-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.3rem 0;
+            font-size: 0.9rem;
+        }
+
+        .ride-row .label {
+            color: #999;
+        }
+
+        .ride-total {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.6rem 0 0;
+            margin-top: 0.5rem;
+            border-top: 1px solid #c8a84e33;
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #c8a84e;
+        }
+
+        .tip-section {
+            background: #13132a;
+            border: 1px solid #c8a84e33;
+            border-radius: 12px;
+            padding: 1.2rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .tip-section h3 {
+            color: #c8a84e;
+            margin: 0 0 0.75rem;
+            font-size: 1rem;
+        }
+
+        .tip-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .tip-btn {
+            padding: 0.6rem;
+            border: 2px solid #333;
+            border-radius: 8px;
+            background: transparent;
+            color: #ddd;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .tip-btn:hover,
+        .tip-btn.active {
+            border-color: #c8a84e;
+            background: rgba(200, 168, 78, 0.12);
+            color: #c8a84e;
+        }
+
+        .tip-custom {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .tip-custom input {
+            flex: 1;
+            padding: 0.6rem;
+            border: 1px solid #333;
+            border-radius: 8px;
+            background: #0a0a1a;
+            color: #eee;
+            font-size: 1rem;
+        }
+
+        .tip-custom input:focus {
+            outline: none;
+            border-color: #c8a84e;
+        }
+
+        .pay-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .btn-pay {
+            display: block;
+            width: 100%;
+            padding: 0.9rem;
+            border: none;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+        }
+
+        .btn-stripe {
+            background: linear-gradient(135deg, #635bff, #7c3aed);
+            color: #fff;
+        }
+
+        .btn-stripe:hover {
+            opacity: 0.9;
+        }
+
+        .btn-zelle {
+            background: linear-gradient(135deg, #6e41e2, #8b5cf6);
+            color: #fff;
+        }
+
+        .btn-zelle:hover {
+            opacity: 0.9;
+        }
+
+        .btn-cash {
+            background: #1a3a1a;
+            border: 2px solid #2ecc71;
+            color: #2ecc71;
+        }
+
+        .btn-cash:hover {
+            background: #2ecc71;
+            color: #0a0a1a;
+        }
+
+        .zelle-info {
+            display: none;
+            background: #13132a;
+            border: 1px solid #6e41e2;
+            border-radius: 12px;
+            padding: 1.2rem;
+            margin-top: 0.75rem;
+            text-align: center;
+        }
+
+        .zelle-info .zelle-id {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #6e41e2;
+            margin: 0.5rem 0;
+        }
+
+        .zelle-copy-btn {
+            padding: 0.5rem 1.2rem;
+            background: #6e41e2;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .paid-box {
+            background: rgba(46, 204, 113, 0.15);
+            border: 2px solid #2ecc71;
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            margin-bottom: 1.25rem;
+        }
+
+        .paid-box h2 {
+            color: #2ecc71;
+            margin: 0 0 0.5rem;
+        }
+
+        .paid-box .amount {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2ecc71;
+        }
+
+        .pay-footer {
+            text-align: center;
+            margin-top: 1.5rem;
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .pay-footer a {
+            color: #c8a84e;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="pay-page">
+        <div class="pay-logo">G&amp;M Car Service</div>
+
+        {% if booking.payment_status == 'paid' %}
+        <!-- Already paid -->
+        <div class="paid-box">
+            <h2>&#9989; Payment Complete</h2>
+            <div class="amount">${{ '%.2f' | format(booking.estimated_price + (booking.tip or 0)) }}</div>
+            <p style="color:#999;margin:0.5rem 0 0;">
+                {% if booking.tip and booking.tip > 0 %}
+                Includes ${{ '%.2f' | format(booking.tip) }} tip — thank you!
+                {% endif %}
+            </p>
+        </div>
+        <div class="ride-summary">
+            <h2>Ride Details</h2>
+            <div class="ride-row"><span class="label">Booking</span><span>#{{ booking.id }}</span></div>
+            <div class="ride-row"><span class="label">Route</span><span>{{ booking.pickup_location.split(',')[0] }}
+                    &#8594; {{ booking.dropoff_location.split(',')[0] }}</span></div>
+            <div class="ride-row"><span class="label">Paid via</span><span>{{ booking.payment_method | capitalize
+                    }}</span></div>
+        </div>
+
+        {% else %}
+        <!-- Payment needed -->
+        <div class="ride-summary">
+            <h2>&#128663; Your Ride</h2>
+            <div class="ride-row"><span class="label">Booking</span><span>#{{ booking.id }}</span></div>
+            <div class="ride-row"><span class="label">Pickup</span><span>{{ booking.pickup_location.split(',')[0]
+                    }}</span></div>
+            <div class="ride-row"><span class="label">Drop-off</span><span>{{ booking.dropoff_location.split(',')[0]
+                    }}</span></div>
+            <div class="ride-row"><span class="label">Vehicle</span><span>{{ booking.vehicle_type | capitalize }}</span>
+            </div>
+            {% if booking.trip_distance_miles %}
+            <div class="ride-row"><span class="label">Distance</span><span>{{ '%.1f' |
+                    format(booking.trip_distance_miles) }} mi</span></div>
+            {% endif %}
+            <div class="ride-total">
+                <span>Fare</span>
+                <span id="base-fare">${{ '%.2f' | format(booking.estimated_price) }}</span>
+            </div>
+        </div>
+
+        <!-- Tip Section -->
+        <div class="tip-section">
+            <h3>&#128077; Add a Tip for Your Driver</h3>
+            <div class="tip-grid">
+                <button type="button" class="tip-btn" data-pct="15" onclick="setTip(this, 0.15)">15%</button>
+                <button type="button" class="tip-btn" data-pct="20" onclick="setTip(this, 0.20)">20%</button>
+                <button type="button" class="tip-btn" data-pct="25" onclick="setTip(this, 0.25)">25%</button>
+                <button type="button" class="tip-btn" data-pct="0" onclick="setTip(this, 0)">No Tip</button>
+            </div>
+            <div class="tip-custom">
+                <span style="color:#999;">Custom $</span>
+                <input type="number" id="custom-tip" min="0" step="0.50" placeholder="0.00"
+                    oninput="setCustomTip(this.value)">
+            </div>
+            <div style="margin-top:0.75rem;text-align:right;">
+                <span style="color:#999;">Tip:</span>
+                <span id="tip-display" style="color:#c8a84e;font-weight:700;">$0.00</span>
+                &nbsp;&bull;&nbsp;
+                <span style="color:#999;">Total:</span>
+                <span id="total-display" style="color:#c8a84e;font-weight:700;font-size:1.1rem;">${{ '%.2f' |
+                    format(booking.estimated_price) }}</span>
+            </div>
+        </div>
+
+        <!-- Pay Actions -->
+        <div class="pay-actions">
+            {% if stripe_enabled %}
+            <button type="button" class="btn-pay btn-stripe" onclick="payWithCard()">
+                &#128179; Pay with Card
+            </button>
+            {% endif %}
+
+            <button type="button" class="btn-pay btn-zelle" onclick="toggleZelle()">
+                &#9889; Pay with Zelle
+            </button>
+
+            <div class="zelle-info" id="zelle-box">
+                <p>Send payment to:</p>
+                <div class="zelle-id" id="zelle-target">{{ zelle_id }}</div>
+                <p style="font-size:0.8rem;color:#999;">Include "<strong>Booking #{{ booking.id }}</strong>" in the memo
+                </p>
+                <button class="zelle-copy-btn" onclick="copyZelle()">&#128203; Copy Zelle Info</button>
+                <span id="zelle-copied"
+                    style="display:none;margin-left:0.5rem;color:#2ecc71;font-weight:600;">Copied!</span>
+                <div style="margin-top:0.75rem;">
+                    <button type="button" class="btn-pay btn-cash" style="font-size:0.85rem;padding:0.6rem;"
+                        onclick="confirmZelle()">
+                        &#10003; I've Sent the Zelle Payment
+                    </button>
+                </div>
+            </div>
+
+            <button type="button" class="btn-pay btn-cash" onclick="confirmCash()">
+                &#128181; I'll Pay Cash
+            </button>
+        </div>
+        {% endif %}
+
+        <div class="pay-footer">
+            <p>G&amp;M Car Service &bull; Sarasota County, FL</p>
+            <a href="/terms">Terms</a> &bull; <a href="/privacy">Privacy</a>
+        </div>
+    </div>
+
+    <script>
+        const baseFare = {{ booking.estimated_price }};
+        const token = '{{ booking.payment_token }}';
+        let currentTip = 0;
+
+        function setTip(btn, pct) {
+            document.querySelectorAll('.tip-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentTip = Math.round(baseFare * pct * 100) / 100;
+            document.getElementById('custom-tip').value = '';
+            updateDisplay();
+        }
+
+        function setCustomTip(val) {
+            document.querySelectorAll('.tip-btn').forEach(b => b.classList.remove('active'));
+            currentTip = Math.max(parseFloat(val) || 0, 0);
+            currentTip = Math.min(currentTip, 500); // cap at $500
+            updateDisplay();
+        }
+
+        function updateDisplay() {
+            document.getElementById('tip-display').textContent = '$' + currentTip.toFixed(2);
+            document.getElementById('total-display').textContent = '$' + (baseFare + currentTip).toFixed(2);
+        }
+
+        function saveTip(callback) {
+            fetch('/pay/' + token + '/tip', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ tip: currentTip })
+            })
+                .then(r => r.json())
+                .then(d => { if (d.success && callback) callback(); })
+                .catch(() => { if (callback) callback(); });
+        }
+
+        function payWithCard() {
+            saveTip(() => {
+                window.location.href = '/pay/' + token + '/stripe';
+            });
+        }
+
+        function toggleZelle() {
+            const box = document.getElementById('zelle-box');
+            box.style.display = box.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function copyZelle() {
+            const text = document.getElementById('zelle-target').textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                document.getElementById('zelle-copied').style.display = 'inline';
+                setTimeout(() => { document.getElementById('zelle-copied').style.display = 'none'; }, 2000);
+            });
+        }
+
+        function confirmZelle() {
+            saveTip(() => {
+                fetch('/pay/' + token + '/confirm', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ method: 'zelle' })
+                })
+                    .then(r => r.json())
+                    .then(d => { if (d.success) location.reload(); });
+            });
+        }
+
+        function confirmCash() {
+            saveTip(() => {
+                fetch('/pay/' + token + '/confirm', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ method: 'cash' })
+                })
+                    .then(r => r.json())
+                    .then(d => { if (d.success) location.reload(); });
+            });
+        }
+    </script>
+</body>
+
+</html>
