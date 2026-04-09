@@ -67,3 +67,17 @@ def send_rider_sms(booking, message):
         to=booking.phone,
     )
     return True
+
+
+def send_receipt_email(mail, booking, rendered_html):
+    """Send a payment receipt email to the customer."""
+    if not booking.email:
+        return False
+
+    msg = Message(
+        subject=f'G&M Car Service — Receipt for Booking #{booking.id}',
+        recipients=[booking.email],
+        html=rendered_html,
+    )
+    mail.send(msg)
+    return True

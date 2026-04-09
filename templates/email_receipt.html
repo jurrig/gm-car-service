@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body style="margin:0;padding:0;background:#0a0a1a;font-family:'Segoe UI',Arial,sans-serif;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#0a0a1a;padding:20px 0;">
+        <tr>
+            <td align="center">
+                <table width="480" cellpadding="0" cellspacing="0"
+                    style="background:#13132a;border-radius:12px;border:1px solid rgba(200,168,78,0.2);overflow:hidden;">
+
+                    <!-- Header -->
+                    <tr>
+                        <td
+                            style="background:linear-gradient(135deg,#0a0a1a,#1a1a3a);padding:24px;text-align:center;border-bottom:2px solid #c8a84e;">
+                            <h1 style="margin:0;color:#c8a84e;font-size:22px;letter-spacing:1px;">G&amp;M Car Service
+                            </h1>
+                            <p style="margin:4px 0 0;color:#888;font-size:13px;">Payment Receipt</p>
+                        </td>
+                    </tr>
+
+                    <!-- Checkmark -->
+                    <tr>
+                        <td style="padding:24px 24px 0;text-align:center;">
+                            <div
+                                style="display:inline-block;width:56px;height:56px;background:rgba(46,204,113,0.15);border:2px solid #2ecc71;border-radius:50%;line-height:56px;font-size:28px;">
+                                &#10003;</div>
+                            <h2 style="color:#2ecc71;margin:12px 0 4px;font-size:18px;">Payment Confirmed</h2>
+                            <p style="color:#999;margin:0;font-size:14px;">Booking #{{ booking.id }}</p>
+                        </td>
+                    </tr>
+
+                    <!-- Amount -->
+                    <tr>
+                        <td style="padding:16px 24px;text-align:center;">
+                            <div style="font-size:36px;font-weight:700;color:#c8a84e;">${{ '%.2f' | format(total) }}
+                            </div>
+                            {% if booking.tip and booking.tip > 0 %}
+                            <p style="color:#888;margin:4px 0 0;font-size:13px;">Includes ${{ '%.2f' |
+                                format(booking.tip) }} tip</p>
+                            {% endif %}
+                            <p style="margin:8px 0 0;">
+                                <span
+                                    style="display:inline-block;background:{% if booking.payment_method == 'stripe' %}#635bff{% elif booking.payment_method == 'zelle' %}#6e41e2{% else %}#2ecc71{% endif %};color:#fff;padding:3px 12px;border-radius:20px;font-size:12px;font-weight:700;">
+                                    {{ booking.payment_method | upper }}
+                                </span>
+                            </p>
+                        </td>
+                    </tr>
+
+                    <!-- Divider -->
+                    <tr>
+                        <td style="padding:0 24px;">
+                            <hr style="border:none;border-top:1px solid rgba(200,168,78,0.2);margin:0;">
+                        </td>
+                    </tr>
+
+                    <!-- Ride Details -->
+                    <tr>
+                        <td style="padding:20px 24px;">
+                            <h3
+                                style="color:#c8a84e;margin:0 0 12px;font-size:14px;text-transform:uppercase;letter-spacing:1px;">
+                                Ride Details</h3>
+                            <table width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;">
+                                <tr>
+                                    <td style="color:#888;padding:6px 0;">Pickup</td>
+                                    <td style="color:#ddd;padding:6px 0;text-align:right;">{{
+                                        booking.pickup_location.split(',')[0] }}</td>
+                                </tr>
+                                <tr>
+                                    <td style="color:#888;padding:6px 0;">Drop-off</td>
+                                    <td style="color:#ddd;padding:6px 0;text-align:right;">{{
+                                        booking.dropoff_location.split(',')[0] }}</td>
+                                </tr>
+                                <tr>
+                                    <td style="color:#888;padding:6px 0;">Date</td>
+                                    <td style="color:#ddd;padding:6px 0;text-align:right;">{{
+                                        booking.pickup_time.strftime('%B %d, %Y at %I:%M %p') if booking.pickup_time
+                                        else '—' }}</td>
+                                </tr>
+                                <tr>
+                                    <td style="color:#888;padding:6px 0;">Vehicle</td>
+                                    <td style="color:#ddd;padding:6px 0;text-align:right;">{{ booking.vehicle_type |
+                                        capitalize }}</td>
+                                </tr>
+                                {% if booking.trip_distance_miles %}
+                                <tr>
+                                    <td style="color:#888;padding:6px 0;">Distance</td>
+                                    <td style="color:#ddd;padding:6px 0;text-align:right;">{{ '%.1f' |
+                                        format(booking.trip_distance_miles) }} mi</td>
+                                </tr>
+                                {% endif %}
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Divider -->
+                    <tr>
+                        <td style="padding:0 24px;">
+                            <hr style="border:none;border-top:1px solid rgba(200,168,78,0.2);margin:0;">
+                        </td>
+                    </tr>
+
+                    <!-- Price Breakdown -->
+                    <tr>
+                        <td style="padding:20px 24px;">
+                            <h3
+                                style="color:#c8a84e;margin:0 0 12px;font-size:14px;text-transform:uppercase;letter-spacing:1px;">
+                                Summary</h3>
+                            <table width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;">
+                                <tr>
+                                    <td style="color:#888;padding:4px 0;">Fare</td>
+                                    <td style="color:#ddd;padding:4px 0;text-align:right;">${{ '%.2f' |
+                                        format(booking.estimated_price - (booking.toll_fee or 0)) }}</td>
+                                </tr>
+                                {% if booking.toll_fee and booking.toll_fee > 0 %}
+                                <tr>
+                                    <td style="color:#888;padding:4px 0;">Tolls</td>
+                                    <td style="color:#ddd;padding:4px 0;text-align:right;">${{ '%.2f' |
+                                        format(booking.toll_fee) }}</td>
+                                </tr>
+                                {% endif %}
+                                {% if booking.tip and booking.tip > 0 %}
+                                <tr>
+                                    <td style="color:#888;padding:4px 0;">Tip</td>
+                                    <td style="color:#ddd;padding:4px 0;text-align:right;">${{ '%.2f' |
+                                        format(booking.tip) }}</td>
+                                </tr>
+                                {% endif %}
+                                <tr>
+                                    <td
+                                        style="color:#c8a84e;padding:8px 0 0;font-weight:700;font-size:16px;border-top:1px solid rgba(200,168,78,0.2);">
+                                        Total</td>
+                                    <td
+                                        style="color:#c8a84e;padding:8px 0 0;font-weight:700;font-size:16px;text-align:right;border-top:1px solid rgba(200,168,78,0.2);">
+                                        ${{ '%.2f' | format(total) }}</td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td
+                            style="background:#0a0a1a;padding:20px 24px;text-align:center;border-top:1px solid rgba(200,168,78,0.15);">
+                            <p style="color:#888;font-size:12px;margin:0;">G&amp;M Car Service &bull; LottoDeamon LLC
+                            </p>
+                            <p style="color:#666;font-size:11px;margin:4px 0 0;">Sarasota County, FL &bull; <a
+                                    href="https://gmcarservice.com"
+                                    style="color:#c8a84e;text-decoration:none;">gmcarservice.com</a></p>
+                            <p style="color:#555;font-size:10px;margin:8px 0 0;">This is an automated receipt. Please do
+                                not reply to this email.</p>
+                        </td>
+                    </tr>
+
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+
+</html>

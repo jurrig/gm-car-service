@@ -5,7 +5,7 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from functools import wraps
 from models import db, Booking, PricingTier, Vehicle, Driver, AppSetting, Expense, MileageLog, DriverShift, Payout
-from notifications import send_email_alert, send_sms_alert, send_rider_sms
+from notifications import send_email_alert, send_sms_alert, send_rider_sms, send_receipt_email
 from scheduler import check_availability, format_suggestions
 from flight_tracker import check_flight, update_booking_flight_status, check_upcoming_flights, check_traffic_for_booking
 from datetime import datetime, timedelta
@@ -89,6 +89,24 @@ with app.app_context():
         ]
         db.session.add_all(default_vehicles)
         db.session.commit()
+
+
+# --------------- Payment Receipt Helper ---------------
+def send_payment_receipt(booking):
+    """Send payment acknowledgment SMS + receipt email when payment is verified."""
+    total = booking.estimated_price + (booking.tip or 0)
+    method = (booking.payment_method or 'cash').capitalize()
+
+    # Short SMS acknowledgment
+    send_rider_sms(booking, f'G&M Car Service — Payment of ${total:.2f} ({method}) confirmed for Booking #{booking.id}. Receipt sent to your email. Thank you!')
+
+    # Full receipt via email
+    if booking.email:
+        try:
+            html = render_template('email_receipt.html', booking=booking, total=total)
+            send_receipt_email(mail, booking, html)
+        except Exception as e:
+            app.logger.warning('Receipt email failed for booking #%s: %s', booking.id, e)
 
 
 # --------------- Pricing Engine ---------------
@@ -227,6 +245,7 @@ def seo_city_page(city_slug):
 def book():
     customer_name = request.form.get('customer_name', '').strip()
     phone = request.form.get('phone', '').strip()
+    email = request.form.get('email', '').strip() or None
     pickup_location = request.form.get('pickup_location', '').strip()
     dropoff_location = request.form.get('dropoff_location', '').strip()
     pickup_date_str = request.form.get('pickup_date', '').strip()
@@ -294,6 +313,7 @@ def book():
     booking = Booking(
         customer_name=customer_name,
         phone=phone,
+        email=email,
         pickup_location=pickup_location,
         dropoff_location=dropoff_location,
         pickup_time=pickup_time,
@@ -570,9 +590,6 @@ def admin_complete(booking_id):
     # Auto-mark cash bookings as paid on completion (collected at pickup)
     if booking.payment_method == 'cash' and booking.payment_status != 'paid':
         booking.payment_status = 'paid'
-        # Send receipt SMS for cash payment on completion
-        total = booking.estimated_price + (booking.tip or 0)
-        send_rider_sms(booking, f'G&M Car Service Receipt — Booking #{booking.id}. Total: ${total:.2f} (Cash). Thank you for riding with us!')
 
     # --- Mileage Engine: auto-mint mileage record ---
     miles = booking.trip_distance_miles
@@ -613,6 +630,10 @@ def admin_complete(booking_id):
             db.session.add(payout)
 
     db.session.commit()
+
+    # Cash auto-paid on completion — send receipt
+    if booking.payment_method == 'cash' and booking.payment_status == 'paid':
+        send_payment_receipt(booking)
 
     # Send payment reminder SMS for unpaid zelle customers on completion
     if booking.payment_method == 'zelle' and booking.payment_status != 'paid' and booking.payment_token:
@@ -1595,9 +1616,7 @@ def stripe_webhook():
                 booking.payment_status = 'paid'
                 booking.stripe_session_id = session_data.get('id', booking.stripe_session_id)
                 db.session.commit()
-                # Send receipt SMS on Stripe payment
-                total = booking.estimated_price + (booking.tip or 0)
-                send_rider_sms(booking, f'G&M Car Service Receipt — Booking #{booking.id}. Total: ${total:.2f} (Card). Payment confirmed. Thank you!')
+                send_payment_receipt(booking)
 
     return jsonify({'status': 'ok'}), 200
 
@@ -1615,9 +1634,7 @@ def admin_mark_payment(booking_id):
         booking.payment_method = method
     db.session.commit()
 
-    # Send receipt SMS when admin marks as paid
-    total = booking.estimated_price + (booking.tip or 0)
-    send_rider_sms(booking, f'G&M Car Service Receipt — Booking #{booking.id}. Total: ${total:.2f} ({booking.payment_method.capitalize()}). Payment confirmed. Thank you!')
+    send_payment_receipt(booking)
 
     return jsonify({'success': True})
 
@@ -1737,9 +1754,7 @@ def pay_stripe_success(token):
                 booking.payment_status = 'paid'
                 booking.payment_method = 'stripe'
                 db.session.commit()
-                # Send receipt SMS on Stripe pay-page success
-                total = booking.estimated_price + (booking.tip or 0)
-                send_rider_sms(booking, f'G&M Car Service Receipt — Booking #{booking.id}. Total: ${total:.2f} (Card). Payment confirmed. Thank you!')
+                send_payment_receipt(booking)
         except Exception as e:
             app.logger.warning('Pay page Stripe verify failed: %s', e)
     return redirect(url_for('pay_page', token=token))

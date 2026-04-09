@@ -15,6 +15,7 @@ class Booking(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     customer_name = db.Column(db.String(120), nullable=False)
     phone = db.Column(db.String(20), nullable=False)
+    email = db.Column(db.String(120), nullable=True)
     pickup_location = db.Column(db.String(255), nullable=False)
     dropoff_location = db.Column(db.String(255), nullable=False)
     pickup_time = db.Column(db.DateTime, nullable=False)
