@@ -323,6 +323,12 @@
                             <span id="quote-vehicle">Sedan</span> &bull; <span id="quote-distance">&mdash;</span> &bull;
                             <span id="quote-duration">&mdash;</span>
                         </div>
+                        <div id="quote-flat-badge" style="display:none;margin-top:0.4rem;">
+                            <span
+                                style="background:rgba(200,168,78,0.18);color:#c8a84e;padding:0.2rem 0.7rem;border-radius:8px;font-size:0.78rem;font-weight:700;">
+                                &#128274; FLAT RATE &mdash; <span id="quote-flat-label"></span>
+                            </span>
+                        </div>
                         <div id="quote-toll-line"
                             style="display:none;font-size:0.8rem;color:#c8a84e;margin-top:0.35rem;"></div>
                     </div>
@@ -1260,12 +1266,39 @@
             if (hiddenField) hiddenField.value = selectedVehicle;
         }
 
+        // --- Flat rate state ---
+        let activeFlatRate = null;  // {label, price_sedan, price_suv, price_luxury}
+
+        function checkFlatRate(pickup, dropoff) {
+            if (!pickup || !dropoff) { activeFlatRate = null; return; }
+            fetch('/api/check-flat-rate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ pickup, dropoff })
+            })
+                .then(r => r.json())
+                .then(data => {
+                    activeFlatRate = data.matched ? data : null;
+                    updateQuote();
+                    updateFinalSummary();
+                })
+                .catch(() => { activeFlatRate = null; });
+        }
+
         function getEstimate(type) {
             const vType = type || selectedVehicle;
+            // Flat rate takes priority
+            if (activeFlatRate) {
+                let fp = activeFlatRate.price_sedan;
+                if (vType === 'suv' && activeFlatRate.price_suv) fp = activeFlatRate.price_suv;
+                if (vType === 'luxury' && activeFlatRate.price_luxury) fp = activeFlatRate.price_luxury;
+                let price = fp + currentTollFee;
+                if (activePromoDiscount > 0) price = price * (1 - activePromoDiscount / 100);
+                return price;
+            }
             const tiers = PRICING_TIERS[vType];
             if (!tiers || tiers.length === 0) return 0;
-            // Find matching tier for current distance
-            let tier = tiers[0]; // default to first
+            let tier = tiers[0];
             for (const t of tiers) {
                 if (currentMiles >= t.min_miles && (t.max_miles === null || currentMiles <= t.max_miles)) {
                     tier = t; break;
@@ -1273,7 +1306,6 @@
             }
             const raw = tier.base_fare + tier.per_mile * currentMiles;
             let price = Math.max(raw, tier.min_fare) + currentTollFee;
-            // Apply promo discount for display
             if (activePromoDiscount > 0) {
                 price = price * (1 - activePromoDiscount / 100);
             }
@@ -1282,6 +1314,12 @@
 
         function getEstimateOriginal(type) {
             const vType = type || selectedVehicle;
+            if (activeFlatRate) {
+                let fp = activeFlatRate.price_sedan;
+                if (vType === 'suv' && activeFlatRate.price_suv) fp = activeFlatRate.price_suv;
+                if (vType === 'luxury' && activeFlatRate.price_luxury) fp = activeFlatRate.price_luxury;
+                return fp + currentTollFee;
+            }
             const tiers = PRICING_TIERS[vType];
             if (!tiers || tiers.length === 0) return 0;
             let tier = tiers[0];
@@ -1342,7 +1380,8 @@
             ['sedan', 'suv', 'luxury'].forEach(type => {
                 const el = document.getElementById('price-' + type);
                 if (el) {
-                    el.textContent = currentMiles > 0 ? '$' + getEstimate(type).toFixed(2) : '—';
+                    const hasPrice = activeFlatRate ? true : currentMiles > 0;
+                    el.textContent = hasPrice ? '$' + getEstimate(type).toFixed(2) : '—';
                 }
             });
 
@@ -1350,7 +1389,19 @@
             document.getElementById('quote-vehicle').textContent = VEHICLE_LABELS[selectedVehicle] || selectedVehicle;
             document.getElementById('quote-distance').textContent = distanceText;
             document.getElementById('quote-duration').textContent = durationText;
-            document.getElementById('quote-amount').textContent = currentMiles > 0 ? '$' + getEstimate().toFixed(2) : '—';
+            const hasPrice = activeFlatRate ? true : currentMiles > 0;
+            document.getElementById('quote-amount').textContent = hasPrice ? '$' + getEstimate().toFixed(2) : '—';
+
+            // Flat rate badge
+            const flatBadge = document.getElementById('quote-flat-badge');
+            if (flatBadge) {
+                if (activeFlatRate) {
+                    document.getElementById('quote-flat-label').textContent = activeFlatRate.label;
+                    flatBadge.style.display = 'block';
+                } else {
+                    flatBadge.style.display = 'none';
+                }
+            }
 
             // Toll line
             const tollLine = document.getElementById('quote-toll-line');
@@ -1452,6 +1503,9 @@
             const pickup = document.getElementById('pickup_location').value;
             const dropoff = document.getElementById('dropoff_location').value;
             if (!pickup || !dropoff) return;
+
+            // Check flat rate match
+            checkFlatRate(pickup, dropoff);
 
             // Get distance
             new google.maps.DistanceMatrixService().getDistanceMatrix({

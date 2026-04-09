@@ -1162,6 +1162,8 @@
                     style="color:#c8a84e; text-decoration:none; font-weight:600;">&#128176; Expenses</a>
                 <a href="{{ url_for('admin_promo_codes') }}"
                     style="color:#c8a84e; text-decoration:none; font-weight:600;">&#127775; Promos</a>
+                <a href="{{ url_for('admin_flat_rates') }}"
+                    style="color:#c8a84e; text-decoration:none; font-weight:600;">&#128274; Flat Rates</a>
                 <button class="car-mode-toggle" id="carModeBtn" title="Toggle car infotainment mode">&#128663; Car
                     Mode</button>
                 <a href="{{ url_for('admin_logout') }}">Logout</a>
@@ -1185,7 +1187,10 @@
                     {{ next_ride.pickup_location[:50] }}{% if next_ride.pickup_location|length > 50 %}...{% endif %}
                     &rarr; {{ next_ride.dropoff_location[:40] }}{% if next_ride.dropoff_location|length > 40 %}...{%
                     endif %}
-                    <div class="nrb-fare">${{ '%.2f' | format(next_ride.estimated_price) }} &bull; {{
+                    <div class="nrb-fare">${{ '%.2f' | format(next_ride.estimated_price) }}
+                        {% if next_ride.is_flat_rate %}<span style="color:#c8a84e;font-size:0.8rem;">&#128274;
+                            FLAT</span>{% endif %}
+                        &bull; {{
                         next_ride.vehicle_type | capitalize }} &bull; {{ next_ride.passengers }} pax</div>
                 </div>
             </div>
@@ -1421,6 +1426,12 @@
                         <label>Fare</label>
                         <span style="color:#c8a84e; font-weight:700;">${{ '%.2f' | format(b.estimated_price)
                             }}</span>
+                        {% if b.is_flat_rate %}
+                        <span
+                            style="background:rgba(200,168,78,0.15);color:#c8a84e;padding:0.15rem 0.5rem;border-radius:8px;font-size:0.7rem;font-weight:700;margin-left:0.4rem;">
+                            &#128274; FLAT RATE
+                        </span>
+                        {% endif %}
                         {% if b.discount_percent and b.discount_percent > 0 %}
                         <span
                             style="background:rgba(46,204,113,0.15);color:#2ecc71;padding:0.15rem 0.5rem;border-radius:8px;font-size:0.7rem;font-weight:700;margin-left:0.4rem;">

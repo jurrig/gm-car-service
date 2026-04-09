@@ -4,7 +4,7 @@ from flask_wtf.csrf import CSRFProtect
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from functools import wraps
-from models import db, Booking, PricingTier, Vehicle, Driver, AppSetting, Expense, MileageLog, DriverShift, Payout, PromoCode
+from models import db, Booking, PricingTier, Vehicle, Driver, AppSetting, Expense, MileageLog, DriverShift, Payout, PromoCode, FlatRate
 from notifications import send_email_alert, send_sms_alert, send_rider_sms, send_receipt_email
 from scheduler import check_availability, format_suggestions
 from flight_tracker import check_flight, update_booking_flight_status, check_upcoming_flights, check_traffic_for_booking
@@ -140,6 +140,17 @@ def calculate_estimate(miles, vehicle_type='sedan'):
 
     total = matched.base_fare + matched.per_mile * miles
     return round(max(total, matched.min_fare), 2)
+
+
+def find_flat_rate(pickup, dropoff):
+    """Find a matching active flat rate for a pickup/dropoff pair. Returns FlatRate or None."""
+    if AppSetting.get('flat_rates_enabled', '1') == '0':
+        return None
+    rates = FlatRate.query.filter_by(is_active=True).order_by(FlatRate.sort_order.asc()).all()
+    for rate in rates:
+        if rate.matches(pickup, dropoff):
+            return rate
+    return None
 
 
 # Google Maps API key — passed to templates
@@ -286,6 +297,17 @@ def book():
 
     estimated_price = calculate_estimate(miles, vehicle_type) + toll_fee
 
+    # --- Flat Rate Override ---
+    matched_flat = find_flat_rate(pickup_location, dropoff_location)
+    is_flat_rate = False
+    flat_rate_id = None
+    if matched_flat:
+        flat_price = matched_flat.get_price(vehicle_type)
+        if flat_price and flat_price > 0:
+            estimated_price = flat_price + toll_fee
+            is_flat_rate = True
+            flat_rate_id = matched_flat.id
+
     # --- VIP Discount Logic ---
     discount_percent = 0
     discount_reason = ''
@@ -362,6 +384,8 @@ def book():
         trip_duration_min=trip_duration_min,
         payment_method=request.form.get('payment_method', 'cash').strip().lower(),
         payment_status='unpaid',
+        is_flat_rate=is_flat_rate,
+        flat_rate_id=flat_rate_id,
     )
 
     # Capture pickup GPS for auto-arrive
@@ -992,6 +1016,7 @@ def admin_settings():
         'driver_home_address': AppSetting.get('driver_home_address', 'North Port, FL'),
         'vip_rides_threshold': AppSetting.get('vip_rides_threshold', '5'),
         'vip_auto_discount_percent': AppSetting.get('vip_auto_discount_percent', '10'),
+        'flat_rates_enabled': AppSetting.get('flat_rates_enabled', '1'),
     }
     return render_template('admin_settings.html', settings=settings)
 
@@ -1103,6 +1128,132 @@ def admin_remove_vip(booking_id):
     booking.promo_code = None
     db.session.commit()
     return redirect(url_for('admin_dashboard'))
+
+
+# --------------- Admin: Flat Rates ---------------
+@app.route('/admin/flat-rates')
+@admin_required
+def admin_flat_rates():
+    rates = FlatRate.query.order_by(FlatRate.sort_order.asc(), FlatRate.label.asc()).all()
+    enabled = AppSetting.get('flat_rates_enabled', '1') != '0'
+    return render_template('admin_flat_rates.html', rates=rates, enabled=enabled)
+
+
+@app.route('/admin/flat-rates/add', methods=['POST'])
+@admin_required
+def admin_flat_rate_add():
+    label = request.form.get('label', '').strip()
+    origin = request.form.get('origin_keywords', '').strip().lower()
+    dest = request.form.get('dest_keywords', '').strip().lower()
+    if not label or not origin or not dest:
+        return redirect(url_for('admin_flat_rates'))
+
+    try:
+        price_sedan = float(request.form.get('price_sedan', '0') or 0)
+    except ValueError:
+        price_sedan = 0
+    try:
+        price_suv = float(request.form.get('price_suv', '') or 0) or None
+    except ValueError:
+        price_suv = None
+    try:
+        price_luxury = float(request.form.get('price_luxury', '') or 0) or None
+    except ValueError:
+        price_luxury = None
+
+    bidirectional = request.form.get('is_bidirectional') == '1'
+    try:
+        sort_order = int(request.form.get('sort_order', '0') or 0)
+    except ValueError:
+        sort_order = 0
+
+    rate = FlatRate(
+        label=label, origin_keywords=origin, dest_keywords=dest,
+        price_sedan=price_sedan, price_suv=price_suv, price_luxury=price_luxury,
+        is_bidirectional=bidirectional, sort_order=sort_order,
+    )
+    db.session.add(rate)
+    db.session.commit()
+    return redirect(url_for('admin_flat_rates'))
+
+
+@app.route('/admin/flat-rates/edit/<int:rate_id>', methods=['POST'])
+@admin_required
+def admin_flat_rate_edit(rate_id):
+    rate = db.get_or_404(FlatRate, rate_id)
+    rate.label = request.form.get('label', rate.label).strip()
+    rate.origin_keywords = request.form.get('origin_keywords', rate.origin_keywords).strip().lower()
+    rate.dest_keywords = request.form.get('dest_keywords', rate.dest_keywords).strip().lower()
+    try:
+        rate.price_sedan = float(request.form.get('price_sedan', rate.price_sedan) or rate.price_sedan)
+    except ValueError:
+        pass
+    try:
+        val = request.form.get('price_suv', '').strip()
+        rate.price_suv = float(val) if val else None
+    except ValueError:
+        pass
+    try:
+        val = request.form.get('price_luxury', '').strip()
+        rate.price_luxury = float(val) if val else None
+    except ValueError:
+        pass
+    rate.is_bidirectional = request.form.get('is_bidirectional') == '1'
+    try:
+        rate.sort_order = int(request.form.get('sort_order', rate.sort_order) or 0)
+    except ValueError:
+        pass
+    db.session.commit()
+    return redirect(url_for('admin_flat_rates'))
+
+
+@app.route('/admin/flat-rates/toggle/<int:rate_id>', methods=['POST'])
+@admin_required
+def admin_flat_rate_toggle(rate_id):
+    rate = db.get_or_404(FlatRate, rate_id)
+    rate.is_active = not rate.is_active
+    db.session.commit()
+    return redirect(url_for('admin_flat_rates'))
+
+
+@app.route('/admin/flat-rates/delete/<int:rate_id>', methods=['POST'])
+@admin_required
+def admin_flat_rate_delete(rate_id):
+    rate = db.get_or_404(FlatRate, rate_id)
+    db.session.delete(rate)
+    db.session.commit()
+    return redirect(url_for('admin_flat_rates'))
+
+
+@app.route('/admin/flat-rates/global-toggle', methods=['POST'])
+@admin_required
+def admin_flat_rate_global_toggle():
+    current = AppSetting.get('flat_rates_enabled', '1')
+    AppSetting.set('flat_rates_enabled', '0' if current != '0' else '1')
+    return redirect(url_for('admin_flat_rates'))
+
+
+# --- Flat rate check API (for live booking form) ---
+@app.route('/api/check-flat-rate', methods=['POST'])
+@csrf.exempt
+@limiter.limit('60 per minute')
+def api_check_flat_rate():
+    data = request.json or {}
+    pickup = data.get('pickup', '').strip()
+    dropoff = data.get('dropoff', '').strip()
+    if not pickup or not dropoff:
+        return jsonify({'matched': False})
+    rate = find_flat_rate(pickup, dropoff)
+    if not rate:
+        return jsonify({'matched': False})
+    return jsonify({
+        'matched': True,
+        'label': rate.label,
+        'price_sedan': rate.price_sedan,
+        'price_suv': rate.price_suv,
+        'price_luxury': rate.price_luxury,
+        'is_bidirectional': rate.is_bidirectional,
+    })
 
 
 # --------------- Flight Tracking API ---------------

@@ -56,6 +56,8 @@ class Booking(db.Model):
     discount_reason = db.Column(db.String(100), nullable=True)
     promo_code = db.Column(db.String(50), nullable=True)
     original_price = db.Column(db.Float, nullable=True)
+    is_flat_rate = db.Column(db.Boolean, default=False)
+    flat_rate_id = db.Column(db.Integer, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     assigned_driver = db.relationship('Driver', backref='bookings', foreign_keys=[assigned_driver_id])
@@ -263,3 +265,44 @@ class PromoCode(db.Model):
 
     def __repr__(self):
         return f'<PromoCode {self.code} {self.discount_percent}%>'
+
+
+class FlatRate(db.Model):
+    __tablename__ = 'flat_rates'
+
+    id = db.Column(db.Integer, primary_key=True)
+    label = db.Column(db.String(120), nullable=False)  # e.g. "Sarasota → TPA"
+    origin_keywords = db.Column(db.String(255), nullable=False)  # comma-separated: "sarasota,srq,siesta"
+    dest_keywords = db.Column(db.String(255), nullable=False)    # comma-separated: "tampa airport,tpa"
+    price_sedan = db.Column(db.Float, nullable=False, default=0)
+    price_suv = db.Column(db.Float, nullable=True)
+    price_luxury = db.Column(db.Float, nullable=True)
+    is_active = db.Column(db.Boolean, nullable=False, default=True)
+    is_bidirectional = db.Column(db.Boolean, nullable=False, default=True)  # match reverse too
+    sort_order = db.Column(db.Integer, nullable=False, default=0)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def get_price(self, vehicle_type='sedan'):
+        if vehicle_type == 'suv' and self.price_suv:
+            return self.price_suv
+        if vehicle_type == 'luxury' and self.price_luxury:
+            return self.price_luxury
+        return self.price_sedan
+
+    def matches(self, pickup, dropoff):
+        """Check if pickup/dropoff text matches this flat rate's keywords."""
+        pickup_lower = pickup.lower()
+        dropoff_lower = dropoff.lower()
+        origin_kws = [k.strip() for k in self.origin_keywords.lower().split(',') if k.strip()]
+        dest_kws = [k.strip() for k in self.dest_keywords.lower().split(',') if k.strip()]
+
+        fwd = any(k in pickup_lower for k in origin_kws) and any(k in dropoff_lower for k in dest_kws)
+        if fwd:
+            return True
+        if self.is_bidirectional:
+            rev = any(k in pickup_lower for k in dest_kws) and any(k in dropoff_lower for k in origin_kws)
+            return rev
+        return False
+
+    def __repr__(self):
+        return f'<FlatRate {self.id} {self.label} ${self.price_sedan}>'

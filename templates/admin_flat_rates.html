@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0a0a1a">
+    <title>Flat Rates - G&amp;M Car Service Admin</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .flat-body {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        .flat-card {
+            background: #12122a;
+            border: 1px solid rgba(200, 168, 78, 0.15);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .flat-card h2 {
+            font-family: 'Playfair Display', serif;
+            color: #fff;
+            font-size: 1.3rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .flat-card .card-desc {
+            color: #888;
+            font-size: 0.85rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: flex-end;
+            margin-bottom: 1rem;
+        }
+
+        .form-group {
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.75rem;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.35rem;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 0.6rem 0.8rem;
+            background: #1a1a3a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 0.9rem;
+            box-sizing: border-box;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #c8a84e;
+        }
+
+        .check-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding-bottom: 0.6rem;
+        }
+
+        .check-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #c8a84e;
+        }
+
+        .check-group label {
+            color: #ccc;
+            font-size: 0.85rem;
+        }
+
+        .btn-add {
+            background: #c8a84e;
+            color: #0a0a1a;
+            border: none;
+            padding: 0.65rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 0.9rem;
+            white-space: nowrap;
+        }
+
+        .btn-add:hover {
+            background: #b8982e;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        th {
+            text-align: left;
+            color: #999;
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 0.6rem 0.5rem;
+            border-bottom: 1px solid #222;
+        }
+
+        td {
+            padding: 0.6rem 0.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 0.85rem;
+            color: #ddd;
+            vertical-align: top;
+        }
+
+        .route-label {
+            color: #c8a84e;
+            font-weight: 700;
+            font-size: 0.92rem;
+        }
+
+        .kw-badge {
+            background: rgba(200, 168, 78, 0.1);
+            color: #c8a84e;
+            padding: 0.1rem 0.45rem;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.78rem;
+            margin: 0.1rem;
+            display: inline-block;
+        }
+
+        .price-col {
+            font-weight: 600;
+            color: #28a745;
+        }
+
+        .active-badge {
+            background: rgba(40, 167, 69, 0.15);
+            color: #28a745;
+            padding: 0.15rem 0.5rem;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .inactive-badge {
+            background: rgba(220, 53, 69, 0.15);
+            color: #dc3545;
+            padding: 0.15rem 0.5rem;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .bidir-badge {
+            background: rgba(23, 162, 184, 0.12);
+            color: #17a2b8;
+            padding: 0.15rem 0.5rem;
+            border-radius: 8px;
+            font-size: 0.72rem;
+            font-weight: 600;
+        }
+
+        .btn-sm {
+            padding: 0.3rem 0.7rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-right: 0.3rem;
+        }
+
+        .btn-toggle {
+            background: #1a1a3a;
+            color: #c8a84e;
+            border: 1px solid rgba(200, 168, 78, 0.3);
+        }
+
+        .btn-edit {
+            background: rgba(23, 162, 184, 0.12);
+            color: #17a2b8;
+        }
+
+        .btn-del {
+            background: rgba(220, 53, 69, 0.12);
+            color: #dc3545;
+        }
+
+        .global-toggle {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding: 1rem 1.5rem;
+            background: #12122a;
+            border: 1px solid rgba(200, 168, 78, 0.15);
+            border-radius: 12px;
+        }
+
+        .global-toggle .status-on {
+            color: #28a745;
+            font-weight: 700;
+        }
+
+        .global-toggle .status-off {
+            color: #dc3545;
+            font-weight: 700;
+        }
+
+        .empty-msg {
+            text-align: center;
+            color: #666;
+            padding: 2rem;
+            font-size: 0.95rem;
+        }
+
+        .edit-form {
+            display: none;
+            background: #0e0e24;
+            border: 1px solid rgba(200, 168, 78, 0.2);
+            border-radius: 10px;
+            padding: 1.2rem;
+            margin-top: 0.5rem;
+        }
+
+        .edit-form.open {
+            display: block;
+        }
+
+        @media (max-width: 600px) {
+            .form-row {
+                flex-direction: column;
+            }
+
+            table {
+                font-size: 0.78rem;
+            }
+
+            td,
+            th {
+                padding: 0.4rem 0.3rem;
+            }
+        }
+    </style>
+</head>
+
+<body style="background:#0a0a1a; color:#e0e0e0; font-family:'Inter', sans-serif;">
+    <header>
+        <h1>G&amp;M Car Service</h1>
+        <nav class="admin-nav">
+            <span>&#128274; Flat Rates</span>
+            <div style="display:flex; gap:0.75rem; align-items:center;">
+                <a href="{{ url_for('admin_dashboard') }}"
+                    style="color:#c8a84e; text-decoration:none; font-weight:600;">&#128663; Dashboard</a>
+                <a href="{{ url_for('admin_settings') }}"
+                    style="color:#c8a84e; text-decoration:none; font-weight:600;">&#9881; Settings</a>
+                <a href="{{ url_for('admin_pricing') }}"
+                    style="color:#c8a84e; text-decoration:none; font-weight:600;">&#128176; Pricing</a>
+                <a href="{{ url_for('admin_promo_codes') }}"
+                    style="color:#c8a84e; text-decoration:none; font-weight:600;">&#127775; Promos</a>
+                <a href="{{ url_for('admin_logout') }}">Logout</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="flat-body">
+        <h1 style="font-family:'Playfair Display',serif; font-size:1.8rem; margin-bottom:1rem;">
+            &#128274; Flat Rate Routes
+        </h1>
+
+        <!-- Global Toggle -->
+        <div class="global-toggle">
+            <div style="flex:1;">
+                <strong style="color:#fff;">Flat Rate System</strong>
+                <span style="margin-left:0.75rem;">
+                    {% if enabled %}
+                    <span class="status-on">&#9989; Enabled</span>
+                    {% else %}
+                    <span class="status-off">&#10060; Disabled</span>
+                    {% endif %}
+                </span>
+                <div style="color:#888; font-size:0.8rem; margin-top:0.3rem;">
+                    When enabled, matching routes show fixed prices instead of distance-based estimates.
+                </div>
+            </div>
+            <form method="POST" action="{{ url_for('admin_flat_rate_global_toggle') }}" style="margin:0;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn-add" style="font-size:0.85rem; padding:0.5rem 1.2rem;">
+                    {% if enabled %}Disable{% else %}Enable{% endif %}
+                </button>
+            </form>
+        </div>
+
+        <!-- Add New Route -->
+        <div class="flat-card">
+            <h2>Add Flat Rate Route</h2>
+            <p class="card-desc">Define origin &amp; destination keywords (comma-separated). Any booking matching these
+                keywords will get this fixed price.</p>
+            <form method="POST" action="{{ url_for('admin_flat_rate_add') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="form-row">
+                    <div class="form-group" style="flex:2;">
+                        <label>Route Label</label>
+                        <input type="text" name="label" placeholder="e.g. SRQ Airport ↔ Downtown Sarasota" required
+                            maxlength="120">
+                    </div>
+                    <div class="form-group">
+                        <label>Sort Order</label>
+                        <input type="number" name="sort_order" value="0" min="0">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Origin Keywords</label>
+                        <input type="text" name="origin_keywords" placeholder="e.g. sarasota,srq,airport" required
+                            maxlength="255">
+                    </div>
+                    <div class="form-group">
+                        <label>Destination Keywords</label>
+                        <input type="text" name="dest_keywords" placeholder="e.g. downtown,main st" required
+                            maxlength="255">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Sedan Price ($)</label>
+                        <input type="number" name="price_sedan" step="0.01" min="0" required placeholder="45.00">
+                    </div>
+                    <div class="form-group">
+                        <label>SUV Price ($)</label>
+                        <input type="number" name="price_suv" step="0.01" min="0" placeholder="55.00">
+                    </div>
+                    <div class="form-group">
+                        <label>Luxury Price ($)</label>
+                        <input type="number" name="price_luxury" step="0.01" min="0" placeholder="75.00">
+                    </div>
+                    <div class="check-group">
+                        <input type="checkbox" id="is_bidirectional" name="is_bidirectional" value="1" checked>
+                        <label for="is_bidirectional">Bidirectional (A↔B)</label>
+                    </div>
+                    <button type="submit" class="btn-add">&#10003; Add Route</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Existing Routes -->
+        <div class="flat-card">
+            <h2>Configured Routes</h2>
+            {% if rates %}
+            <div style="overflow-x:auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Route</th>
+                            <th>Origin Keywords</th>
+                            <th>Dest Keywords</th>
+                            <th>Sedan</th>
+                            <th>SUV</th>
+                            <th>Luxury</th>
+                            <th>Dir</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in rates %}
+                        <tr>
+                            <td>{{ r.sort_order }}</td>
+                            <td><span class="route-label">{{ r.label }}</span></td>
+                            <td>
+                                {% for kw in r.origin_keywords.split(',') %}
+                                <span class="kw-badge">{{ kw.strip() }}</span>
+                                {% endfor %}
+                            </td>
+                            <td>
+                                {% for kw in r.dest_keywords.split(',') %}
+                                <span class="kw-badge">{{ kw.strip() }}</span>
+                                {% endfor %}
+                            </td>
+                            <td class="price-col">${{ '%.2f' | format(r.price_sedan) }}</td>
+                            <td class="price-col">{{ '$%.2f' | format(r.price_suv) if r.price_suv else '—' }}</td>
+                            <td class="price-col">{{ '$%.2f' | format(r.price_luxury) if r.price_luxury else '—' }}</td>
+                            <td>
+                                {% if r.is_bidirectional %}
+                                <span class="bidir-badge">↔ Both</span>
+                                {% else %}
+                                <span style="color:#888; font-size:0.78rem;">→ One-way</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if r.is_active %}
+                                <span class="active-badge">&#10003; Active</span>
+                                {% else %}
+                                <span class="inactive-badge">Disabled</span>
+                                {% endif %}
+                            </td>
+                            <td style="white-space:nowrap;">
+                                <button class="btn-sm btn-edit" onclick="toggleEdit({{ r.id }})">&#9998; Edit</button>
+                                <form method="POST" action="{{ url_for('admin_flat_rate_toggle', rate_id=r.id) }}"
+                                    style="display:inline;">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button class="btn-sm btn-toggle" type="submit">
+                                        {% if r.is_active %}Disable{% else %}Enable{% endif %}
+                                    </button>
+                                </form>
+                                <form method="POST" action="{{ url_for('admin_flat_rate_delete', rate_id=r.id) }}"
+                                    style="display:inline;" onsubmit="return confirm('Delete this flat rate route?');">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button class="btn-sm btn-del" type="submit">&#128465;</button>
+                                </form>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="10" style="padding:0; border:none;">
+                                <div class="edit-form" id="edit-{{ r.id }}">
+                                    <form method="POST" action="{{ url_for('admin_flat_rate_edit', rate_id=r.id) }}">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <div class="form-row">
+                                            <div class="form-group" style="flex:2;">
+                                                <label>Route Label</label>
+                                                <input type="text" name="label" value="{{ r.label }}" required
+                                                    maxlength="120">
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Sort Order</label>
+                                                <input type="number" name="sort_order" value="{{ r.sort_order }}"
+                                                    min="0">
+                                            </div>
+                                        </div>
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label>Origin Keywords</label>
+                                                <input type="text" name="origin_keywords"
+                                                    value="{{ r.origin_keywords }}" required maxlength="255">
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Destination Keywords</label>
+                                                <input type="text" name="dest_keywords" value="{{ r.dest_keywords }}"
+                                                    required maxlength="255">
+                                            </div>
+                                        </div>
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label>Sedan ($)</label>
+                                                <input type="number" name="price_sedan" value="{{ r.price_sedan }}"
+                                                    step="0.01" min="0" required>
+                                            </div>
+                                            <div class="form-group">
+                                                <label>SUV ($)</label>
+                                                <input type="number" name="price_suv" value="{{ r.price_suv or '' }}"
+                                                    step="0.01" min="0">
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Luxury ($)</label>
+                                                <input type="number" name="price_luxury"
+                                                    value="{{ r.price_luxury or '' }}" step="0.01" min="0">
+                                            </div>
+                                            <div class="check-group">
+                                                <input type="checkbox" name="is_bidirectional" value="1" {{ 'checked' if
+                                                    r.is_bidirectional }}>
+                                                <label>Bidirectional</label>
+                                            </div>
+                                            <button type="submit" class="btn-add" style="font-size:0.85rem;">&#10003;
+                                                Save</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="empty-msg">No flat rate routes defined yet. Add one above.</p>
+            {% endif %}
+        </div>
+    </main>
+
+    <script>
+        function toggleEdit(id) {
+            const el = document.getElementById('edit-' + id);
+            if (el) el.classList.toggle('open');
+        }
+    </script>
+</body>
+
+</html>

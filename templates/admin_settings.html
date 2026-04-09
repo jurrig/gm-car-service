@@ -246,6 +246,23 @@
                 </div>
             </div>
 
+            <!-- Flat Rate Routes -->
+            <div class="settings-card">
+                <h2>&#128274; Flat Rate Routes</h2>
+                <p class="card-desc">Define fixed-price routes that override distance-based pricing. Match routes by
+                    pickup/dropoff keywords.</p>
+                <div style="display:flex; align-items:center; gap:1rem;">
+                    <span
+                        style="color:{{ '#28a745' if settings.flat_rates_enabled == '1' else '#dc3545' }}; font-weight:700;">
+                        {{ '✅ Enabled' if settings.flat_rates_enabled == '1' else '❌ Disabled' }}
+                    </span>
+                    <a href="{{ url_for('admin_flat_rates') }}"
+                        style="color:#c8a84e;font-weight:600;text-decoration:none;">
+                        &#128274; Manage Flat Rates &rarr;
+                    </a>
+                </div>
+            </div>
+
             <button type="submit" class="btn-save">&#128190; Save All Settings</button>
         </form>
     </main>
