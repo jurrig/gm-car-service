@@ -570,6 +570,9 @@ def admin_complete(booking_id):
     # Auto-mark cash bookings as paid on completion (collected at pickup)
     if booking.payment_method == 'cash' and booking.payment_status != 'paid':
         booking.payment_status = 'paid'
+        # Send receipt SMS for cash payment on completion
+        total = booking.estimated_price + (booking.tip or 0)
+        send_rider_sms(booking, f'G&M Car Service Receipt — Booking #{booking.id}. Total: ${total:.2f} (Cash). Thank you for riding with us!')
 
     # --- Mileage Engine: auto-mint mileage record ---
     miles = booking.trip_distance_miles
@@ -1592,6 +1595,9 @@ def stripe_webhook():
                 booking.payment_status = 'paid'
                 booking.stripe_session_id = session_data.get('id', booking.stripe_session_id)
                 db.session.commit()
+                # Send receipt SMS on Stripe payment
+                total = booking.estimated_price + (booking.tip or 0)
+                send_rider_sms(booking, f'G&M Car Service Receipt — Booking #{booking.id}. Total: ${total:.2f} (Card). Payment confirmed. Thank you!')
 
     return jsonify({'status': 'ok'}), 200
 
@@ -1608,6 +1614,11 @@ def admin_mark_payment(booking_id):
     if method in ('cash', 'zelle', 'stripe'):
         booking.payment_method = method
     db.session.commit()
+
+    # Send receipt SMS when admin marks as paid
+    total = booking.estimated_price + (booking.tip or 0)
+    send_rider_sms(booking, f'G&M Car Service Receipt — Booking #{booking.id}. Total: ${total:.2f} ({booking.payment_method.capitalize()}). Payment confirmed. Thank you!')
+
     return jsonify({'success': True})
 
 
@@ -1726,6 +1737,9 @@ def pay_stripe_success(token):
                 booking.payment_status = 'paid'
                 booking.payment_method = 'stripe'
                 db.session.commit()
+                # Send receipt SMS on Stripe pay-page success
+                total = booking.estimated_price + (booking.tip or 0)
+                send_rider_sms(booking, f'G&M Car Service Receipt — Booking #{booking.id}. Total: ${total:.2f} (Card). Payment confirmed. Thank you!')
         except Exception as e:
             app.logger.warning('Pay page Stripe verify failed: %s', e)
     return redirect(url_for('pay_page', token=token))
