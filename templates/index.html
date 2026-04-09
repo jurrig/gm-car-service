@@ -446,8 +446,45 @@
                         <div class="price-total"><span>Your Quote:</span> <span id="fin-price">&mdash;</span></div>
                     </div>
 
-                    <p class="payment-note">Payment will be collected at the time of service. By booking, you agree to
-                        our cancellation policy.</p>
+                    <!-- Payment Method Selection -->
+                    <div class="payment-method-select" style="margin:1.25rem 0;">
+                        <label
+                            style="display:block;color:#c8a84e;font-weight:700;font-size:0.9rem;margin-bottom:0.6rem;">HOW
+                            WOULD YOU LIKE TO PAY?</label>
+                        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+                            <label class="pay-option" id="pay-opt-cash" style="flex:1;min-width:100px;cursor:pointer;">
+                                <input type="radio" name="payment_method" value="cash" checked style="display:none;">
+                                <div class="pay-card pay-active"
+                                    style="text-align:center;padding:0.75rem 0.5rem;border:2px solid #c8a84e;border-radius:10px;background:rgba(200,168,78,0.12);transition:all 0.2s;">
+                                    <div style="font-size:1.5rem;">&#128181;</div>
+                                    <div style="font-weight:700;font-size:0.85rem;color:#c8a84e;">Cash</div>
+                                    <div style="font-size:0.7rem;color:#999;">Pay at pickup</div>
+                                </div>
+                            </label>
+                            <label class="pay-option" id="pay-opt-zelle" style="flex:1;min-width:100px;cursor:pointer;">
+                                <input type="radio" name="payment_method" value="zelle" style="display:none;">
+                                <div class="pay-card"
+                                    style="text-align:center;padding:0.75rem 0.5rem;border:2px solid #333;border-radius:10px;background:rgba(255,255,255,0.03);transition:all 0.2s;">
+                                    <div style="font-size:1.5rem;">&#9889;</div>
+                                    <div style="font-weight:700;font-size:0.85rem;color:#ddd;">Zelle</div>
+                                    <div style="font-size:0.7rem;color:#999;">Send after booking</div>
+                                </div>
+                            </label>
+                            <label class="pay-option" id="pay-opt-stripe"
+                                style="flex:1;min-width:100px;cursor:pointer;">
+                                <input type="radio" name="payment_method" value="stripe" style="display:none;">
+                                <div class="pay-card"
+                                    style="text-align:center;padding:0.75rem 0.5rem;border:2px solid #333;border-radius:10px;background:rgba(255,255,255,0.03);transition:all 0.2s;">
+                                    <div style="font-size:1.5rem;">&#128179;</div>
+                                    <div style="font-weight:700;font-size:0.85rem;color:#ddd;">Card</div>
+                                    <div style="font-size:0.7rem;color:#999;">Pay online now</div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <p class="payment-note">By booking, you agree to our <a href="/terms"
+                            style="color:#c8a84e;">cancellation policy</a>.</p>
 
                     <div class="btn-row">
                         <button type="button" class="btn btn-outline-dark" onclick="goToStep(2)">&larr; Back</button>
@@ -954,6 +991,21 @@
             banner.style.color = '#ccc';
             setTimeout(() => checkAvailabilityAndProceed(), 300);
         }
+
+        /* ---- Payment method selector ---- */
+        document.querySelectorAll('.pay-option input[name="payment_method"]').forEach(radio => {
+            radio.addEventListener('change', function () {
+                document.querySelectorAll('.pay-option .pay-card').forEach(c => {
+                    c.style.border = '2px solid #333';
+                    c.style.background = 'rgba(255,255,255,0.03)';
+                    c.classList.remove('pay-active');
+                });
+                const card = this.closest('.pay-option').querySelector('.pay-card');
+                card.style.border = '2px solid #c8a84e';
+                card.style.background = 'rgba(200,168,78,0.12)';
+                card.classList.add('pay-active');
+            });
+        });
 
         /* ---- Multi-step navigation ---- */
         function goToStep(n) {

@@ -8,6 +8,104 @@
     <title>Booking Confirmed - G&amp;M Car Service</title>
     <link rel="manifest" href="/manifest.json">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .payment-box {
+            margin: 1.25rem 0;
+            padding: 1rem 1.25rem;
+            border-radius: 10px;
+        }
+
+        .payment-box h3 {
+            margin: 0 0 0.5rem;
+            font-size: 1rem;
+        }
+
+        .pay-cash {
+            background: rgba(46, 204, 113, 0.1);
+            border: 1px solid #2ecc71;
+        }
+
+        .pay-cash h3 {
+            color: #2ecc71;
+        }
+
+        .pay-zelle {
+            background: rgba(110, 65, 226, 0.1);
+            border: 1px solid #6e41e2;
+        }
+
+        .pay-zelle h3 {
+            color: #6e41e2;
+        }
+
+        .pay-stripe {
+            background: rgba(99, 91, 255, 0.1);
+            border: 1px solid #635bff;
+        }
+
+        .pay-stripe h3 {
+            color: #635bff;
+        }
+
+        .pay-success {
+            background: rgba(46, 204, 113, 0.15);
+            border: 2px solid #2ecc71;
+        }
+
+        .pay-success h3 {
+            color: #2ecc71;
+        }
+
+        .pay-cancelled {
+            background: rgba(231, 76, 60, 0.1);
+            border: 1px solid #e74c3c;
+        }
+
+        .pay-cancelled h3 {
+            color: #e74c3c;
+        }
+
+        .zelle-copy {
+            display: inline-block;
+            margin-top: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: #6e41e2;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .zelle-copy:hover {
+            opacity: 0.85;
+        }
+
+        .pay-badge {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .pay-badge-paid {
+            background: #2ecc71;
+            color: #fff;
+        }
+
+        .pay-badge-unpaid {
+            background: #e67e22;
+            color: #fff;
+        }
+
+        .pay-badge-pending {
+            background: #3498db;
+            color: #fff;
+        }
+    </style>
 </head>
 
 <body>
@@ -53,12 +151,59 @@
                     <th>Passengers</th>
                     <td>{{ booking.passengers }}</td>
                 </tr>
+                <tr>
+                    <th>Payment</th>
+                    <td>
+                        {{ booking.payment_method | capitalize }}
+                        &nbsp;
+                        <span class="pay-badge pay-badge-{{ booking.payment_status }}">{{ booking.payment_status
+                            }}</span>
+                    </td>
+                </tr>
             </table>
 
             <div class="receipt-total">
                 <span>Estimated Price</span>
                 <span class="price">${{ '%.2f' | format(booking.estimated_price) }}</span>
             </div>
+
+            <!-- Payment-specific instructions -->
+            {% if payment_success %}
+            <div class="payment-box pay-success">
+                <h3>&#9989; Payment Received!</h3>
+                <p>Your card has been charged <strong>${{ '%.2f' | format(booking.estimated_price) }}</strong>. You're
+                    all set!</p>
+            </div>
+            {% elif payment_cancelled %}
+            <div class="payment-box pay-cancelled">
+                <h3>&#10060; Payment Cancelled</h3>
+                <p>Your booking is still confirmed. You can pay with cash at pickup or send via Zelle: <strong>{{
+                        zelle_id }}</strong></p>
+            </div>
+            {% elif booking.payment_method == 'cash' %}
+            <div class="payment-box pay-cash">
+                <h3>&#128181; Pay Cash at Pickup</h3>
+                <p>Please have <strong>${{ '%.2f' | format(booking.estimated_price) }}</strong> ready when your driver
+                    arrives. Exact change appreciated.</p>
+            </div>
+            {% elif booking.payment_method == 'zelle' %}
+            <div class="payment-box pay-zelle">
+                <h3>&#9889; Send via Zelle</h3>
+                <p>Send <strong>${{ '%.2f' | format(booking.estimated_price) }}</strong> to:</p>
+                <p style="font-size:1.2rem;font-weight:700;color:#6e41e2;margin:0.5rem 0;" id="zelle-target">{{ zelle_id
+                    }}</p>
+                <p style="font-size:0.8rem;color:#999;">Include "Booking #{{ booking.id }}" in the memo.</p>
+                <button class="zelle-copy" onclick="copyZelle()">&#128203; Copy Zelle Info</button>
+                <span id="zelle-copied"
+                    style="display:none;margin-left:0.5rem;color:#2ecc71;font-weight:600;">Copied!</span>
+            </div>
+            {% elif booking.payment_method == 'stripe' and booking.payment_status != 'paid' %}
+            <div class="payment-box pay-stripe">
+                <h3>&#128179; Card Payment Pending</h3>
+                <p>If you weren't redirected to pay, you can pay cash at pickup or Zelle to <strong>{{ zelle_id
+                        }}</strong>.</p>
+            </div>
+            {% endif %}
 
             <p class="receipt-note">
                 Thank you for choosing G&amp;M Car Service!<br>
@@ -69,6 +214,15 @@
         </div>
     </main>
 
+    <script>
+        function copyZelle() {
+            const text = document.getElementById('zelle-target').textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                document.getElementById('zelle-copied').style.display = 'inline';
+                setTimeout(() => { document.getElementById('zelle-copied').style.display = 'none'; }, 2000);
+            });
+        }
+    </script>
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>
 

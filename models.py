@@ -38,6 +38,9 @@ class Booking(db.Model):
     assigned_driver_id = db.Column(db.Integer, db.ForeignKey('drivers.id'), nullable=True)
     toll_fee = db.Column(db.Float, nullable=True, default=0)       # toll portion of the fare
     tip = db.Column(db.Float, nullable=True, default=0)            # tip from customer
+    payment_method = db.Column(db.String(20), nullable=False, default='cash')  # stripe, zelle, cash
+    payment_status = db.Column(db.String(20), nullable=False, default='unpaid')  # unpaid, pending, paid
+    stripe_session_id = db.Column(db.String(255), nullable=True)   # Stripe Checkout session
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     assigned_driver = db.relationship('Driver', backref='bookings', foreign_keys=[assigned_driver_id])

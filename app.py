@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
+import stripe
 
 load_dotenv()
 
@@ -47,6 +48,12 @@ app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME', '')
 app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD', '')
 app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_USERNAME', '')
 mail = Mail(app)
+
+# Stripe configuration
+stripe.api_key = os.environ.get('STRIPE_SECRET_KEY', '')
+STRIPE_PUBLISHABLE_KEY = os.environ.get('STRIPE_PUBLISHABLE_KEY', '')
+STRIPE_WEBHOOK_SECRET = os.environ.get('STRIPE_WEBHOOK_SECRET', '')
+ZELLE_BUSINESS_ID = os.environ.get('ZELLE_BUSINESS_ID', 'info@gmcarservice.com')  # Zelle email/phone
 
 with app.app_context():
     db.create_all()
@@ -297,6 +304,8 @@ def book():
         toll_fee=toll_fee if toll_fee > 0 else 0,
         trip_distance_miles=miles if miles > 0 else None,
         trip_duration_min=trip_duration_min,
+        payment_method=request.form.get('payment_method', 'cash').strip().lower(),
+        payment_status='unpaid',
     )
 
     # --- Passenger photo + airport pickup details ---
@@ -331,7 +340,36 @@ def book():
     except Exception as e:
         app.logger.warning('SMS notification failed: %s', e)
 
-    return render_template('receipt.html', booking=booking)
+    # --- Payment routing ---
+    if booking.payment_method == 'stripe' and stripe.api_key:
+        try:
+            checkout_session = stripe.checkout.Session.create(
+                payment_method_types=['card'],
+                line_items=[{
+                    'price_data': {
+                        'currency': 'usd',
+                        'product_data': {
+                            'name': f'G&M Car Service — Booking #{booking.id}',
+                            'description': f'{booking.pickup_location.split(",")[0]} → {booking.dropoff_location.split(",")[0]} ({booking.vehicle_type.capitalize()})',
+                        },
+                        'unit_amount': int(round(booking.estimated_price * 100)),  # cents
+                    },
+                    'quantity': 1,
+                }],
+                mode='payment',
+                success_url=request.host_url.rstrip('/') + url_for('payment_success', booking_id=booking.id) + '?session_id={CHECKOUT_SESSION_ID}',
+                cancel_url=request.host_url.rstrip('/') + url_for('payment_cancel', booking_id=booking.id),
+                metadata={'booking_id': str(booking.id)},
+            )
+            booking.stripe_session_id = checkout_session.id
+            booking.payment_status = 'pending'
+            db.session.commit()
+            return redirect(checkout_session.url, code=303)
+        except Exception as e:
+            app.logger.warning('Stripe checkout failed: %s', e)
+            # Fall through to receipt page — payment can be collected later
+
+    return render_template('receipt.html', booking=booking, zelle_id=ZELLE_BUSINESS_ID)
 
 
 # --------------- Admin Dashboard ---------------
@@ -521,6 +559,10 @@ def admin_noshow(booking_id):
 def admin_complete(booking_id):
     booking = db.get_or_404(Booking, booking_id)
     booking.status = 'Completed'
+
+    # Auto-mark cash bookings as paid on completion (collected at pickup)
+    if booking.payment_method == 'cash' and booking.payment_status != 'paid':
+        booking.payment_status = 'paid'
 
     # --- Mileage Engine: auto-mint mileage record ---
     miles = booking.trip_distance_miles
@@ -1479,6 +1521,80 @@ def contact():
         except Exception:
             return render_template('contact.html', error='Could not send message. Please call us instead.')
     return render_template('contact.html')
+
+
+# --------------- Payment Routes ---------------
+@app.route('/payment/success/<int:booking_id>')
+def payment_success(booking_id):
+    """Stripe redirects here after successful payment."""
+    booking = db.get_or_404(Booking, booking_id)
+    session_id = request.args.get('session_id', '')
+    # Verify the Stripe session if possible
+    if stripe.api_key and session_id:
+        try:
+            sess = stripe.checkout.Session.retrieve(session_id)
+            if sess.payment_status == 'paid' and sess.metadata.get('booking_id') == str(booking_id):
+                booking.payment_status = 'paid'
+                db.session.commit()
+        except Exception as e:
+            app.logger.warning('Stripe session verify failed: %s', e)
+    return render_template('receipt.html', booking=booking, zelle_id=ZELLE_BUSINESS_ID, payment_success=True)
+
+
+@app.route('/payment/cancel/<int:booking_id>')
+def payment_cancel(booking_id):
+    """Stripe redirects here if customer cancels payment."""
+    booking = db.get_or_404(Booking, booking_id)
+    return render_template('receipt.html', booking=booking, zelle_id=ZELLE_BUSINESS_ID, payment_cancelled=True)
+
+
+@app.route('/webhook/stripe', methods=['POST'])
+@csrf.exempt
+@limiter.exempt
+def stripe_webhook():
+    """Stripe webhook for payment confirmation (backup to redirect)."""
+    payload = request.get_data()
+    sig_header = request.headers.get('Stripe-Signature', '')
+
+    if STRIPE_WEBHOOK_SECRET:
+        try:
+            event = stripe.Webhook.construct_event(payload, sig_header, STRIPE_WEBHOOK_SECRET)
+        except (ValueError, stripe.error.SignatureVerificationError):
+            return jsonify({'error': 'Invalid signature'}), 400
+    else:
+        try:
+            event = stripe.Event.construct_from(
+                stripe.util.json.loads(payload), stripe.api_key
+            )
+        except Exception:
+            return jsonify({'error': 'Invalid payload'}), 400
+
+    if event['type'] == 'checkout.session.completed':
+        session_data = event['data']['object']
+        booking_id = session_data.get('metadata', {}).get('booking_id')
+        if booking_id:
+            booking = db.session.get(Booking, int(booking_id))
+            if booking:
+                booking.payment_status = 'paid'
+                booking.stripe_session_id = session_data.get('id', booking.stripe_session_id)
+                db.session.commit()
+
+    return jsonify({'status': 'ok'}), 200
+
+
+@app.route('/admin/payment/mark-paid/<int:booking_id>', methods=['POST'])
+@csrf.exempt
+@admin_required
+def admin_mark_payment(booking_id):
+    """Admin manually marks a booking as paid (for Cash/Zelle collected offline)."""
+    booking = db.get_or_404(Booking, booking_id)
+    data = request.get_json(silent=True) or {}
+    booking.payment_status = 'paid'
+    method = data.get('method', booking.payment_method)
+    if method in ('cash', 'zelle', 'stripe'):
+        booking.payment_method = method
+    db.session.commit()
+    return jsonify({'success': True})
 
 
 if __name__ == '__main__':

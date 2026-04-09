@@ -1193,18 +1193,18 @@
                     style="text-decoration:none;">&#128205; Navigate</a>
                 {% if next_ride.status == 'Pending' %}
                 <form method="POST" action="{{ url_for('admin_confirm', booking_id=next_ride.id) }}" style="margin:0;">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button type="submit" class="btn-action btn-accept" style="width:100%;">&#10003; Confirm</button>
                 </form>
                 {% elif next_ride.status in ['Confirmed', 'Accepted'] %}
                 <form method="POST" action="{{ url_for('admin_onmyway', booking_id=next_ride.id) }}" style="margin:0;">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button type="submit" class="btn-action btn-enroute" style="width:100%;">&#128663; On My
                         Way</button>
                 </form>
                 {% elif next_ride.status == 'En Route' %}
                 <form method="POST" action="{{ url_for('admin_arrived', booking_id=next_ride.id) }}" style="margin:0;">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button type="submit" class="btn-action btn-arrived" style="width:100%;">&#128205; Arrived</button>
                 </form>
                 {% endif %}
@@ -1421,6 +1421,27 @@
                             }}</span>
                     </div>
                     <div class="ride-field">
+                        <label>Payment</label>
+                        <span>
+                            {{ b.payment_method | default('cash') | capitalize }}
+                            {% if b.payment_status == 'paid' %}
+                            <span
+                                style="background:#2ecc71;color:#fff;padding:0.15rem 0.4rem;border-radius:8px;font-size:0.7rem;font-weight:700;">PAID</span>
+                            {% elif b.payment_status == 'pending' %}
+                            <span
+                                style="background:#3498db;color:#fff;padding:0.15rem 0.4rem;border-radius:8px;font-size:0.7rem;font-weight:700;">PENDING</span>
+                            {% else %}
+                            <span
+                                style="background:#e67e22;color:#fff;padding:0.15rem 0.4rem;border-radius:8px;font-size:0.7rem;font-weight:700;">UNPAID</span>
+                            {% if b.status != 'Completed' %}
+                            <button type="button" onclick="markPayment({{ b.id }})"
+                                style="margin-left:0.3rem;padding:0.15rem 0.5rem;background:#2ecc71;color:#fff;border:none;border-radius:6px;font-size:0.7rem;font-weight:700;cursor:pointer;"
+                                title="Mark as paid">&#10003; Paid</button>
+                            {% endif %}
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="ride-field">
                         <label>Booked</label>
                         <span>{{ b.created_at.strftime('%b %d, %I:%M %p') if b.created_at else '—' }}</span>
                     </div>
@@ -1463,12 +1484,12 @@
                     {% if b.status == 'Pending' %}
                     <form method="POST" action="{{ url_for('admin_confirm', booking_id=b.id) }}"
                         style="display:inline;">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <button class="btn-action btn-accept" type="submit">&#10003; Confirm</button>
                     </form>
                     <form method="POST" action="{{ url_for('admin_accept', booking_id=b.id) }}"
                         style="display:inline-flex; align-items:center; gap:0.35rem;">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <input type="text" name="eta" value="15 min" class="eta-input" title="ETA to send rider">
                         <button class="btn-action btn-enroute" type="submit">&#128232; Accept &amp; Notify
                             Rider</button>
@@ -1478,7 +1499,7 @@
                     {% if b.status == 'Confirmed' %}
                     <form method="POST" action="{{ url_for('admin_accept', booking_id=b.id) }}"
                         style="display:inline-flex; align-items:center; gap:0.35rem;">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <input type="text" name="eta" value="15 min" class="eta-input" title="ETA to send rider">
                         <button class="btn-action btn-enroute" type="submit">&#128232; Accept &amp; Notify
                             Rider</button>
@@ -1488,7 +1509,7 @@
                     {% if b.status == 'Accepted' %}
                     <form method="POST" action="{{ url_for('admin_onmyway', booking_id=b.id) }}"
                         style="display:inline;">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <button class="btn-action btn-enroute" type="submit">&#128663; On My Way (SMS
                             rider)</button>
                     </form>
@@ -1497,7 +1518,7 @@
                     {% if b.status == 'En Route' %}
                     <form method="POST" action="{{ url_for('admin_arrived', booking_id=b.id) }}"
                         style="display:inline;">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <button class="btn-action btn-arrived" type="submit">&#128205; I've Arrived (SMS
                             rider)</button>
                     </form>
@@ -1506,7 +1527,7 @@
                     {% if b.status in ['Accepted', 'En Route', 'Arrived', 'Confirmed'] %}
                     <form method="POST" action="{{ url_for('admin_complete', booking_id=b.id) }}"
                         style="display:inline;">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <button class="btn-action btn-done" type="submit">&#9745; Complete</button>
                     </form>
                     <!-- Odometer Snap -->
@@ -1518,7 +1539,7 @@
                             onchange="uploadOdometer({{ b.id }}, this)">
                     </label>
                     <form method="POST" action="{{ url_for('admin_noshow', booking_id=b.id) }}" style="display:inline;">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <button class="btn-action btn-noshow" type="submit">&#128683; No-Show</button>
                     </form>
                     {% endif %}
@@ -1531,7 +1552,7 @@
                     <form method="POST" action="{{ url_for('admin_delete', booking_id=b.id) }}"
                         onsubmit="return confirm('Delete booking #{{ b.id }}?');"
                         style="display:inline; margin-left:auto;">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <button class="btn-action btn-del" type="submit">&#10005;</button>
                     </form>
 
@@ -1965,6 +1986,19 @@
             }).then(r => r.json()).then(d => {
                 if (!d.success) alert(d.error || 'Failed to assign driver');
             }).catch(() => alert('Network error'));
+        }
+
+        // ===== Mark Payment as Paid =====
+        function markPayment(bookingId) {
+            if (!confirm('Mark this booking as paid?')) return;
+            fetch('/admin/payment/mark-paid/' + bookingId, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ method: 'cash' })
+            })
+                .then(r => r.json())
+                .then(d => { if (d.success) location.reload(); else alert('Failed'); })
+                .catch(() => alert('Network error'));
         }
 
         // ===== Odometer Photo Upload =====
