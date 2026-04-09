@@ -47,6 +47,11 @@ class Booking(db.Model):
     payment_status = db.Column(db.String(20), nullable=False, default='unpaid')
     payment_token = db.Column(db.String(32), nullable=True, default=generate_token)
     stripe_session_id = db.Column(db.String(255), nullable=True)
+    driver_lat = db.Column(db.Float, nullable=True)
+    driver_lng = db.Column(db.Float, nullable=True)
+    driver_location_updated = db.Column(db.DateTime, nullable=True)
+    pickup_lat = db.Column(db.Float, nullable=True)
+    pickup_lng = db.Column(db.Float, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     assigned_driver = db.relationship('Driver', backref='bookings', foreign_keys=[assigned_driver_id])

@@ -14,6 +14,7 @@ from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
 import stripe
+import math
 
 load_dotenv()
 
@@ -328,6 +329,16 @@ def book():
         payment_status='unpaid',
     )
 
+    # Capture pickup GPS for auto-arrive
+    try:
+        plat = float(request.form.get('pickup_lat', '') or 0)
+        plng = float(request.form.get('pickup_lng', '') or 0)
+        if plat and plng:
+            booking.pickup_lat = plat
+            booking.pickup_lng = plng
+    except (TypeError, ValueError):
+        pass
+
     # --- Passenger photo + airport pickup details ---
     pax_photo = request.files.get('passenger_photo')
     if pax_photo and pax_photo.filename and allowed_file(pax_photo.filename):
@@ -509,11 +520,16 @@ def admin_onmyway(booking_id):
         from urllib.parse import quote
         pickup_enc = quote(booking.pickup_location)
         maps_link = f"https://www.google.com/maps/dir/?api=1&destination={pickup_enc}&travelmode=driving"
+        track_url = ''
+        if booking.payment_token:
+            track_url = request.host_url.rstrip('/') + url_for('passenger_track', token=booking.payment_token)
         msg = (
             f"Hi {booking.customer_name}! Your driver is on the way to {booking.pickup_location}.\n"
             f"Track the route: {maps_link}\n"
-            f"— G&M Car Service"
         )
+        if track_url:
+            msg += f"Live tracking: {track_url}\n"
+        msg += f"— G&M Car Service"
         send_rider_sms(booking, msg)
         booking.last_notified = datetime.now()
         db.session.commit()
@@ -1187,6 +1203,248 @@ def driver_logout():
     session.pop('driver_id', None)
     session.pop('driver_name', None)
     return redirect(url_for('driver_login'))
+
+
+# --------------- Driver Status API (hands-free workflow) ---------------
+def _haversine(lat1, lng1, lat2, lng2):
+    """Distance in meters between two GPS points."""
+    R = 6371000
+    rlat1, rlat2 = math.radians(lat1), math.radians(lat2)
+    dlat = math.radians(lat2 - lat1)
+    dlng = math.radians(lng2 - lng1)
+    a = math.sin(dlat / 2) ** 2 + math.cos(rlat1) * math.cos(rlat2) * math.sin(dlng / 2) ** 2
+    return R * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+
+def _driver_owns_booking(booking_id):
+    """Returns (booking, driver_id) if driver is logged in and owns the booking."""
+    driver_id = session.get('driver_id')
+    if not driver_id:
+        return None, None
+    booking = db.session.get(Booking, booking_id)
+    if not booking or booking.assigned_driver_id != driver_id:
+        return None, None
+    return booking, driver_id
+
+
+@app.route('/driver/status/<int:booking_id>', methods=['POST'])
+@csrf.exempt
+@limiter.limit("60 per minute")
+def driver_update_status(booking_id):
+    """Driver changes booking status: enroute → arrived → completed."""
+    booking, driver_id = _driver_owns_booking(booking_id)
+    if not booking:
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 403
+
+    data = request.get_json(silent=True) or {}
+    new_status = data.get('status', '')
+    valid_transitions = {
+        'Pending': 'En Route', 'Accepted': 'En Route',
+        'En Route': 'Arrived',
+        'Arrived': 'Completed',
+    }
+    expected = valid_transitions.get(booking.status)
+    if new_status != expected:
+        return jsonify({'success': False, 'error': f'Cannot go from {booking.status} to {new_status}'}), 400
+
+    booking.status = new_status
+
+    if new_status == 'En Route':
+        db.session.commit()
+        try:
+            from urllib.parse import quote
+            pickup_enc = quote(booking.pickup_location)
+            maps_link = f"https://www.google.com/maps/dir/?api=1&destination={pickup_enc}&travelmode=driving"
+            track_url = ''
+            if booking.payment_token:
+                track_url = request.host_url.rstrip('/') + url_for('passenger_track', token=booking.payment_token)
+            msg = (
+                f"Hi {booking.customer_name}! Your driver is on the way to {booking.pickup_location}.\n"
+                f"Track the route: {maps_link}\n"
+            )
+            if track_url:
+                msg += f"Live tracking: {track_url}\n"
+            msg += f"— G&M Car Service"
+            send_rider_sms(booking, msg)
+            booking.last_notified = datetime.now()
+            db.session.commit()
+        except Exception:
+            pass
+
+    elif new_status == 'Arrived':
+        db.session.commit()
+        try:
+            msg = (
+                f"Hi {booking.customer_name}! Your G&M Car Service driver has arrived at {booking.pickup_location}.\n"
+                f"We're waiting for you!\n"
+            )
+            if booking.payment_status != 'paid' and booking.payment_method in ('cash', 'zelle') and booking.payment_token:
+                pay_url = request.host_url.rstrip('/') + url_for('pay_page', token=booking.payment_token)
+                msg += f"\nYour fare: ${booking.estimated_price:.2f}\nPay or add a tip here: {pay_url}\n"
+            msg += "— G&M Car Service"
+            send_rider_sms(booking, msg)
+            booking.last_notified = datetime.now()
+            db.session.commit()
+        except Exception:
+            pass
+
+    elif new_status == 'Completed':
+        if booking.payment_method == 'cash' and booking.payment_status != 'paid':
+            booking.payment_status = 'paid'
+
+        # Mileage Engine
+        miles = booking.trip_distance_miles
+        if miles and miles > 0:
+            route_desc = f'{booking.pickup_location.split(",")[0]} → {booking.dropoff_location.split(",")[0]}'
+            mileage = MileageLog(
+                booking_id=booking.id, driver_id=booking.assigned_driver_id,
+                date=booking.pickup_time.date() if booking.pickup_time else datetime.now().date(),
+                miles=round(miles, 1), category='Business: Passenger Transport',
+                route_description=route_desc, deduction_rate=0.725)
+            db.session.add(mileage)
+
+        # Payout Engine
+        if booking.assigned_driver_id:
+            driver = db.session.get(Driver, booking.assigned_driver_id)
+            if driver:
+                fare = booking.estimated_price - (booking.toll_fee or 0)
+                rate = driver.commission_rate or 0.60
+                commission = round(fare * rate, 2)
+                toll_reimburse = round(booking.toll_fee or 0, 2)
+                tip = round(booking.tip or 0, 2)
+                payout = Payout(
+                    driver_id=driver.id, booking_id=booking.id,
+                    date=booking.pickup_time.date() if booking.pickup_time else datetime.now().date(),
+                    fare_amount=round(fare, 2), commission_rate=rate,
+                    commission_amount=commission, toll_reimbursement=toll_reimburse,
+                    tip_amount=tip, total_payout=round(commission + toll_reimburse + tip, 2),
+                    status='Pending')
+                db.session.add(payout)
+
+        db.session.commit()
+
+        if booking.payment_method == 'cash' and booking.payment_status == 'paid':
+            send_payment_receipt(booking)
+        if booking.payment_method == 'zelle' and booking.payment_status != 'paid' and booking.payment_token:
+            pay_url = request.host_url.rstrip('/') + url_for('pay_page', token=booking.payment_token)
+            total = booking.estimated_price + (booking.tip or 0)
+            send_rider_sms(booking, f'Your ride is complete! Total: ${total:.2f}. Pay & add tip here: {pay_url}')
+
+    return jsonify({'success': True, 'status': booking.status})
+
+
+@app.route('/driver/location', methods=['POST'])
+@csrf.exempt
+@limiter.limit("120 per minute")
+def driver_location_ping():
+    """Driver sends GPS coords. If within 200m of next pickup, auto-arrive."""
+    driver_id = session.get('driver_id')
+    if not driver_id:
+        return jsonify({'success': False}), 403
+
+    data = request.get_json(silent=True) or {}
+    try:
+        lat = float(data.get('lat', 0))
+        lng = float(data.get('lng', 0))
+    except (TypeError, ValueError):
+        return jsonify({'success': False}), 400
+
+    if lat == 0 and lng == 0:
+        return jsonify({'success': False}), 400
+
+    # Find the driver's active ride (En Route)
+    active = Booking.query.filter_by(
+        assigned_driver_id=driver_id, status='En Route'
+    ).first()
+
+    auto_arrived = False
+    if active:
+        active.driver_lat = lat
+        active.driver_lng = lng
+        active.driver_location_updated = datetime.now()
+        db.session.commit()
+
+        # Check proximity to pickup (within 200m)
+        if active.pickup_lat and active.pickup_lng:
+            dist = _haversine(lat, lng, active.pickup_lat, active.pickup_lng)
+            if dist <= 200:
+                active.status = 'Arrived'
+                db.session.commit()
+                auto_arrived = True
+                try:
+                    msg = (
+                        f"Hi {active.customer_name}! Your G&M Car Service driver has arrived at {active.pickup_location}.\n"
+                        f"We're waiting for you!\n"
+                    )
+                    if active.payment_status != 'paid' and active.payment_method in ('cash', 'zelle') and active.payment_token:
+                        pay_url = request.host_url.rstrip('/') + url_for('pay_page', token=active.payment_token)
+                        msg += f"\nYour fare: ${active.estimated_price:.2f}\nPay or add a tip here: {pay_url}\n"
+                    msg += "— G&M Car Service"
+                    send_rider_sms(active, msg)
+                    active.last_notified = datetime.now()
+                    db.session.commit()
+                except Exception:
+                    pass
+    else:
+        # Update location on Arrived bookings too (for passenger tracking)
+        waiting = Booking.query.filter(
+            Booking.assigned_driver_id == driver_id,
+            Booking.status.in_(['Arrived', 'Pending', 'Accepted'])
+        ).first()
+        if waiting:
+            waiting.driver_lat = lat
+            waiting.driver_lng = lng
+            waiting.driver_location_updated = datetime.now()
+            db.session.commit()
+
+    return jsonify({'success': True, 'auto_arrived': auto_arrived,
+                    'booking_id': active.id if active and auto_arrived else None})
+
+
+@app.route('/driver/rides/status')
+def driver_rides_status():
+    """Poll endpoint for driver portal to refresh ride statuses."""
+    driver_id = session.get('driver_id')
+    if not driver_id:
+        return jsonify([])
+
+    now = datetime.now()
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    today_end = today_start + timedelta(days=1)
+    rides = Booking.query.filter_by(assigned_driver_id=driver_id).filter(
+        Booking.pickup_time >= today_start, Booking.pickup_time < today_end
+    ).all()
+    return jsonify([{'id': r.id, 'status': r.status} for r in rides])
+
+
+@app.route('/track/<token>')
+def passenger_track(token):
+    """Public passenger tracking page — shows driver ETA in real time."""
+    booking = Booking.query.filter_by(payment_token=token).first_or_404()
+    return render_template('track.html', booking=booking)
+
+
+@app.route('/track/<token>/status')
+@limiter.limit("60 per minute")
+def passenger_track_status(token):
+    """API for passenger tracking page to poll driver location / ETA."""
+    booking = Booking.query.filter_by(payment_token=token).first_or_404()
+    result = {
+        'status': booking.status,
+        'driver_name': booking.assigned_driver.name if booking.assigned_driver else None,
+        'has_location': False,
+        'updated': None,
+    }
+    if booking.driver_lat and booking.driver_lng and booking.status in ('En Route', 'Arrived'):
+        result['has_location'] = True
+        result['driver_lat'] = booking.driver_lat
+        result['driver_lng'] = booking.driver_lng
+        result['updated'] = booking.driver_location_updated.isoformat() if booking.driver_location_updated else None
+        if booking.pickup_lat and booking.pickup_lng:
+            result['distance_m'] = round(_haversine(
+                booking.driver_lat, booking.driver_lng,
+                booking.pickup_lat, booking.pickup_lng))
+    return jsonify(result)
 
 
 # --------------- Odometer Snap ---------------

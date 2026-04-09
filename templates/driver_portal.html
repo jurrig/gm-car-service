@@ -135,6 +135,78 @@
             text-decoration: none;
             border: 1px solid rgba(200, 168, 78, 0.2);
         }
+
+        /* Status action buttons */
+        .dp-status-btn {
+            display: block;
+            width: 100%;
+            padding: 0.7rem;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 0.7rem;
+            transition: opacity 0.2s;
+        }
+
+        .dp-status-btn:hover {
+            opacity: 0.85;
+        }
+
+        .dp-status-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .btn-enroute-dp {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            color: #fff;
+        }
+
+        .btn-arrived-dp {
+            background: linear-gradient(135deg, #9b59b6, #8e44ad);
+            color: #fff;
+        }
+
+        .btn-complete-dp {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: #fff;
+        }
+
+        .dp-gps-bar {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            margin-top: 0.5rem;
+            font-size: 0.75rem;
+            color: #666;
+        }
+
+        .gps-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #555;
+            display: inline-block;
+        }
+
+        .gps-dot.active {
+            background: #2ecc71;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.4;
+            }
+        }
     </style>
 </head>
 
@@ -159,7 +231,7 @@
     {% if rides %}
     <div class="dp-cards">
         {% for r in rides %}
-        <div class="dp-card">
+        <div class="dp-card" id="ride-{{ r.id }}" data-status="{{ r.status }}" data-id="{{ r.id }}">
             <div class="dp-time">{{ r.pickup_time.strftime('%I:%M %p') if r.pickup_time else 'TBD' }}</div>
             <div class="dp-name">{{ r.customer_name }}{% if r.passengers %} &middot; {{ r.passengers }} pax{% endif %}
             </div>
@@ -169,15 +241,24 @@
             </div>
             <div class="dp-meta">
                 {% if r.vehicle_type %}<span>&#128663; {{ r.vehicle_type|title }}</span>{% endif %}
-                {% if r.fare %}<span>&#128176; ${{ "%.2f"|format(r.fare) }}</span>{% endif %}
+                {% if r.estimated_price %}<span>&#128176; ${{ "%.2f"|format(r.estimated_price) }}</span>{% endif %}
                 {% if r.flight_number %}<span>&#9992;&#65039; {{ r.flight_number }}</span>{% endif %}
             </div>
-            <span class="dp-badge {{ r.status or 'pending' }}">{{ (r.status or 'pending')|upper }}</span>
+            <span class="dp-badge {{ r.status|lower|replace(' ', '') }}" id="badge-{{ r.id }}">{{ (r.status or
+                'pending')|upper }}</span>
+
+            {% if r.passenger_photo %}
+            <div style="margin-top:0.5rem;">
+                <img src="{{ url_for('static', filename='uploads/' + r.passenger_photo) }}" alt="Passenger"
+                    style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid #c8a84e;">
+            </div>
+            {% endif %}
+
             {% if r.driver_notes %}
-            <div
-                style="margin-top:0.5rem; font-size:0.8rem; color:#999; border-top:1px solid #222; padding-top:0.4rem;">
+            <div style="margin-top:0.5rem;font-size:0.8rem;color:#999;border-top:1px solid #222;padding-top:0.4rem;">
                 &#128221; {{ r.driver_notes }}</div>
             {% endif %}
+
             <div class="dp-nav">
                 <a href="https://www.google.com/maps/dir/?api=1&destination={{ r.pickup_location|urlencode }}"
                     target="_blank">&#128205; Navigate Pickup</a>
@@ -185,8 +266,33 @@
                 <a href="https://www.google.com/maps/dir/?api=1&destination={{ r.dropoff_location|urlencode }}"
                     target="_blank">&#127937; Navigate Drop-off</a>
                 {% endif %}
-                {% if r.customer_phone %}
-                <a href="tel:{{ r.customer_phone }}">&#128222; Call</a>
+                {% if r.phone %}
+                <a href="tel:{{ r.phone }}">&#128222; Call</a>
+                {% endif %}
+            </div>
+
+            <!-- Status Action Buttons -->
+            <div id="action-{{ r.id }}">
+                {% if r.status in ('Pending', 'Accepted') %}
+                <button class="dp-status-btn btn-enroute-dp" onclick="setStatus({{ r.id }}, 'En Route', this)">
+                    &#128663; On My Way
+                </button>
+                {% elif r.status == 'En Route' %}
+                <button class="dp-status-btn btn-arrived-dp" onclick="setStatus({{ r.id }}, 'Arrived', this)">
+                    &#128205; I've Arrived
+                </button>
+                <div class="dp-gps-bar">
+                    <span class="gps-dot active" id="gps-dot-{{ r.id }}"></span>
+                    <span id="gps-label-{{ r.id }}">GPS tracking pickup proximity...</span>
+                </div>
+                {% elif r.status == 'Arrived' %}
+                <button class="dp-status-btn btn-complete-dp" onclick="setStatus({{ r.id }}, 'Completed', this)">
+                    &#9989; Complete Ride
+                </button>
+                {% elif r.status == 'Completed' %}
+                <div style="margin-top:0.7rem;text-align:center;color:#2ecc71;font-weight:700;font-size:0.9rem;">
+                    &#9989; Ride Complete
+                </div>
                 {% endif %}
             </div>
         </div>
@@ -200,6 +306,8 @@
     {% endif %}
     <script>
         let shiftActive = false;
+        let gpsWatchId = null;
+        let lastPingTime = 0;
 
         // Check shift status on load
         fetch('/driver/shift/status').then(r => r.json()).then(d => {
@@ -212,11 +320,13 @@
             }
         });
 
+        // Start GPS tracking if any ride is En Route
+        startGpsTracking();
+
         function toggleShift() {
             const btn = document.getElementById('shiftBtn');
 
             if (!shiftActive) {
-                // Start shift — get GPS location
                 btn.textContent = '...';
                 getLocation(function (loc) {
                     fetch('/driver/shift/start', {
@@ -237,7 +347,6 @@
                     });
                 });
             } else {
-                // End shift — get GPS location
                 btn.textContent = '...';
                 getLocation(function (loc) {
                     fetch('/driver/shift/end', {
@@ -262,6 +371,111 @@
             }
         }
 
+        // ===== Status Button Handler =====
+        function setStatus(bookingId, newStatus, btn) {
+            const label = { 'En Route': 'On My Way', 'Arrived': 'Arrived', 'Completed': 'Complete' }[newStatus];
+            if (!confirm(label + '?')) return;
+            btn.disabled = true;
+            btn.textContent = 'Updating...';
+
+            fetch('/driver/status/' + bookingId, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: newStatus })
+            })
+                .then(r => r.json())
+                .then(d => {
+                    if (d.success) {
+                        updateCardUI(bookingId, newStatus);
+                        if (newStatus === 'En Route') startGpsTracking();
+                    } else {
+                        alert(d.error || 'Failed to update');
+                        btn.disabled = false;
+                        btn.textContent = label;
+                    }
+                })
+                .catch(() => { btn.disabled = false; btn.textContent = label; });
+        }
+
+        function updateCardUI(bookingId, status) {
+            const card = document.getElementById('ride-' + bookingId);
+            if (!card) return;
+            card.dataset.status = status;
+
+            // Update badge
+            const badge = document.getElementById('badge-' + bookingId);
+            if (badge) {
+                badge.className = 'dp-badge ' + status.toLowerCase().replace(/\s/g, '');
+                badge.textContent = status.toUpperCase();
+            }
+
+            // Replace action button
+            const actionDiv = document.getElementById('action-' + bookingId);
+            if (!actionDiv) return;
+            if (status === 'En Route') {
+                actionDiv.innerHTML =
+                    '<button class="dp-status-btn btn-arrived-dp" onclick="setStatus(' + bookingId + ', \'Arrived\', this)">&#128205; I\'ve Arrived</button>' +
+                    '<div class="dp-gps-bar"><span class="gps-dot active" id="gps-dot-' + bookingId + '"></span>' +
+                    '<span id="gps-label-' + bookingId + '">GPS tracking pickup proximity...</span></div>';
+            } else if (status === 'Arrived') {
+                actionDiv.innerHTML =
+                    '<button class="dp-status-btn btn-complete-dp" onclick="setStatus(' + bookingId + ', \'Completed\', this)">&#9989; Complete Ride</button>';
+                stopGpsTracking();
+            } else if (status === 'Completed') {
+                actionDiv.innerHTML =
+                    '<div style="margin-top:0.7rem;text-align:center;color:#2ecc71;font-weight:700;font-size:0.9rem;">&#9989; Ride Complete</div>';
+                stopGpsTracking();
+            }
+        }
+
+        // ===== GPS Tracking for Auto-Arrive =====
+        function startGpsTracking() {
+            if (gpsWatchId !== null) return; // already tracking
+            // Only track if there's an En Route ride
+            const enroute = document.querySelector('.dp-card[data-status="En Route"]');
+            if (!enroute) return;
+
+            if (!navigator.geolocation) return;
+            gpsWatchId = navigator.geolocation.watchPosition(
+                function (pos) {
+                    const now = Date.now();
+                    if (now - lastPingTime < 8000) return; // throttle to every 8s
+                    lastPingTime = now;
+
+                    fetch('/driver/location', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ lat: pos.coords.latitude, lng: pos.coords.longitude })
+                    })
+                        .then(r => r.json())
+                        .then(d => {
+                            if (d.auto_arrived && d.booking_id) {
+                                // Server auto-triggered arrived!
+                                updateCardUI(d.booking_id, 'Arrived');
+                                if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+                                alert('Auto-arrived! Customer has been notified.');
+                            }
+                        })
+                        .catch(() => { });
+                },
+                function () {
+                    // GPS error — update UI
+                    const dots = document.querySelectorAll('.gps-dot');
+                    dots.forEach(d => d.classList.remove('active'));
+                    const labels = document.querySelectorAll('[id^="gps-label-"]');
+                    labels.forEach(l => l.textContent = 'GPS unavailable');
+                },
+                { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
+            );
+        }
+
+        function stopGpsTracking() {
+            if (gpsWatchId !== null) {
+                navigator.geolocation.clearWatch(gpsWatchId);
+                gpsWatchId = null;
+            }
+        }
+
         function getLocation(cb) {
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
@@ -273,6 +487,19 @@
                 cb('');
             }
         }
+
+        // Poll for status changes every 30s (in case admin changes status)
+        setInterval(function () {
+            fetch('/driver/rides/status').then(r => r.json()).then(rides => {
+                rides.forEach(function (r) {
+                    const card = document.getElementById('ride-' + r.id);
+                    if (card && card.dataset.status !== r.status) {
+                        updateCardUI(r.id, r.status);
+                        if (r.status === 'En Route') startGpsTracking();
+                    }
+                });
+            }).catch(() => { });
+        }, 30000);
     </script>
 </body>
 

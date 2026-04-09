@@ -271,6 +271,8 @@
                     <!-- Hidden fields -->
                     <input type="hidden" id="miles" name="miles" value="0">
                     <input type="hidden" id="toll_fee" name="toll_fee" value="0">
+                    <input type="hidden" id="pickup_lat" name="pickup_lat" value="">
+                    <input type="hidden" id="pickup_lng" name="pickup_lng" value="">
                     <input type="hidden" id="vehicle_type" name="vehicle_type" value="sedan">
 
                     <!-- Embedded Map -->
@@ -1337,7 +1339,14 @@
             const options = { componentRestrictions: { country: 'us' }, fields: ['formatted_address', 'geometry'] };
             pickupAutocomplete = new google.maps.places.Autocomplete(document.getElementById('pickup_location'), options);
             dropoffAutocomplete = new google.maps.places.Autocomplete(document.getElementById('dropoff_location'), options);
-            pickupAutocomplete.addListener('place_changed', tryCalcDistance);
+            pickupAutocomplete.addListener('place_changed', function () {
+                const place = pickupAutocomplete.getPlace();
+                if (place && place.geometry && place.geometry.location) {
+                    document.getElementById('pickup_lat').value = place.geometry.location.lat();
+                    document.getElementById('pickup_lng').value = place.geometry.location.lng();
+                }
+                tryCalcDistance();
+            });
             dropoffAutocomplete.addListener('place_changed', tryCalcDistance);
         }
 

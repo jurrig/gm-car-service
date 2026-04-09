@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0a0a1a">
+    <title>Track Your Driver — G&amp;M Car Service</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        body {
+            background: #0a0a1a;
+            color: #ddd;
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0;
+        }
+
+        .track-page {
+            max-width: 480px;
+            margin: 0 auto;
+            padding: 1.5rem;
+        }
+
+        .track-logo {
+            text-align: center;
+            color: #c8a84e;
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+        }
+
+        .status-card {
+            background: #13132a;
+            border: 1px solid rgba(200, 168, 78, 0.2);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            margin-bottom: 1.25rem;
+        }
+
+        .status-icon {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .status-text {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 0.3rem;
+        }
+
+        .status-sub {
+            color: #999;
+            font-size: 0.9rem;
+        }
+
+        .status-eta {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #c8a84e;
+            margin: 0.75rem 0 0.25rem;
+        }
+
+        .status-eta-label {
+            color: #888;
+            font-size: 0.8rem;
+        }
+
+        .driver-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            background: #13132a;
+            border: 1px solid rgba(200, 168, 78, 0.15);
+            border-radius: 12px;
+            padding: 1rem 1.2rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .driver-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: #1a1a3a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            border: 2px solid #c8a84e;
+        }
+
+        .driver-name {
+            font-weight: 700;
+            color: #e0e0e0;
+        }
+
+        .driver-label {
+            color: #888;
+            font-size: 0.8rem;
+        }
+
+        .ride-info {
+            background: #13132a;
+            border: 1px solid rgba(200, 168, 78, 0.15);
+            border-radius: 12px;
+            padding: 1rem 1.2rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .ride-info h3 {
+            color: #c8a84e;
+            margin: 0 0 0.75rem;
+            font-size: 0.95rem;
+        }
+
+        .ride-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.3rem 0;
+            font-size: 0.85rem;
+        }
+
+        .ride-row .label {
+            color: #888;
+        }
+
+        .pulse-ring {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 6px;
+            vertical-align: middle;
+        }
+
+        .pulse-ring.enroute {
+            background: #2ecc71;
+            animation: pulse 1.5s infinite;
+        }
+
+        .pulse-ring.arrived {
+            background: #9b59b6;
+            animation: pulse 1.5s infinite;
+        }
+
+        .pulse-ring.completed {
+            background: #3498db;
+        }
+
+        .pulse-ring.pending {
+            background: #c8a84e;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.4;
+            }
+        }
+
+        .track-footer {
+            text-align: center;
+            margin-top: 1.5rem;
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .track-footer a {
+            color: #c8a84e;
+        }
+
+        .completed-box {
+            background: rgba(46, 204, 113, 0.12);
+            border: 2px solid #2ecc71;
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .completed-box h2 {
+            color: #2ecc71;
+            margin: 0 0 0.3rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="track-page">
+        <div class="track-logo">G&amp;M Car Service</div>
+
+        <div class="status-card" id="statusCard">
+            <div class="status-icon" id="statusIcon">&#128663;</div>
+            <div class="status-text" id="statusText">
+                <span class="pulse-ring {{ booking.status|lower|replace(' ', '') }}" id="statusDot"></span>
+                <span id="statusLabel">{{ booking.status }}</span>
+            </div>
+            <div class="status-sub" id="statusSub">
+                {% if booking.status == 'En Route' %}
+                Your driver is on the way
+                {% elif booking.status == 'Arrived' %}
+                Your driver is waiting at the pickup
+                {% elif booking.status == 'Completed' %}
+                Ride complete — thank you!
+                {% else %}
+                Your ride is being prepared
+                {% endif %}
+            </div>
+            <div class="status-eta" id="etaValue"
+                style="{% if booking.status not in ('En Route',) %}display:none;{% endif %}">—</div>
+            <div class="status-eta-label" id="etaLabel"
+                style="{% if booking.status not in ('En Route',) %}display:none;{% endif %}">estimated distance</div>
+        </div>
+
+        {% if booking.assigned_driver %}
+        <div class="driver-info">
+            <div class="driver-avatar">&#128100;</div>
+            <div>
+                <div class="driver-name">{{ booking.assigned_driver.name }}</div>
+                <div class="driver-label">Your Driver</div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="ride-info">
+            <h3>&#128205; Ride Details</h3>
+            <div class="ride-row"><span class="label">Booking</span><span>#{{ booking.id }}</span></div>
+            <div class="ride-row"><span class="label">Pickup</span><span>{{ booking.pickup_location.split(',')[0]
+                    }}</span></div>
+            <div class="ride-row"><span class="label">Drop-off</span><span>{{ booking.dropoff_location.split(',')[0]
+                    }}</span></div>
+            <div class="ride-row"><span class="label">Time</span><span>{{ booking.pickup_time.strftime('%I:%M %p') if
+                    booking.pickup_time else '—' }}</span></div>
+            <div class="ride-row"><span class="label">Vehicle</span><span>{{ booking.vehicle_type|capitalize }}</span>
+            </div>
+        </div>
+
+        {% if booking.payment_token and booking.payment_status != 'paid' %}
+        <a href="{{ url_for('pay_page', token=booking.payment_token) }}"
+            style="display:block;text-align:center;padding:0.8rem;background:linear-gradient(135deg,#c8a84e,#b8963e);color:#0a0a1a;border-radius:10px;font-weight:700;text-decoration:none;margin-bottom:1.25rem;">
+            &#128176; Pay &amp; Add Tip
+        </a>
+        {% endif %}
+
+        <div class="track-footer">
+            <p>G&amp;M Car Service &bull; Sarasota County, FL</p>
+            <a href="tel:+19415551234">&#9742; Call Us</a>
+        </div>
+    </div>
+
+    <script>
+        const token = '{{ booking.payment_token }}';
+        let currentStatus = '{{ booking.status }}';
+
+        function formatDistance(meters) {
+            if (meters < 1000) return Math.round(meters) + ' m away';
+            const miles = meters / 1609.34;
+            if (miles < 0.5) return Math.round(meters) + ' m away';
+            return miles.toFixed(1) + ' mi away';
+        }
+
+        function updateUI(data) {
+            if (data.status === currentStatus && !data.has_location) return;
+            currentStatus = data.status;
+
+            const icon = document.getElementById('statusIcon');
+            const label = document.getElementById('statusLabel');
+            const sub = document.getElementById('statusSub');
+            const dot = document.getElementById('statusDot');
+            const eta = document.getElementById('etaValue');
+            const etaLbl = document.getElementById('etaLabel');
+
+            dot.className = 'pulse-ring ' + currentStatus.toLowerCase().replace(/\s/g, '');
+
+            if (currentStatus === 'En Route') {
+                icon.innerHTML = '&#128663;';
+                label.textContent = 'En Route';
+                sub.textContent = data.driver_name ? data.driver_name + ' is on the way' : 'Your driver is on the way';
+                eta.style.display = '';
+                etaLbl.style.display = '';
+                if (data.has_location && data.distance_m !== undefined) {
+                    eta.textContent = formatDistance(data.distance_m);
+                    etaLbl.textContent = 'from pickup';
+                } else {
+                    eta.textContent = '—';
+                    etaLbl.textContent = 'estimated distance';
+                }
+            } else if (currentStatus === 'Arrived') {
+                icon.innerHTML = '&#128205;';
+                label.textContent = 'Arrived';
+                sub.textContent = data.driver_name ? data.driver_name + ' is waiting at pickup' : 'Your driver is waiting at the pickup';
+                eta.style.display = 'none';
+                etaLbl.style.display = 'none';
+                if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+            } else if (currentStatus === 'Completed') {
+                icon.innerHTML = '&#9989;';
+                label.textContent = 'Completed';
+                sub.textContent = 'Ride complete — thank you!';
+                eta.style.display = 'none';
+                etaLbl.style.display = 'none';
+            } else {
+                icon.innerHTML = '&#128338;';
+                label.textContent = currentStatus;
+                sub.textContent = 'Your ride is being prepared';
+                eta.style.display = 'none';
+                etaLbl.style.display = 'none';
+            }
+        }
+
+        function poll() {
+            fetch('/track/' + token + '/status')
+                .then(r => r.json())
+                .then(updateUI)
+                .catch(() => { });
+        }
+
+        // Poll every 8 seconds for live updates
+        poll();
+        setInterval(poll, 8000);
+    </script>
+</body>
+
+</html>
