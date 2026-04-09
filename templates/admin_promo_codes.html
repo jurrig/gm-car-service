@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0a0a1a">
+    <title>Promo Codes - G&amp;M Car Service Admin</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .promo-body {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        .promo-card {
+            background: #12122a;
+            border: 1px solid rgba(200, 168, 78, 0.15);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .promo-card h2 {
+            font-family: 'Playfair Display', serif;
+            color: #fff;
+            font-size: 1.3rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .promo-card .card-desc {
+            color: #888;
+            font-size: 0.85rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: flex-end;
+            margin-bottom: 1rem;
+        }
+
+        .form-group {
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.75rem;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.35rem;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.6rem 0.8rem;
+            background: #1a1a3a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 0.9rem;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #c8a84e;
+        }
+
+        .btn-add {
+            background: #c8a84e;
+            color: #0a0a1a;
+            border: none;
+            padding: 0.65rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 0.9rem;
+            white-space: nowrap;
+        }
+
+        .btn-add:hover {
+            background: #b8982e;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        th {
+            text-align: left;
+            color: #999;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 0.6rem 0.75rem;
+            border-bottom: 1px solid #222;
+        }
+
+        td {
+            padding: 0.65rem 0.75rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 0.88rem;
+            color: #ddd;
+        }
+
+        .code-badge {
+            background: rgba(200, 168, 78, 0.15);
+            color: #c8a84e;
+            padding: 0.2rem 0.7rem;
+            border-radius: 6px;
+            font-weight: 700;
+            font-family: monospace;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+        }
+
+        .active-badge {
+            background: rgba(40, 167, 69, 0.15);
+            color: #28a745;
+            padding: 0.15rem 0.5rem;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .inactive-badge {
+            background: rgba(220, 53, 69, 0.15);
+            color: #dc3545;
+            padding: 0.15rem 0.5rem;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .btn-sm {
+            padding: 0.3rem 0.7rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-toggle {
+            background: #1a1a3a;
+            color: #c8a84e;
+            border: 1px solid rgba(200, 168, 78, 0.3);
+        }
+
+        .btn-del {
+            background: rgba(220, 53, 69, 0.12);
+            color: #dc3545;
+        }
+
+        .empty-msg {
+            text-align: center;
+            color: #666;
+            padding: 2rem;
+            font-size: 0.95rem;
+        }
+    </style>
+</head>
+
+<body style="background:#0a0a1a; color:#e0e0e0; font-family:'Inter', sans-serif;">
+    <header>
+        <h1>G&amp;M Car Service</h1>
+        <nav class="admin-nav">
+            <span>&#127775; Promo Codes</span>
+            <div style="display:flex; gap:0.75rem; align-items:center;">
+                <a href="{{ url_for('admin_dashboard') }}"
+                    style="color:#c8a84e; text-decoration:none; font-weight:600;">&#128663; Dashboard</a>
+                <a href="{{ url_for('admin_settings') }}"
+                    style="color:#c8a84e; text-decoration:none; font-weight:600;">&#9881; Settings</a>
+                <a href="{{ url_for('admin_pricing') }}"
+                    style="color:#c8a84e; text-decoration:none; font-weight:600;">&#128176; Pricing</a>
+                <a href="{{ url_for('admin_logout') }}">Logout</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="promo-body">
+        <h1 style="font-family:'Playfair Display',serif; font-size:1.8rem; margin-bottom:1.5rem;">
+            &#127775; Promo Codes &amp; VIP Discounts
+        </h1>
+
+        <!-- Add New Code -->
+        <div class="promo-card">
+            <h2>Create Promo Code</h2>
+            <p class="card-desc">Give customers a code for instant discounts at booking.</p>
+            <form method="POST" action="{{ url_for('admin_promo_add') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="form-row">
+                    <div class="form-group" style="flex:2;">
+                        <label for="code">Code</label>
+                        <input type="text" id="code" name="code" placeholder="e.g. VIP2026" required
+                            style="text-transform:uppercase;" maxlength="50">
+                    </div>
+                    <div class="form-group">
+                        <label for="discount_percent">Discount %</label>
+                        <input type="number" id="discount_percent" name="discount_percent" value="10" min="1" max="100"
+                            step="1">
+                    </div>
+                    <div class="form-group">
+                        <label for="max_uses">Max Uses</label>
+                        <input type="number" id="max_uses" name="max_uses" placeholder="Unlimited" min="1">
+                    </div>
+                    <div class="form-group">
+                        <label for="expires_at">Expires</label>
+                        <input type="date" id="expires_at" name="expires_at">
+                    </div>
+                    <button type="submit" class="btn-add">&#10003; Create</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Existing Codes -->
+        <div class="promo-card">
+            <h2>Active Codes</h2>
+            {% if codes %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Discount</th>
+                        <th>Uses</th>
+                        <th>Expires</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in codes %}
+                    <tr>
+                        <td><span class="code-badge">{{ c.code }}</span></td>
+                        <td>{{ c.discount_percent }}%</td>
+                        <td>{{ c.current_uses }} / {{ c.max_uses if c.max_uses else '∞' }}</td>
+                        <td>{{ c.expires_at.strftime('%b %d, %Y') if c.expires_at else 'Never' }}</td>
+                        <td>
+                            {% if c.is_valid() %}
+                            <span class="active-badge">&#10003; Active</span>
+                            {% elif not c.is_active %}
+                            <span class="inactive-badge">Disabled</span>
+                            {% elif c.max_uses and c.current_uses >= c.max_uses %}
+                            <span class="inactive-badge">Maxed Out</span>
+                            {% else %}
+                            <span class="inactive-badge">Expired</span>
+                            {% endif %}
+                        </td>
+                        <td style="display:flex;gap:0.4rem;">
+                            <form method="POST" action="{{ url_for('admin_promo_toggle', promo_id=c.id) }}"
+                                style="display:inline;">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button class="btn-sm btn-toggle" type="submit">
+                                    {{ '&#10007; Disable' if c.is_active else '&#10003; Enable' }}
+                                </button>
+                            </form>
+                            <form method="POST" action="{{ url_for('admin_promo_delete', promo_id=c.id) }}"
+                                onsubmit="return confirm('Delete {{ c.code }}?');" style="display:inline;">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button class="btn-sm btn-del" type="submit">&#128465;</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="empty-msg">No promo codes yet. Create one above!</div>
+            {% endif %}
+        </div>
+    </main>
+</body>
+
+</html>

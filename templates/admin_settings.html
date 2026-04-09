@@ -138,7 +138,7 @@
             Settings</h1>
 
         <form method="POST" action="{{ url_for('admin_settings_save') }}">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
             <!-- Flight Tracking -->
             <div class="settings-card">
@@ -215,6 +215,34 @@
                     <input type="text" id="driver_phone" name="driver_phone" value="{{ settings.driver_phone }}"
                         placeholder="+1234567890">
                     <div class="hint">Receives "Leave Early" SMS alerts when Skyway / I-75 traffic is heavy.</div>
+                </div>
+            </div>
+
+            <!-- VIP / Repeat Customer Discounts -->
+            <div class="settings-card">
+                <h2>&#127775; VIP Auto-Discount</h2>
+                <p class="card-desc">Automatically give returning customers a discount after they complete a set number
+                    of rides. Matched by phone number.</p>
+
+                <div class="setting-row">
+                    <label for="vip_rides_threshold">Rides Required for VIP</label>
+                    <input type="number" id="vip_rides_threshold" name="vip_rides_threshold"
+                        value="{{ settings.vip_rides_threshold }}" placeholder="5" min="0" max="999">
+                    <div class="hint">Set to 0 to disable auto-discount. Example: after 5 completed rides, customer
+                        gets a discount.</div>
+                </div>
+                <div class="setting-row">
+                    <label for="vip_auto_discount_percent">Auto-Discount Percentage</label>
+                    <input type="number" id="vip_auto_discount_percent" name="vip_auto_discount_percent"
+                        value="{{ settings.vip_auto_discount_percent }}" placeholder="10" min="0" max="100" step="1">
+                    <div class="hint">Percentage off the fare for VIP customers. Example: 10 = 10% off.</div>
+                </div>
+
+                <div style="margin-top:1rem;">
+                    <a href="{{ url_for('admin_promo_codes') }}"
+                        style="color:#c8a84e;font-weight:600;text-decoration:none;">
+                        &#127775; Manage Promo Codes &rarr;
+                    </a>
                 </div>
             </div>
 

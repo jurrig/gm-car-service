@@ -52,6 +52,10 @@ class Booking(db.Model):
     driver_location_updated = db.Column(db.DateTime, nullable=True)
     pickup_lat = db.Column(db.Float, nullable=True)
     pickup_lng = db.Column(db.Float, nullable=True)
+    discount_percent = db.Column(db.Float, nullable=True, default=0)
+    discount_reason = db.Column(db.String(100), nullable=True)
+    promo_code = db.Column(db.String(50), nullable=True)
+    original_price = db.Column(db.Float, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     assigned_driver = db.relationship('Driver', backref='bookings', foreign_keys=[assigned_driver_id])
@@ -234,3 +238,28 @@ class AppSetting(db.Model):
             row = AppSetting(key=key, value=value)
             db.session.add(row)
         db.session.commit()
+
+
+class PromoCode(db.Model):
+    __tablename__ = 'promo_codes'
+
+    id = db.Column(db.Integer, primary_key=True)
+    code = db.Column(db.String(50), nullable=False, unique=True)
+    discount_percent = db.Column(db.Float, nullable=False, default=10)
+    max_uses = db.Column(db.Integer, nullable=True)  # NULL = unlimited
+    current_uses = db.Column(db.Integer, nullable=False, default=0)
+    is_active = db.Column(db.Boolean, nullable=False, default=True)
+    expires_at = db.Column(db.DateTime, nullable=True)  # NULL = never expires
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def is_valid(self):
+        if not self.is_active:
+            return False
+        if self.max_uses and self.current_uses >= self.max_uses:
+            return False
+        if self.expires_at and datetime.utcnow() > self.expires_at:
+            return False
+        return True
+
+    def __repr__(self):
+        return f'<PromoCode {self.code} {self.discount_percent}%>'

@@ -452,7 +452,30 @@
                         <div><span>Distance:</span> <span id="fin-distance">&mdash;</span></div>
                         <div id="fin-airport-row" style="display:none;"><span>&#9992; Airport:</span> <span
                                 id="fin-airport-info"></span></div>
+                        <div id="fin-discount-row" style="display:none;color:#2ecc71;">
+                            <span>&#127775; VIP Discount:</span> <span id="fin-discount-info"></span>
+                        </div>
+                        <div id="fin-original-row" style="display:none;color:#999;text-decoration:line-through;">
+                            <span>Original:</span> <span id="fin-original-price"></span>
+                        </div>
                         <div class="price-total"><span>Your Quote:</span> <span id="fin-price">&mdash;</span></div>
+                    </div>
+
+                    <!-- Promo Code -->
+                    <div style="margin:1rem 0;">
+                        <label
+                            style="display:block;color:#c8a84e;font-weight:700;font-size:0.9rem;margin-bottom:0.4rem;">HAVE
+                            A PROMO CODE?</label>
+                        <div style="display:flex;gap:0.5rem;align-items:center;">
+                            <input type="text" id="promo_code_input" name="promo_code" placeholder="Enter code"
+                                maxlength="50" autocomplete="off"
+                                style="flex:1;padding:0.6rem 0.8rem;background:#1a1a3a;border:1px solid #333;border-radius:8px;color:#fff;font-size:0.95rem;text-transform:uppercase;">
+                            <button type="button" id="promoApplyBtn" onclick="applyPromo()"
+                                style="padding:0.6rem 1.2rem;background:linear-gradient(135deg,#c8a84e,#b8963e);color:#0a0a1a;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:0.85rem;">
+                                Apply
+                            </button>
+                        </div>
+                        <div id="promoMsg" style="font-size:0.8rem;margin-top:0.35rem;display:none;"></div>
                     </div>
 
                     <!-- Payment Method Selection -->
@@ -1249,7 +1272,68 @@
                 }
             }
             const raw = tier.base_fare + tier.per_mile * currentMiles;
+            let price = Math.max(raw, tier.min_fare) + currentTollFee;
+            // Apply promo discount for display
+            if (activePromoDiscount > 0) {
+                price = price * (1 - activePromoDiscount / 100);
+            }
+            return price;
+        }
+
+        function getEstimateOriginal(type) {
+            const vType = type || selectedVehicle;
+            const tiers = PRICING_TIERS[vType];
+            if (!tiers || tiers.length === 0) return 0;
+            let tier = tiers[0];
+            for (const t of tiers) {
+                if (currentMiles >= t.min_miles && (t.max_miles === null || currentMiles <= t.max_miles)) {
+                    tier = t; break;
+                }
+            }
+            const raw = tier.base_fare + tier.per_mile * currentMiles;
             return Math.max(raw, tier.min_fare) + currentTollFee;
+        }
+
+        // --- Promo code state ---
+        let activePromoDiscount = 0;
+        let activePromoCode = '';
+
+        function applyPromo() {
+            const input = document.getElementById('promo_code_input');
+            const msg = document.getElementById('promoMsg');
+            const code = input.value.trim().toUpperCase();
+            if (!code) { msg.style.display = 'none'; return; }
+
+            fetch('/api/validate-promo', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code: code })
+            })
+                .then(r => r.json())
+                .then(data => {
+                    msg.style.display = 'block';
+                    if (data.valid) {
+                        activePromoDiscount = data.discount_percent;
+                        activePromoCode = data.code;
+                        input.value = data.code;
+                        msg.style.color = '#2ecc71';
+                        msg.innerHTML = '&#10003; ' + data.discount_percent + '% discount applied!';
+                        input.style.borderColor = '#2ecc71';
+                    } else {
+                        activePromoDiscount = 0;
+                        activePromoCode = '';
+                        msg.style.color = '#dc3545';
+                        msg.innerHTML = '&#10007; ' + (data.message || 'Invalid code');
+                        input.style.borderColor = '#dc3545';
+                    }
+                    updateQuote();
+                    updateFinalSummary();
+                })
+                .catch(() => {
+                    msg.style.display = 'block';
+                    msg.style.color = '#dc3545';
+                    msg.innerHTML = '&#10007; Could not validate code';
+                });
         }
 
         /* Update all vehicle prices + the big quote card */
@@ -1289,6 +1373,20 @@
             document.getElementById('fin-vehicle').textContent = VEHICLE_LABELS[selectedVehicle] || selectedVehicle;
             document.getElementById('fin-distance').textContent = distanceText;
             document.getElementById('fin-price').textContent = currentMiles > 0 ? '$' + getEstimate().toFixed(2) : '—';
+
+            // Discount summary
+            const discRow = document.getElementById('fin-discount-row');
+            const origRow = document.getElementById('fin-original-row');
+            if (activePromoDiscount > 0 && currentMiles > 0) {
+                const orig = getEstimateOriginal();
+                document.getElementById('fin-original-price').textContent = '$' + orig.toFixed(2);
+                document.getElementById('fin-discount-info').textContent = activePromoDiscount + '% off (' + activePromoCode + ')';
+                discRow.style.display = '';
+                origRow.style.display = '';
+            } else {
+                discRow.style.display = 'none';
+                origRow.style.display = 'none';
+            }
 
             // Airport summary
             const airRow = document.getElementById('fin-airport-row');

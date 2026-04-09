@@ -4,7 +4,7 @@ from flask_wtf.csrf import CSRFProtect
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from functools import wraps
-from models import db, Booking, PricingTier, Vehicle, Driver, AppSetting, Expense, MileageLog, DriverShift, Payout
+from models import db, Booking, PricingTier, Vehicle, Driver, AppSetting, Expense, MileageLog, DriverShift, Payout, PromoCode
 from notifications import send_email_alert, send_sms_alert, send_rider_sms, send_receipt_email
 from scheduler import check_availability, format_suggestions
 from flight_tracker import check_flight, update_booking_flight_status, check_upcoming_flights, check_traffic_for_booking
@@ -286,6 +286,37 @@ def book():
 
     estimated_price = calculate_estimate(miles, vehicle_type) + toll_fee
 
+    # --- VIP Discount Logic ---
+    discount_percent = 0
+    discount_reason = ''
+    applied_promo = ''
+    original_price = estimated_price
+
+    # 1. Promo code discount
+    promo_input = request.form.get('promo_code', '').strip().upper()
+    if promo_input:
+        promo = PromoCode.query.filter_by(code=promo_input).first()
+        if promo and promo.is_valid():
+            discount_percent = promo.discount_percent
+            discount_reason = f'Promo: {promo.code}'
+            applied_promo = promo.code
+            promo.current_uses += 1
+
+    # 2. Repeat-customer auto-discount (only if no promo already applied)
+    if not discount_percent:
+        vip_threshold = int(AppSetting.get('vip_rides_threshold', '0') or 0)
+        vip_auto_pct = float(AppSetting.get('vip_auto_discount_percent', '0') or 0)
+        if vip_threshold > 0 and vip_auto_pct > 0:
+            past_rides = Booking.query.filter_by(phone=phone, status='Completed').count()
+            if past_rides >= vip_threshold:
+                discount_percent = vip_auto_pct
+                discount_reason = f'VIP: {past_rides} completed rides'
+
+    # Apply discount
+    if discount_percent > 0:
+        discount_amount = round(estimated_price * discount_percent / 100, 2)
+        estimated_price = round(estimated_price - discount_amount, 2)
+
     # --- Booking Agent: server-side availability check ---
     admin_override = request.form.get('admin_override') == '1' and session.get('admin_logged_in')
     trip_dur_str = request.form.get('trip_duration_min', '').strip()
@@ -322,6 +353,10 @@ def book():
         vehicle_type=vehicle_type,
         status='Pending',
         estimated_price=estimated_price,
+        original_price=original_price if discount_percent else None,
+        discount_percent=discount_percent if discount_percent else 0,
+        discount_reason=discount_reason or None,
+        promo_code=applied_promo or None,
         toll_fee=toll_fee if toll_fee > 0 else 0,
         trip_distance_miles=miles if miles > 0 else None,
         trip_duration_min=trip_duration_min,
@@ -955,6 +990,8 @@ def admin_settings():
         'twilio_phone': AppSetting.get('twilio_phone', ''),
         'driver_phone': AppSetting.get('driver_phone', ''),
         'driver_home_address': AppSetting.get('driver_home_address', 'North Port, FL'),
+        'vip_rides_threshold': AppSetting.get('vip_rides_threshold', '5'),
+        'vip_auto_discount_percent': AppSetting.get('vip_auto_discount_percent', '10'),
     }
     return render_template('admin_settings.html', settings=settings)
 
@@ -963,11 +1000,109 @@ def admin_settings():
 @admin_required
 def admin_settings_save():
     keys = ['aviationstack_api_key', 'twilio_sid', 'twilio_token', 'twilio_phone',
-            'driver_phone', 'driver_home_address']
+            'driver_phone', 'driver_home_address', 'vip_rides_threshold', 'vip_auto_discount_percent']
     for key in keys:
         val = request.form.get(key, '').strip()
         AppSetting.set(key, val)
     return redirect(url_for('admin_settings'))
+
+
+# --------------- Admin: Promo Codes ---------------
+@app.route('/admin/promo-codes')
+@admin_required
+def admin_promo_codes():
+    codes = PromoCode.query.order_by(PromoCode.created_at.desc()).all()
+    return render_template('admin_promo_codes.html', codes=codes)
+
+
+@app.route('/admin/promo-codes/add', methods=['POST'])
+@admin_required
+def admin_promo_add():
+    code = request.form.get('code', '').strip().upper()
+    if not code:
+        return redirect(url_for('admin_promo_codes'))
+    discount = float(request.form.get('discount_percent', '10') or 10)
+    discount = max(1, min(discount, 100))
+    max_uses = request.form.get('max_uses', '').strip()
+    max_uses = int(max_uses) if max_uses else None
+    expires = request.form.get('expires_at', '').strip()
+    expires_at = datetime.strptime(expires, '%Y-%m-%d') if expires else None
+
+    existing = PromoCode.query.filter_by(code=code).first()
+    if existing:
+        return redirect(url_for('admin_promo_codes'))
+
+    promo = PromoCode(code=code, discount_percent=discount, max_uses=max_uses, expires_at=expires_at)
+    db.session.add(promo)
+    db.session.commit()
+    return redirect(url_for('admin_promo_codes'))
+
+
+@app.route('/admin/promo-codes/toggle/<int:promo_id>', methods=['POST'])
+@admin_required
+def admin_promo_toggle(promo_id):
+    promo = db.get_or_404(PromoCode, promo_id)
+    promo.is_active = not promo.is_active
+    db.session.commit()
+    return redirect(url_for('admin_promo_codes'))
+
+
+@app.route('/admin/promo-codes/delete/<int:promo_id>', methods=['POST'])
+@admin_required
+def admin_promo_delete(promo_id):
+    promo = db.get_or_404(PromoCode, promo_id)
+    db.session.delete(promo)
+    db.session.commit()
+    return redirect(url_for('admin_promo_codes'))
+
+
+# --- Promo code validation API (for live booking form) ---
+@app.route('/api/validate-promo', methods=['POST'])
+@csrf.exempt
+@limiter.limit('30 per minute')
+def api_validate_promo():
+    code = (request.json or {}).get('code', '').strip().upper()
+    if not code:
+        return jsonify({'valid': False, 'message': 'No code entered'})
+    promo = PromoCode.query.filter_by(code=code).first()
+    if not promo or not promo.is_valid():
+        return jsonify({'valid': False, 'message': 'Invalid or expired code'})
+    return jsonify({'valid': True, 'discount_percent': promo.discount_percent, 'code': promo.code})
+
+
+# --- Admin: Apply VIP discount to an existing booking ---
+@app.route('/admin/vip/<int:booking_id>', methods=['POST'])
+@admin_required
+def admin_apply_vip(booking_id):
+    booking = db.get_or_404(Booking, booking_id)
+    pct = request.form.get('discount_percent', '10').strip()
+    try:
+        pct = float(pct)
+        pct = max(1, min(pct, 100))
+    except (ValueError, TypeError):
+        pct = 10
+    if not booking.original_price:
+        booking.original_price = booking.estimated_price
+    booking.discount_percent = pct
+    booking.discount_reason = 'Admin VIP'
+    discount_amount = round(booking.original_price * pct / 100, 2)
+    booking.estimated_price = round(booking.original_price - discount_amount, 2)
+    db.session.commit()
+    return redirect(url_for('admin_dashboard'))
+
+
+@app.route('/admin/vip/remove/<int:booking_id>', methods=['POST'])
+@admin_required
+def admin_remove_vip(booking_id):
+    booking = db.get_or_404(Booking, booking_id)
+    if booking.original_price:
+        booking.estimated_price = booking.original_price
+    booking.original_price = None
+    booking.discount_percent = 0
+    booking.discount_reason = None
+    booking.promo_code = None
+    db.session.commit()
+    return redirect(url_for('admin_dashboard'))
 
 
 # --------------- Flight Tracking API ---------------
