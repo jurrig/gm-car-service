@@ -292,6 +292,35 @@ def marketing_landing():
     return render_template('marketing.html')
 
 
+@app.route('/d')
+@app.route('/driverapp')
+def driver_app_entry():
+    return redirect(url_for('driver_login'))
+
+
+@app.route('/manage-booking', methods=['GET', 'POST'])
+def manage_booking():
+    booking = None
+    error = None
+    if request.method == 'POST':
+        booking_id_raw = (request.form.get('booking_id') or '').strip()
+        phone_last4 = ''.join(ch for ch in (request.form.get('phone_last4') or '') if ch.isdigit())
+        if not booking_id_raw.isdigit():
+            error = 'Please enter a valid booking number.'
+        elif len(phone_last4) != 4:
+            error = 'Please enter the last 4 digits of your phone number.'
+        else:
+            booking = db.session.get(Booking, int(booking_id_raw))
+            if not booking:
+                error = 'Booking not found.'
+            else:
+                booking_phone_digits = ''.join(ch for ch in (booking.phone or '') if ch.isdigit())
+                if not booking_phone_digits.endswith(phone_last4):
+                    error = 'Booking details do not match.'
+                    booking = None
+    return render_template('manage_booking.html', booking=booking, error=error)
+
+
 @app.route('/api/leads', methods=['POST'])
 @csrf.exempt
 @limiter.limit("20 per hour")

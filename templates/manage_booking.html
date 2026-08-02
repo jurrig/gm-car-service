@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0a0a1a">
+    <title>Manage Booking - G&M Car Service</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        body { background:#0a0a1a; color:#ddd; font-family:'Inter', 'Segoe UI', Arial, sans-serif; margin:0; }
+        .page { max-width:700px; margin:0 auto; padding:2rem 1rem 3rem; }
+        .card { background:#12121f; border:1px solid #2a2a3a; border-radius:12px; padding:1.2rem; margin-bottom:1rem; }
+        label { display:block; color:#9aa0ad; font-size:0.82rem; margin-bottom:0.3rem; text-transform:uppercase; letter-spacing:0.08em; }
+        input { width:100%; box-sizing:border-box; padding:0.7rem; border-radius:8px; border:1px solid #2a2a3a; background:#0a0a1a; color:#fff; }
+        .row { display:grid; grid-template-columns:1fr 1fr; gap:0.8rem; }
+        .btn { background:#c8a84e; color:#111; border:none; border-radius:8px; padding:0.75rem 1rem; font-weight:700; cursor:pointer; width:100%; margin-top:0.8rem; }
+        .error { background:#2a0d0d; border:1px solid #5c1a1a; border-radius:8px; color:#f87575; padding:0.8rem; margin-bottom:0.8rem; }
+        .detail-row { display:flex; justify-content:space-between; gap:1rem; border-bottom:1px solid #1e1e30; padding:0.55rem 0; }
+        .detail-row:last-child { border-bottom:none; }
+        .back { color:#c8a84e; text-decoration:none; display:inline-block; margin-bottom:1rem; }
+        @media (max-width: 720px) { .row { grid-template-columns:1fr; } }
+    </style>
+</head>
+<body>
+<div class="page">
+    <a class="back" href="/">← Back to Home</a>
+    <h1 style="color:#c8a84e; margin:0 0 .3rem;">Manage Booking</h1>
+    <p style="color:#9aa0ad; margin:0 0 1rem;">Lookup your booking with booking number and last 4 digits of your phone.</p>
+
+    {% if error %}
+    <div class="error">{{ error }}</div>
+    {% endif %}
+
+    <div class="card">
+        <form method="POST" action="{{ url_for('manage_booking') }}">
+            <div class="row">
+                <div>
+                    <label for="booking_id">Booking Number</label>
+                    <input id="booking_id" name="booking_id" type="number" min="1" required>
+                </div>
+                <div>
+                    <label for="phone_last4">Phone Last 4</label>
+                    <input id="phone_last4" name="phone_last4" maxlength="4" pattern="\d{4}" required>
+                </div>
+            </div>
+            <button class="btn" type="submit">View Booking</button>
+        </form>
+    </div>
+
+    {% if booking %}
+    <div class="card">
+        <h2 style="margin-top:0;">Booking #{{ booking.id }}</h2>
+        <div class="detail-row"><span>Status</span><strong>{{ booking.status }}</strong></div>
+        <div class="detail-row"><span>Name</span><strong>{{ booking.customer_name }}</strong></div>
+        <div class="detail-row"><span>Pickup</span><strong>{{ booking.pickup_location }}</strong></div>
+        <div class="detail-row"><span>Drop-off</span><strong>{{ booking.dropoff_location }}</strong></div>
+        <div class="detail-row"><span>Date &amp; Time</span><strong>{{ booking.pickup_time.strftime('%B %d, %Y at %I:%M %p') if booking.pickup_time else '—' }}</strong></div>
+        <div class="detail-row"><span>Fare</span><strong>${{ '%.2f'|format(booking.estimated_price) if booking.estimated_price else '—' }}</strong></div>
+        <p style="color:#9aa0ad; margin:0.8rem 0 0;">Need to change or cancel this booking? Call <a href="tel:+19415551234" style="color:#c8a84e;">(941) 555-1234</a>.</p>
+    </div>
+    {% endif %}
+</div>
+</body>
+</html>
