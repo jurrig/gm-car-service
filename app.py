@@ -4,7 +4,7 @@ from flask_wtf.csrf import CSRFProtect
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from functools import wraps
-from models import db, Booking, PricingTier, Vehicle, Driver, MedicalOffice, AppSetting, Expense, MileageLog, DriverShift, Payout, PromoCode, FlatRate
+from models import db, Booking, Article, ArticleFeedback, PricingTier, Vehicle, Driver, MedicalOffice, AppSetting, Expense, MileageLog, DriverShift, Payout, PromoCode, FlatRate
 from notifications import send_email_alert, send_sms_alert, send_rider_sms, send_receipt_email
 from scheduler import check_availability, format_suggestions
 from flight_tracker import check_flight, update_booking_flight_status, check_upcoming_flights, check_traffic_for_booking
@@ -15,6 +15,7 @@ import os
 import sys
 import stripe
 import math
+import re
 
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 if PROJECT_ROOT not in sys.path:
@@ -236,6 +237,100 @@ def index():
         Booking.pickup_time.desc()
     ).limit(5).all()
     return render_template('index.html', service_cities=SERVICE_CITIES, seo_routes=SEO_ROUTES, recent_rides=recent_rides)
+
+
+def _slugify_article_title(title):
+    slug = re.sub(r'[^a-z0-9]+', '-', (title or '').lower()).strip('-')
+    return slug[:150] or 'gm-guide'
+
+
+def _unique_article_slug_for_edit(title, article_id=None):
+    base_slug = _slugify_article_title(title)
+    slug = base_slug
+    counter = 2
+    while True:
+        q = Article.query.filter_by(slug=slug)
+        if article_id is not None:
+            q = q.filter(Article.id != article_id)
+        if not q.first():
+            return slug
+        suffix = f'-{counter}'
+        slug = f'{base_slug[:150 - len(suffix)]}{suffix}'
+        counter += 1
+
+
+def _sanitize_generated_article_html(content):
+    content = content or ''
+    content = re.sub(r'<\s*(script|style|iframe|object|embed)[^>]*>.*?<\s*/\s*\1\s*>', '', content, flags=re.I | re.S)
+    content = re.sub(r'\s+on[a-z]+\s*=\s*("[^"]*"|\'[^\']*\'|[^\s>]+)', '', content, flags=re.I)
+    content = re.sub(r'(href|src)\s*=\s*("|\')\s*javascript:[^"\']*("|\')', r'\1="#"', content, flags=re.I)
+    return content.strip()
+
+
+@app.route('/blog')
+def blog_index():
+    articles = Article.query.filter(
+        Article.published_at.isnot(None),
+        Article.published_at <= datetime.utcnow(),
+    ).order_by(Article.published_at.desc()).all()
+    return render_template('blog_index.html', articles=articles)
+
+
+@app.route('/blog/<slug>')
+def blog_article(slug):
+    article = Article.query.filter(
+        Article.slug == slug,
+        Article.published_at.isnot(None),
+        Article.published_at <= datetime.utcnow(),
+    ).first_or_404()
+    article_content = _sanitize_generated_article_html(article.content)
+    return render_template('blog_article.html', article=article, article_content=article_content)
+
+
+@app.route('/vip-service')
+def marketing_landing():
+    return render_template('marketing.html')
+
+
+@app.route('/api/leads', methods=['POST'])
+@csrf.exempt
+@limiter.limit("20 per hour")
+def capture_lead():
+    return jsonify({'success': True, 'profile_url': '/'})
+
+
+@app.route('/submit-lead', methods=['POST'])
+@csrf.exempt
+@limiter.limit("20 per hour")
+def submit_lead():
+    return jsonify({'success': True, 'profile_url': '/'})
+
+
+@app.route('/api/article-feedback', methods=['POST'])
+@csrf.exempt
+@limiter.limit("60 per hour")
+def capture_article_feedback():
+    article_id = request.form.get('article_id') or (request.get_json(silent=True) or {}).get('article_id')
+    vote = (request.form.get('vote') or (request.get_json(silent=True) or {}).get('vote') or '').strip().lower()
+    try:
+        article_id = int(article_id)
+    except (TypeError, ValueError):
+        return jsonify({'success': False, 'error': 'Missing article.'}), 400
+    if vote not in ('yes', 'no'):
+        return jsonify({'success': False, 'error': 'Choose yes or no.'}), 400
+    article = db.session.get(Article, article_id)
+    if not article:
+        return jsonify({'success': False, 'error': 'Article not found.'}), 404
+    feedback = ArticleFeedback(
+        article_id=article.id,
+        vote=vote,
+        source_path=(request.referrer or request.path or '')[:255],
+        visitor_hash=(request.remote_addr or '')[:64],
+        created_at=datetime.utcnow(),
+    )
+    db.session.add(feedback)
+    db.session.commit()
+    return jsonify({'success': True, 'message': 'Thanks for the feedback.'})
 
 
 @app.route('/car-service-<origin>-to-<destination>')
@@ -672,6 +767,81 @@ def admin_medical_providers():
 
     offices = MedicalOffice.query.order_by(MedicalOffice.name.asc()).all()
     return render_template('admin_medical_providers.html', offices=offices)
+
+
+@app.route('/admin/marketing', methods=['GET', 'POST'])
+@admin_required
+def admin_marketing():
+    error = None
+    if request.method == 'POST':
+        title = request.form.get('title', '').strip()
+        slug = request.form.get('slug', '').strip()
+        meta_description = request.form.get('meta_description', '').strip()
+        content = request.form.get('content', '').strip()
+        publish_now = request.form.get('publish_now') == '1'
+        if not title:
+            error = 'Title is required.'
+        elif not content:
+            error = 'Article content is required.'
+        else:
+            article_slug = _unique_article_slug_for_edit(slug or title)
+            article = Article(
+                title=title[:180],
+                slug=article_slug,
+                meta_description=(meta_description[:255] if meta_description else None),
+                content=_sanitize_generated_article_html(content),
+                published_at=(datetime.utcnow() if publish_now else None),
+            )
+            db.session.add(article)
+            db.session.commit()
+            return redirect(url_for('admin_marketing'))
+
+    drafts = Article.query.filter(Article.published_at.is_(None)).order_by(Article.id.desc()).all()
+    published = Article.query.filter(Article.published_at.isnot(None)).order_by(Article.published_at.desc()).all()
+    return render_template('admin_marketing.html', drafts=drafts, published=published, error=error)
+
+
+@app.route('/admin/marketing/draft/<int:article_id>')
+@admin_required
+def admin_marketing_draft_preview(article_id):
+    article = db.get_or_404(Article, article_id)
+    article_content = _sanitize_generated_article_html(article.content)
+    return render_template('blog_article.html', article=article, article_content=article_content, admin_preview=True)
+
+
+@app.route('/admin/marketing/draft/<int:article_id>/edit', methods=['GET', 'POST'])
+@admin_required
+def admin_marketing_edit_article(article_id):
+    article = db.get_or_404(Article, article_id)
+    error = None
+    if request.method == 'POST':
+        title = request.form.get('title', '').strip()
+        slug = request.form.get('slug', '').strip()
+        meta_description = request.form.get('meta_description', '').strip()
+        content = request.form.get('content', '').strip()
+        if not title:
+            error = 'Add an article title.'
+        elif not content:
+            error = 'Article content cannot be empty.'
+        else:
+            article.title = title[:180]
+            article.slug = _unique_article_slug_for_edit(slug or title, article.id)
+            article.meta_description = meta_description[:255] if meta_description else None
+            article.content = _sanitize_generated_article_html(content)
+            db.session.commit()
+            return redirect(url_for('admin_marketing_draft_preview', article_id=article.id))
+    return render_template('admin_marketing_edit_article.html', article=article, error=error)
+
+
+@app.route('/admin/marketing/publish/<int:article_id>', methods=['POST'])
+@admin_required
+def admin_marketing_publish_article(article_id):
+    article = db.get_or_404(Article, article_id)
+    if not article.published_at:
+        article.published_at = datetime.utcnow()
+    article.content = _sanitize_generated_article_html(article.content)
+    db.session.commit()
+    return redirect(url_for('admin_marketing'))
 
 
 @app.route('/admin')

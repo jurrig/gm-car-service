@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Premium private chauffeur service for corporate travelers, seasonal visitors, airport transfers, and luxury commuters across Sarasota, Tampa, and the Gulf Coast.">
+    <title>VIP Private Chauffeur Service - G&amp;M Car Service</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        body { background: #080812; color: #f5f1e6; }
+        .vip-page { min-height: 100vh; background: #080812; }
+        .vip-nav { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.9rem clamp(1rem, 4vw, 3rem); background: rgba(8, 8, 18, 0.94); border-bottom: 1px solid rgba(200, 168, 78, 0.18); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+        .vip-brand { display: inline-flex; align-items: center; text-decoration: none; }
+        .vip-brand img { width: min(190px, 46vw); height: auto; background: #0a0a1a; border-radius: 6px; }
+        .vip-nav-links { display: flex; align-items: center; gap: 1.1rem; }
+        .vip-nav-links a { color: #ded8c7; font-size: 0.9rem; font-weight: 700; text-decoration: none; }
+        .vip-nav-links a:hover { color: var(--gold); }
+        .vip-hero { position: relative; overflow: hidden; min-height: 86vh; display: flex; align-items: center; padding: clamp(5rem, 10vw, 8rem) 0; background: linear-gradient(115deg, rgba(8, 8, 18, 0.98), rgba(18, 18, 42, 0.9)), url("{{ url_for('static', filename='brand/gm-logo-gold.png') }}") right 10% center / min(460px, 55vw) auto no-repeat; }
+        .vip-hero::after { content: ''; position: absolute; inset: auto 0 0; height: 40%; background: linear-gradient(0deg, #080812, transparent); pointer-events: none; }
+        .vip-container { width: min(1120px, calc(100% - 2rem)); margin: 0 auto; position: relative; z-index: 1; }
+        .vip-hero-copy { max-width: 760px; }
+        .vip-kicker { color: var(--gold); font-size: 0.82rem; font-weight: 900; letter-spacing: 0.22em; margin-bottom: 1rem; text-transform: uppercase; }
+        .vip-hero h1 { color: #fff; font-family: Georgia, 'Times New Roman', serif; font-size: clamp(2.7rem, 7vw, 5.8rem); line-height: 1.02; margin-bottom: 1.2rem; max-width: 920px; }
+        .vip-hero p { color: #d7d2c7; font-size: clamp(1.05rem, 2vw, 1.28rem); max-width: 680px; margin-bottom: 2rem; }
+        .vip-actions { display: flex; flex-wrap: wrap; gap: 0.9rem; align-items: center; }
+        .vip-btn { border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-weight: 900; letter-spacing: 0.08em; min-height: 52px; padding: 0.95rem 1.35rem; text-decoration: none; }
+        .vip-btn-primary { background: var(--gold); color: #080812; border: 2px solid var(--gold); }
+        .vip-btn-primary:hover { background: var(--gold-hover); border-color: var(--gold-hover); }
+        .vip-btn-secondary { color: #f5f1e6; border: 2px solid rgba(245, 241, 230, 0.25); }
+        .vip-section { padding: clamp(3.5rem, 7vw, 6rem) 0; }
+        .vip-section-header { max-width: 760px; margin-bottom: 2rem; }
+        .vip-section-header h2 { color: #fff; font-family: Georgia, 'Times New Roman', serif; font-size: clamp(2rem, 4vw, 3.4rem); line-height: 1.08; margin-bottom: 0.8rem; }
+        .vip-section-header p { color: #c9c1ae; font-size: 1.05rem; }
+        .vip-value-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+        .vip-value-card { background: #111123; border: 1px solid rgba(200, 168, 78, 0.22); border-radius: 8px; padding: 1.4rem; min-height: 230px; }
+        .vip-value-card span { color: var(--gold); display: block; font-size: 1.8rem; font-weight: 900; margin-bottom: 1rem; }
+        .vip-value-card h3 { color: #fff; font-size: 1.22rem; margin-bottom: 0.75rem; }
+        .vip-value-card p { color: #c9c1ae; }
+        .vip-lead-panel { display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 2rem; align-items: center; background: #f5f1e6; border-radius: 8px; color: #16161f; padding: clamp(1.5rem, 4vw, 3rem); }
+        .vip-lead-panel h2 { color: #0a0a1a; font-family: Georgia, 'Times New Roman', serif; font-size: clamp(1.9rem, 4vw, 3rem); line-height: 1.1; margin-bottom: 1rem; }
+        .vip-lead-panel p { color: #3d3a35; font-size: 1.05rem; }
+        .vip-lead-form { background: #fff; border: 1px solid rgba(10, 10, 26, 0.08); border-radius: 8px; padding: 1.2rem; }
+        .vip-lead-form label { color: #0a0a1a; display: block; font-size: 0.78rem; font-weight: 900; letter-spacing: 0.12em; margin-bottom: 0.45rem; text-transform: uppercase; }
+        .vip-lead-form input { border: 1px solid rgba(10, 10, 26, 0.18); border-radius: 8px; font-size: 1rem; margin-bottom: 0.8rem; padding: 0.95rem 1rem; width: 100%; }
+        .vip-lead-form button { background: #0a0a1a; border: 0; border-radius: 8px; color: #fff; cursor: pointer; font-weight: 900; min-height: 50px; padding: 0.95rem 1rem; width: 100%; }
+        .vip-lead-form button:hover { background: #1a1a3e; }
+        .vip-lead-message { color: #7a6122; min-height: 1.35rem; margin-top: 0.75rem; font-size: 0.95rem; }
+        .vip-routes { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.75rem; margin-top: 1.5rem; }
+        .vip-route-chip { border: 1px solid rgba(200, 168, 78, 0.24); border-radius: 8px; color: #ded8c7; padding: 0.9rem; text-align: center; }
+        .vip-footer { border-top: 1px solid rgba(200, 168, 78, 0.16); color: #938b7a; padding: 2rem 0; }
+        .vip-footer-inner { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 1rem; }
+        .vip-footer a { color: var(--gold); text-decoration: none; }
+        @media (max-width: 820px) { .vip-nav, .vip-nav-links, .vip-actions, .vip-footer-inner { flex-direction: column; align-items: flex-start; } .vip-value-grid, .vip-lead-panel, .vip-routes { grid-template-columns: 1fr; } .vip-hero { background-size: 85vw auto; background-position: center 16%; padding-top: 12rem; } .vip-btn { width: 100%; } }
+    </style>
+</head>
+
+<body>
+    <div class="vip-page">
+        <nav class="vip-nav" aria-label="VIP service navigation">
+            <a href="{{ url_for('index') }}" class="vip-brand" aria-label="G&amp;M Car Service home">
+                <img src="{{ url_for('static', filename='brand/gm-logo-transparent.png') }}" alt="G&amp;M Car Service">
+            </a>
+            <div class="vip-nav-links">
+                <a href="{{ url_for('blog_index') }}">Travel Guides</a>
+                <a href="{{ url_for('index') }}#book-now">Check Rates</a>
+                <a href="tel:+{{ signalwire_clean }}">{{ signalwire_number }}</a>
+            </div>
+        </nav>
+
+        <header class="vip-hero">
+            <div class="vip-container">
+                <div class="vip-hero-copy">
+                    <div class="vip-kicker">Private Chauffeur | Sarasota | Tampa | Gulf Coast</div>
+                    <h1>Your Premier Private Chauffeur Service Across the Gulf Coast.</h1>
+                    <p>Reserved executive transportation for airport arrivals, corporate transfers, seasonal stays, private appointments, and luxury commuting throughout Sarasota, Tampa, Venice, Longboat Key, Siesta Key, and beyond.</p>
+                    <div class="vip-actions">
+                        <a href="{{ url_for('index') }}#book-now" class="vip-btn vip-btn-primary">Check Rates &amp; Availability</a>
+                        <a href="#preferred-client" class="vip-btn vip-btn-secondary">Join Preferred Client List</a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main>
+            <section class="vip-section">
+                <div class="vip-container">
+                    <div class="vip-section-header">
+                        <div class="vip-kicker">Executive Ground Transport</div>
+                        <h2>Built for travelers who expect the ride to be handled before they land.</h2>
+                        <p>G&amp;M Car Service pairs clean premium SUV transportation with careful scheduling, airport awareness, and transparent pricing for clients who value certainty.</p>
+                    </div>
+
+                    <div class="vip-value-grid">
+                        <article class="vip-value-card">
+                            <span>01</span>
+                            <h3>Immaculate Luxury SUV</h3>
+                            <p>Premium comfort, pristine spacing, and dedicated cargo room for luggage, golf bags, business gear, and seasonal travel needs.</p>
+                        </article>
+                        <article class="vip-value-card">
+                            <span>02</span>
+                            <h3>Real-Time Flight Tracking</h3>
+                            <p>Your driver is at the terminal waiting, regardless of airline delays, early arrivals, or shifting baggage claim timing.</p>
+                        </article>
+                        <article class="vip-value-card">
+                            <span>03</span>
+                            <h3>Transparent Flat Rates</h3>
+                            <p>No hidden fees, no rideshare surge multipliers, and no app-based uncertainty when your travel day is already full.</p>
+                        </article>
+                    </div>
+
+                    <div class="vip-routes" aria-label="Popular VIP routes">
+                        <div class="vip-route-chip">SRQ Airport</div>
+                        <div class="vip-route-chip">TPA Airport</div>
+                        <div class="vip-route-chip">Siesta Key</div>
+                        <div class="vip-route-chip">Longboat Key</div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="vip-section" id="preferred-client">
+                <div class="vip-container">
+                    <div class="vip-lead-panel">
+                        <div>
+                            <div class="vip-kicker">Preferred Private Client</div>
+                            <h2>Preferred updates for repeat Gulf Coast travelers.</h2>
+                            <p>Join our Preferred Private Client List for occasional travel notes, airport pickup tips, private chauffeur offers, and a link to complete your preferred client profile.</p>
+                        </div>
+                        <form class="vip-lead-form" action="{{ url_for('submit_lead') }}" method="post">
+                            <label for="vip-email">Email address</label>
+                            <input type="email" id="vip-email" name="email" autocomplete="email" placeholder="you@example.com" required>
+                            <input type="hidden" name="source_tag" value="vip_service_landing">
+                            <button type="submit">Join Preferred Client List</button>
+                            <p class="lead-consent">By joining, you agree to receive occasional G&amp;M travel updates and offers. You can ask us to remove you anytime.</p>
+                            <div class="vip-lead-message" role="status" aria-live="polite"></div>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <section class="vip-section">
+                <div class="vip-container">
+                    <div class="vip-section-header">
+                        <div class="vip-kicker">Direct Booking</div>
+                        <h2>Ready to secure your next airport transfer or private ride?</h2>
+                        <p>Use the native booking engine for live route pricing, vehicle selection, flight details, and fast confirmation.</p>
+                    </div>
+                    <a href="{{ url_for('index') }}#book-now" class="vip-btn vip-btn-primary">Check Rates &amp; Availability</a>
+                </div>
+            </section>
+        </main>
+
+        <footer class="vip-footer">
+            <div class="vip-container vip-footer-inner">
+                <div>&copy; 2026 G&amp;M Car Service. Private SUV transport across Sarasota and the Gulf Coast.</div>
+                <div><a href="{{ url_for('index') }}">Home</a> | <a href="{{ url_for('blog_index') }}">Travel Guides</a> | <a href="{{ url_for('contact') }}">Contact</a></div>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        document.querySelectorAll('.vip-lead-form').forEach((form) => {
+            form.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                const message = form.querySelector('.vip-lead-message');
+                const formData = new FormData(form);
+                message.textContent = '';
+                try {
+                    const response = await fetch(form.action, { method: 'POST', body: formData });
+                    const data = await response.json();
+                    if (!response.ok || !data.success) {
+                        message.textContent = data.error || 'Please try again.';
+                        return;
+                    }
+                    form.reset();
+                    message.innerHTML = `You are on the Preferred Private Client List. <a href="${data.profile_url}">Complete your preferred profile.</a>`;
+                } catch (error) {
+                    message.textContent = 'Please try again.';
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

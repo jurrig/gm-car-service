@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Premium Sarasota, airport, dining, and private chauffeur guides from G&M Car Service.">
+    <title>Sarasota Executive Travel Guides - G&amp;M Car Service</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        :root { --ink: #171717; --soft-ink: #3f3a34; --muted: #766f64; --line: #ded6c7; --gold: #c8a84e; --gold-deep: #927229; --paper: #f7f1e7; --cream: #fffaf1; --midnight: #080813; --panel: #11111d; }
+        body { background: var(--paper); color: var(--ink); margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        .guides-page { min-height: 100vh; }
+        .guides-masthead { background-color: var(--midnight); background-image: linear-gradient(180deg, rgba(8, 8, 19, 0.78) 0%, rgba(17, 17, 29, 0.88) 100%), url('https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=2400&q=90'); background-position: center 50%; background-size: cover; border-bottom: 1px solid var(--gold); color: #fff; padding: 1.75rem 1.5rem 5rem; position: relative; }
+        .guides-masthead::before,
+        .guides-masthead::after { content: none; }
+        .guides-inner { max-width: 1140px; margin: 0 auto; position: relative; width: 100%; z-index: 1; }
+        .guides-nav { align-items: center; border-bottom: 1px solid rgba(255, 255, 255, 0.12); display: flex; gap: 1.5rem; justify-content: space-between; margin-bottom: 3.5rem; padding-bottom: 1.25rem; }
+        .brand-mark { align-items: center; display: inline-flex; gap: 0.85rem; text-decoration: none; }
+        .brand-mark img { display: block; height: 64px; max-width: min(245px, 58vw); object-fit: contain; width: auto; }
+        .brand-text { border-left: 1px solid rgba(255, 255, 255, 0.2); color: var(--gold); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.22em; padding-left: 1rem; text-transform: uppercase; }
+        .guides-nav-links { align-items: center; display: flex; gap: 1.5rem; }
+        .guides-nav-links a { color: #e5e5e5; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.1em; text-decoration: none; text-transform: uppercase; transition: color 0.2s ease; }
+        .guides-nav-links a:hover { color: var(--gold); }
+        .guides-nav-links a.nav-btn { border: 1px solid var(--gold); border-radius: 4px; color: var(--gold); padding: 0.5rem 1.1rem; transition: all 0.2s ease; }
+        .guides-nav-links a.nav-btn:hover { background: var(--gold); color: var(--midnight); }
+        .guides-hero { background: transparent; margin: 0 auto; max-width: 980px; padding: clamp(0.75rem, 3vw, 1.5rem); text-align: center; }
+        .guides-kicker { align-items: center; color: var(--gold); display: inline-flex; font-size: 0.75rem; font-weight: 800; gap: 0.75rem; letter-spacing: 0.25em; margin-bottom: 1.25rem; text-transform: uppercase; }
+        .guides-kicker::before, .guides-kicker::after { background: var(--gold); content: ''; display: inline-block; height: 1px; opacity: 0.6; width: 32px; }
+        .guides-hero h1 { background: transparent; color: #ffffff; font-family: Georgia, 'Times New Roman', serif; font-size: clamp(2.4rem, 5vw, 4.2rem); font-weight: 400; letter-spacing: -0.01em; line-height: 1.08; margin: 0 0 1.25rem; max-width: 1020px; }
+        .guides-hero p { color: #d1d1d1; font-size: clamp(1rem, 1.8vw, 1.2rem); font-weight: 300; line-height: 1.65; max-width: 640px; margin: 0 auto; }
+        .guides-content { margin: 2rem auto 0; max-width: 1180px; padding: 0 1.25rem 5rem; position: relative; z-index: 2; }
+        .section-bar { align-items: center; display: flex; justify-content: space-between; gap: 1rem; margin: 0 0 1.15rem; }
+        .section-bar span { color: var(--gold-deep); font-size: 0.76rem; font-weight: 900; letter-spacing: 0.18em; text-transform: uppercase; }
+        .section-bar::after { background: var(--line); content: ''; flex: 1; height: 1px; }
+        .articles-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+        .article-card { background: var(--cream); border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 24px 70px rgba(30, 24, 16, 0.11); display: flex; flex-direction: column; min-height: 390px; overflow: hidden; padding: 0; position: relative; transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s; }
+        .article-card:hover { border-color: rgba(200, 168, 78, 0.85); box-shadow: 0 28px 80px rgba(30, 24, 16, 0.15); transform: translateY(-3px); }
+        .article-topline { align-items: center; background: #fff; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; gap: 1rem; padding: 1rem 1.15rem; }
+        .article-date { color: var(--muted); font-size: 0.72rem; font-weight: 900; letter-spacing: 0.12em; text-transform: uppercase; }
+        .article-number { color: rgba(146, 114, 41, 0.38); font-family: Georgia, 'Times New Roman', serif; font-size: 2.1rem; line-height: 1; }
+        .article-card-body { display: flex; flex: 1; flex-direction: column; padding: 1.35rem; }
+        .article-card h2 { color: var(--ink); font-family: Georgia, 'Times New Roman', serif; font-size: clamp(1.55rem, 2.5vw, 2rem); font-weight: 500; line-height: 1.08; margin: 0 0 1rem; }
+        .article-card h2 a { color: inherit; text-decoration: none; }
+        .article-card p { color: var(--soft-ink); flex: 1; font-size: 1rem; line-height: 1.72; margin-bottom: 1.35rem; }
+        .read-guide { align-items: center; align-self: flex-start; background: var(--midnight); border: 1px solid var(--midnight); border-radius: 999px; color: #fff; display: inline-flex; font-size: 0.77rem; font-weight: 900; justify-content: center; letter-spacing: 0.12em; min-height: 44px; padding: 0.78rem 1.05rem; text-decoration: none; text-transform: uppercase; transition: background 0.2s, border-color 0.2s, color 0.2s; }
+        .read-guide:hover { background: var(--gold); border-color: var(--gold); color: var(--midnight); }
+        .lead-panel { background: var(--midnight); border: 1px solid rgba(200, 168, 78, 0.36); border-radius: 8px; box-shadow: 0 24px 70px rgba(8, 8, 19, 0.18); color: #fffaf1; display: grid; gap: 1.1rem; grid-template-columns: minmax(0, 1fr) minmax(280px, 0.74fr); margin-top: 2rem; padding: clamp(1.2rem, 3vw, 1.9rem); }
+        .lead-panel h2 { color: #fffaf1; font-family: Georgia, 'Times New Roman', serif; font-size: clamp(1.7rem, 3.6vw, 2.55rem); font-weight: 500; line-height: 1.08; margin: 0 0 0.6rem; }
+        .lead-panel p { color: #d7d2c7; line-height: 1.65; margin: 0; }
+        .lead-form { align-self: center; display: grid; gap: 0.75rem; }
+        .lead-form input { background: #fffaf1; border: 1px solid rgba(255, 255, 255, 0.26); border-radius: 8px; color: #111827; font-size: 1rem; min-height: 52px; padding: 0.9rem 1rem; width: 100%; }
+        .lead-form input:focus { border-color: var(--gold); outline: 3px solid rgba(200, 168, 78, 0.22); }
+        .lead-form button { background: var(--gold); border: 0; border-radius: 8px; color: var(--midnight); cursor: pointer; font-size: 0.82rem; font-weight: 900; letter-spacing: 0.08em; min-height: 52px; padding: 0.9rem 1rem; text-transform: uppercase; width: 100%; }
+        .lead-form button:hover { background: #b8952e; }
+        .lead-consent { color: #bdb5a6; font-size: 0.84rem; line-height: 1.5; }
+        .lead-message { color: #e7d58e; font-size: 0.95rem; min-height: 1.35rem; }
+        .empty-card { grid-column: 1 / -1; min-height: 0; }
+        @media (max-width: 980px) { .articles-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+        @media (max-width: 760px) { .lead-panel { grid-template-columns: 1fr; } }
+        @media (max-width: 768px) { .guides-masthead { padding: 1.25rem 1rem 3.5rem; } .guides-nav { align-items: flex-start; flex-direction: column; gap: 1rem; margin-bottom: 2.5rem; } .guides-nav-links { justify-content: space-between; width: 100%; } .brand-text { display: none; } }
+        @media (max-width: 680px) { .guides-kicker::before, .guides-kicker::after { width: 34px; } .articles-grid { grid-template-columns: 1fr; } .article-card { min-height: 0; } }
+    </style>
+</head>
+
+<body>
+    <main class="guides-page">
+        <section class="guides-masthead">
+            <div class="guides-inner">
+                <nav class="guides-nav" aria-label="Blog navigation">
+                    <a class="brand-mark" href="/">
+                        <img src="{{ url_for('static', filename='brand/gm-logo-transparent.png') }}" alt="G&amp;M Car Service">
+                        <span class="brand-text">Private Chauffeur Service</span>
+                    </a>
+                    <div class="guides-nav-links">
+                        <a href="{{ url_for('marketing_landing') }}">VIP Service</a>
+                        <a href="{{ url_for('index') }}#book-now" class="nav-btn">Reserve</a>
+                    </div>
+                </nav>
+
+                <header class="guides-hero">
+                    <div class="guides-kicker">Executive Local Intelligence</div>
+                    <h1>Sarasota &amp; Gulf Coast Travel Insights</h1>
+                    <p>Exclusive local guides, fine dining curations, and airport transit logistics by G&amp;M Car Service.</p>
+                </header>
+            </div>
+        </section>
+
+        <section class="guides-content" aria-label="Executive travel guides">
+            <div class="section-bar"><span>Latest Private Travel Notes</span></div>
+            <div class="articles-grid">
+            {% for article in articles %}
+            <article class="article-card">
+                <div class="article-topline">
+                    <div class="article-date">{% if article.published_at %}{{ article.published_at.strftime('%B %d, %Y') }}{% else %}Executive Guide{% endif %}</div>
+                    <div class="article-number">{{ '%02d' % loop.index }}</div>
+                </div>
+                <div class="article-card-body">
+                    <h2><a href="{{ url_for('blog_article', slug=article.slug) }}">{{ article.title }}</a></h2>
+                    {% if article.meta_description %}<p>{{ article.meta_description }}</p>{% else %}<p>Premium local transportation guidance from G&amp;M Car Service.</p>{% endif %}
+                    <a class="read-guide" href="{{ url_for('blog_article', slug=article.slug) }}">Read Executive Guide &rarr;</a>
+                </div>
+            </article>
+            {% else %}
+            <article class="article-card empty-card">
+                <div class="article-topline">
+                    <div class="article-date">Coming Soon</div>
+                    <div class="article-number">01</div>
+                </div>
+                <div class="article-card-body">
+                    <h2>Executive guides are being prepared.</h2>
+                    <p>Check back for Sarasota airport, dining, and private chauffeur planning notes.</p>
+                    <a class="read-guide" href="{{ url_for('index') }}#book-now">Reserve a Ride &rarr;</a>
+                </div>
+            </article>
+            {% endfor %}
+            </div>
+            <section class="lead-panel" aria-label="Preferred Private Client signup">
+                <div>
+                    <h2>Private travel notes and booking updates.</h2>
+                    <p>Join the G&amp;M Preferred Private Client List for occasional Gulf Coast travel updates, airport pickup notes, and private chauffeur booking offers.</p>
+                </div>
+                <form class="lead-form" action="{{ url_for('submit_lead') }}" method="post">
+                    <input type="email" name="email" autocomplete="email" placeholder="Email address" required>
+                    <input type="hidden" name="source_tag" value="blog_index">
+                    <button type="submit">Join Preferred List</button>
+                    <p class="lead-consent">By joining, you agree to receive occasional G&amp;M travel updates and offers. You can ask us to remove you anytime.</p>
+                    <div class="lead-message" role="status" aria-live="polite"></div>
+                </form>
+            </section>
+        </section>
+    </main>
+    <script>
+        document.querySelectorAll('.lead-form').forEach((form) => {
+            form.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                const message = form.querySelector('.lead-message');
+                const formData = new FormData(form);
+                if (message) message.textContent = '';
+                try {
+                    const response = await fetch(form.action, { method: 'POST', body: formData });
+                    const data = await response.json();
+                    if (!response.ok || !data.success) {
+                        if (message) message.textContent = data.error || 'Please try again.';
+                        return;
+                    }
+                    form.reset();
+                    if (message) {
+                        message.innerHTML = `You are on the Preferred Private Client List. <a href="${data.profile_url}">Complete your preferred profile.</a>`;
+                    }
+                } catch (error) {
+                    if (message) message.textContent = 'Please try again.';
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

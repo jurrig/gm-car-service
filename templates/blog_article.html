@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="{{ article.meta_description or article.title }}">
+    <title>{{ article.title }} - G&amp;M Car Service</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        :root { --ink: #171717; --soft-ink: #3f3a34; --muted: #766f64; --line: #ded6c7; --gold: #c8a84e; --gold-deep: #927229; --paper: #f7f1e7; --cream: #fffaf1; --midnight: #080813; --panel: #11111d; }
+        body { background: var(--paper); color: var(--ink); margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        .article-page { min-height: 100vh; }
+        .article-masthead { background-color: var(--midnight); background-image: linear-gradient(180deg, rgba(8, 8, 19, 0.78) 0%, rgba(17, 17, 29, 0.88) 100%), url('https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=2400&q=90'); background-position: center 50%; background-size: cover; border-bottom: 1px solid var(--gold); color: #fff; padding: 1.75rem 1.5rem 5rem; position: relative; }
+        .article-masthead::before,
+        .article-masthead::after { content: none; }
+        .article-inner { max-width: 1140px; margin: 0 auto; position: relative; width: 100%; z-index: 1; }
+        .article-nav { align-items: center; border-bottom: 1px solid rgba(255, 255, 255, 0.12); display: flex; gap: 1.5rem; justify-content: space-between; margin-bottom: 3.5rem; padding-bottom: 1.25rem; }
+        .brand-mark { align-items: center; display: inline-flex; gap: 0.85rem; text-decoration: none; }
+        .brand-mark img { display: block; height: 64px; max-width: min(245px, 58vw); object-fit: contain; width: auto; }
+        .brand-text { border-left: 1px solid rgba(255, 255, 255, 0.2); color: var(--gold); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.22em; padding-left: 1rem; text-transform: uppercase; }
+        .article-nav-links { align-items: center; display: flex; gap: 1.5rem; }
+        .article-nav-links a { color: #e5e5e5; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.1em; text-decoration: none; text-transform: uppercase; transition: color 0.2s ease; }
+        .article-nav-links a:hover { color: var(--gold); }
+        .article-nav-links a.nav-btn { border: 1px solid var(--gold); border-radius: 4px; color: var(--gold); padding: 0.5rem 1.1rem; transition: all 0.2s ease; }
+        .article-nav-links a.nav-btn:hover { background: var(--gold); color: var(--midnight); }
+        .article-hero { background: transparent; margin: 0 auto; max-width: 980px; padding: clamp(0.75rem, 3vw, 1.5rem); text-align: center; }
+        .article-kicker { align-items: center; color: var(--gold); display: inline-flex; font-size: 0.75rem; font-weight: 800; gap: 0.75rem; letter-spacing: 0.25em; margin-bottom: 1.25rem; text-transform: uppercase; }
+        .article-kicker::before, .article-kicker::after { background: var(--gold); content: ''; display: inline-block; height: 1px; opacity: 0.6; width: 32px; }
+        .article-hero h1 { color: #ffffff; font-family: Georgia, 'Times New Roman', serif; font-size: clamp(2.4rem, 5vw, 4.2rem); font-weight: 400; letter-spacing: -0.01em; line-height: 1.08; margin: 0 0 1.25rem; max-width: 1020px; }
+        .article-date { color: #d1d1d1; font-size: 0.84rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+        .article-shell { margin: clamp(1.5rem, 3vw, 2.5rem) auto 0; max-width: 1220px; padding: 0 1.25rem 5rem; position: relative; z-index: 2; }
+        .article-layout { align-items: start; display: grid; grid-template-columns: minmax(0, 65fr) minmax(310px, 35fr); gap: clamp(1.25rem, 4vw, 3rem); }
+        .article-main { background: var(--cream); border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 24px 70px rgba(30, 24, 16, 0.11); overflow: hidden; }
+        .article-deck { background: #fff; border-bottom: 1px solid var(--line); color: var(--muted); display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr) auto; padding: clamp(1.25rem, 3vw, 1.8rem); }
+        .article-deck strong { color: var(--gold-deep); display: block; font-size: 0.75rem; font-weight: 900; letter-spacing: 0.18em; margin-bottom: 0.4rem; text-transform: uppercase; }
+        .article-deck p { color: var(--soft-ink); font-size: 1rem; line-height: 1.65; margin: 0; max-width: 700px; }
+        .article-deck-link { align-items: center; align-self: center; background: var(--midnight); border-radius: 999px; color: #fff; display: inline-flex; font-size: 0.76rem; font-weight: 900; justify-content: center; letter-spacing: 0.12em; min-height: 44px; padding: 0.78rem 1.05rem; text-decoration: none; text-transform: uppercase; white-space: nowrap; }
+        .article-deck-link:hover { background: var(--gold); color: var(--midnight); }
+        .article-body { color: var(--soft-ink); font-family: Georgia, 'Times New Roman', serif; font-size: clamp(1.08rem, 1.8vw, 1.18rem); line-height: 1.82; padding: clamp(1.45rem, 4vw, 3rem); }
+        .article-body p { margin: 0 0 1.35rem; }
+        .article-body h2, .article-body h3 { color: var(--ink); font-family: Georgia, 'Times New Roman', serif; font-weight: 500; line-height: 1.14; margin: 2.4rem 0 0.9rem; }
+        .article-body h2 { font-size: clamp(1.8rem, 3.1vw, 2.55rem); }
+        .article-body h3 { font-size: clamp(1.35rem, 2.4vw, 1.75rem); }
+        .article-body ul, .article-body ol { margin: 0 0 1.35rem 1.35rem; }
+        .article-body li { margin-bottom: 0.5rem; }
+        .article-body a { color: var(--gold-deep); font-weight: 800; text-decoration: underline; text-underline-offset: 3px; }
+        .article-body .marketing-photo { margin: 0 0 1.75rem; }
+        .article-body .marketing-photo img { border-radius: 8px; display: block; max-height: 520px; object-fit: cover; width: 100%; }
+        .article-body .marketing-photo figcaption { color: var(--muted); font-family: 'Inter', 'Segoe UI', Arial, sans-serif; font-size: 0.82rem; line-height: 1.5; margin-top: 0.55rem; }
+        .article-body .marketing-inline-lead, .article-body .marketing-inline-cta { background: #11111d; border: 1px solid rgba(200,168,78,0.32); border-radius: 8px; color: #fffaf1; font-family: 'Inter', 'Segoe UI', Arial, sans-serif; margin: 2rem 0; padding: clamp(1.2rem, 3vw, 1.75rem); }
+        .article-body .marketing-inline-lead h2, .article-body .marketing-inline-cta h2 { color: #fffaf1; font-family: Georgia, 'Times New Roman', serif; font-size: clamp(1.45rem, 2.6vw, 2rem); margin: 0 0 0.7rem; }
+        .article-body .marketing-inline-lead p, .article-body .marketing-inline-cta p { color: #d7d2c7; font-family: 'Inter', 'Segoe UI', Arial, sans-serif; line-height: 1.65; }
+        .article-body .marketing-inline-lead form { display: grid; gap: 0.7rem; margin-top: 1rem; }
+        .article-body .marketing-inline-lead input { background: #fffaf1; border: 1px solid rgba(255,255,255,0.28); border-radius: 8px; color: #111827; font-size: 1rem; min-height: 50px; padding: 0.85rem 1rem; width: 100%; }
+        .article-body .marketing-inline-lead button, .article-body .marketing-inline-cta a { align-items: center; background: var(--gold); border: 0; border-radius: 999px; color: var(--midnight); display: inline-flex; font-family: 'Inter', 'Segoe UI', Arial, sans-serif; font-size: 0.82rem; font-weight: 900; justify-content: center; letter-spacing: 0.08em; min-height: 48px; padding: 0.85rem 1.1rem; text-decoration: none; text-transform: uppercase; }
+        .article-body .marketing-inline-lead button { border-radius: 8px; cursor: pointer; width: 100%; }
+        .article-body .marketing-inline-cta a:hover, .article-body .marketing-inline-lead button:hover { background: #b8952e; color: var(--midnight); }
+        .article-body .private-client-box { display: none; }
+        .article-body .chauffeur-cta { display: none; }
+        .article-feedback { background: #fff; border-top: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: 0.9rem; align-items: center; justify-content: space-between; padding: clamp(1.15rem, 3vw, 1.55rem) clamp(1.45rem, 4vw, 3rem); }
+        .article-feedback strong { color: var(--ink); font-size: 0.95rem; letter-spacing: 0.02em; }
+        .article-feedback-actions { display: flex; gap: 0.65rem; }
+        .article-feedback button { background: #fffaf1; border: 1px solid var(--line); border-radius: 999px; color: var(--soft-ink); cursor: pointer; font-size: 0.92rem; font-weight: 800; min-height: 42px; padding: 0.65rem 1rem; }
+        .article-feedback button:hover, .article-feedback button.selected { background: var(--gold); border-color: var(--gold); color: var(--midnight); }
+        .article-feedback-message { color: var(--muted); flex-basis: 100%; font-size: 0.9rem; min-height: 1.2rem; }
+        .article-sidebar { position: sticky; top: 1.25rem; }
+        .client-card { background: var(--panel); border: 1px solid rgba(200, 168, 78, 0.45); border-radius: 8px; box-shadow: 0 24px 70px rgba(8, 8, 19, 0.26); color: #fff; overflow: hidden; }
+        .client-card-brand { align-items: center; background: #080813; border-bottom: 1px solid rgba(200, 168, 78, 0.24); display: flex; gap: 0.85rem; padding: 1rem 1.25rem; }
+        .client-card-brand img { height: 74px; max-width: min(260px, 78%); object-fit: contain; width: auto; }
+        .client-card-brand span { color: #d9c98f; font-size: 0.7rem; font-weight: 900; letter-spacing: 0.16em; text-transform: uppercase; }
+        .client-card-body { padding: clamp(1.2rem, 3vw, 1.65rem); }
+        .client-card h2 { color: #fffaf1; font-family: Georgia, 'Times New Roman', serif; font-size: clamp(1.65rem, 3vw, 2.25rem); font-weight: 500; line-height: 1.08; margin: 0 0 0.85rem; }
+        .client-card p { color: #d7d2c7; line-height: 1.68; margin-bottom: 1.15rem; }
+        .client-card .lead-form { display: grid; gap: 0.75rem; margin-top: 1rem; }
+        .client-card input { background: #fffaf1; border: 1px solid rgba(255, 255, 255, 0.32); border-radius: 8px; color: #111827; font-size: 1rem; min-height: 52px; padding: 0.9rem 1rem; width: 100%; }
+        .client-card input:focus { border-color: var(--gold); outline: 3px solid rgba(200, 168, 78, 0.22); }
+        .client-card button { background: var(--gold); border: 0; border-radius: 8px; color: var(--midnight); cursor: pointer; font-weight: 900; letter-spacing: 0.06em; min-height: 52px; padding: 0.9rem 1rem; text-transform: uppercase; width: 100%; }
+        .client-card button:hover { background: #b8952e; }
+        .lead-message { color: #e7d58e; min-height: 1.4rem; margin-top: 0.75rem; font-size: 0.95rem; }
+        .sidebar-note { border-top: 1px solid rgba(255, 255, 255, 0.12); color: #bdb5a6; font-size: 0.9rem; line-height: 1.6; margin-top: 1.2rem; padding-top: 1rem; }
+        .article-cta-strip { align-items: center; background: var(--midnight); border-top: 1px solid rgba(200, 168, 78, 0.32); color: #fff; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 1.5rem; padding: clamp(1.35rem, 3vw, 2rem); }
+        .article-cta-strip h2 { color: #fffaf1; font-family: Georgia, 'Times New Roman', serif; font-size: clamp(1.7rem, 3vw, 2.45rem); font-weight: 500; line-height: 1.08; margin: 0 0 0.55rem; }
+        .article-cta-strip p { color: #d7d2c7; line-height: 1.6; margin: 0; }
+        .article-cta-strip a { align-items: center; background: var(--gold); border-radius: 999px; color: var(--midnight); display: inline-flex; font-size: 0.78rem; font-weight: 900; justify-content: center; letter-spacing: 0.1em; min-height: 50px; padding: 0.85rem 1.2rem; text-decoration: none; text-transform: uppercase; white-space: nowrap; }
+        .article-cta-strip a:hover { background: #b8952e; }
+        .admin-preview-bar { align-items: center; background: #080813; border-bottom: 1px solid rgba(200, 168, 78, 0.35); color: #fffaf1; display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: center; padding: 0.8rem 1rem; position: sticky; top: 0; z-index: 10; }
+        .admin-preview-bar strong { color: #e9d58d; font-size: 0.8rem; letter-spacing: 0.12em; text-transform: uppercase; }
+        .admin-preview-bar a, .admin-preview-bar button { background: #25315f; border: 1px solid #41539a; border-radius: 8px; color: #fff; cursor: pointer; font-size: 0.78rem; font-weight: 900; padding: 0.58rem 0.82rem; text-decoration: none; text-transform: uppercase; }
+        .admin-preview-bar button { background: #c8a84e; border-color: #c8a84e; color: #080813; }
+        .admin-preview-bar form { margin: 0; }
+        @media (max-width: 940px) { .article-layout { grid-template-columns: 1fr; } .article-sidebar { position: static; } .article-deck { grid-template-columns: 1fr; } .article-deck-link { justify-self: start; } .article-cta-strip { grid-template-columns: 1fr; } .article-cta-strip a { width: 100%; } }
+        @media (max-width: 768px) { .article-masthead { padding: 1.25rem 1rem 3.5rem; } .article-nav { align-items: flex-start; flex-direction: column; gap: 1rem; margin-bottom: 2.5rem; } .article-nav-links { justify-content: space-between; width: 100%; } .brand-text { display: none; } }
+        @media (max-width: 640px) { .article-shell { margin-top: 1.25rem; padding-left: 1rem; padding-right: 1rem; } .brand-mark img { height: 64px; max-width: 82vw; } .client-card-brand img { height: 66px; max-width: 82%; } .article-kicker::before, .article-kicker::after { width: 34px; } .article-body { padding: 1.25rem; } }
+    </style>
+</head>
+
+<body>
+    {% if admin_preview %}
+    <div class="admin-preview-bar">
+        <strong>Draft Preview</strong>
+        <a href="{{ url_for('admin_marketing_edit_article', article_id=article.id) }}">Edit Draft</a>
+        <a href="{{ url_for('admin_marketing') }}">Marketing Center</a>
+        {% if not article.published_at %}
+        <form method="POST" action="{{ url_for('admin_marketing_publish_article', article_id=article.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit">Publish After Review</button>
+        </form>
+        {% endif %}
+    </div>
+    {% endif %}
+    <main class="article-page">
+        <section class="article-masthead">
+            <div class="article-inner">
+                <nav class="article-nav" aria-label="Blog navigation">
+                    <a class="brand-mark" href="{{ url_for('blog_index') }}">
+                        <img src="{{ url_for('static', filename='brand/gm-logo-transparent.png') }}" alt="G&amp;M Car Service">
+                        <span class="brand-text">Private Chauffeur Service</span>
+                    </a>
+                    <div class="article-nav-links">
+                        <a href="{{ url_for('marketing_landing') }}">VIP Service</a>
+                        <a href="{{ url_for('index') }}#book-now" class="nav-btn">Reserve</a>
+                    </div>
+                </nav>
+
+                <header class="article-hero">
+                    <div class="article-kicker">G&amp;M Executive Guide</div>
+                    <h1>{{ article.title }}</h1>
+                    {% if article.published_at %}<div class="article-date">{{ article.published_at.strftime('%B %d, %Y') }}</div>{% endif %}
+                </header>
+            </div>
+        </section>
+
+        <section class="article-shell">
+        <div class="article-layout">
+            <article class="article-main">
+                <div class="article-deck">
+                    <div>
+                        <strong>Private Travel Briefing</strong>
+                        <p>{{ article.meta_description or 'Premium local transportation guidance from G&amp;M Car Service.' }}</p>
+                    </div>
+                    <a class="article-deck-link" href="{{ url_for('index') }}#book-now">Reserve SUV</a>
+                </div>
+
+                <div class="article-body">
+                    {{ (article_content if article_content is defined else article.content) | safe }}
+                </div>
+
+                <section class="article-feedback" aria-label="Article feedback" data-article-id="{{ article.id }}">
+                    <strong>Was this driver guide helpful?</strong>
+                    <div class="article-feedback-actions">
+                        <button type="button" data-vote="yes" aria-label="Yes, this guide was helpful">👍 Yes</button>
+                        <button type="button" data-vote="no" aria-label="No, this guide was not helpful">👎 No</button>
+                    </div>
+                    <div class="article-feedback-message" role="status" aria-live="polite"></div>
+                </section>
+
+                {% set rendered_article_content = article_content if article_content is defined else article.content %}
+                {% if 'marketing-inline-cta' not in rendered_article_content and 'marketing-inline-lead' not in rendered_article_content %}
+                <section class="article-cta-strip" aria-labelledby="chauffeur-cta-title">
+                    <div>
+                        <h2 id="chauffeur-cta-title">Experience Chauffeur-Driven Excellence.</h2>
+                        <p>Skip the transit stress and reserve G&amp;M's premium SUV for your Sarasota, Tampa, or Lakewood Ranch travels.</p>
+                    </div>
+                    <a href="{{ url_for('index') }}#book-now">Check Rates &amp; Availability</a>
+                </section>
+                {% endif %}
+            </article>
+
+            <aside class="article-sidebar" aria-label="Preferred Private Client signup">
+                <section class="client-card">
+                    <div class="client-card-brand">
+                        <img src="{{ url_for('static', filename='brand/gm-logo-transparent.png') }}" alt="G&amp;M Car Service">
+                        <span>Preferred Private Client</span>
+                    </div>
+                    <div class="client-card-body">
+                        <h2>Join the preferred client list.</h2>
+                        <p>Get occasional Gulf Coast travel notes, airport pickup tips, private chauffeur offers, and a link to complete your preferred client profile for easier future booking conversations.</p>
+                        <form class="lead-form" action="{{ url_for('submit_lead') }}" method="post">
+                            <input type="email" name="email" autocomplete="email" placeholder="Email address" required>
+                            <input type="hidden" name="source_tag" value="blog_article_{{ article.slug }}">
+                            <button type="submit">Join Preferred List</button>
+                        </form>
+                        <p class="lead-consent">By joining, you agree to receive occasional G&amp;M travel updates and offers. You can ask us to remove you anytime.</p>
+                        <div class="lead-message" role="status" aria-live="polite"></div>
+                        <div class="sidebar-note">Ideal for repeat airport travelers, seasonal guests, executive transfers, and private SUV clients across Sarasota and Tampa.</div>
+                    </div>
+                </section>
+            </aside>
+        </div>
+        </section>
+    </main>
+
+    <script>
+        document.querySelectorAll('.lead-form').forEach((form) => {
+            form.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                const container = form.closest('.client-card') || form.parentElement;
+                const message = container.querySelector('.lead-message');
+                const formData = new FormData(form);
+                if (message) message.textContent = '';
+                try {
+                    const response = await fetch(form.action || '/api/leads', { method: 'POST', body: formData });
+                    const data = await response.json();
+                    if (!response.ok || !data.success) {
+                        if (message) message.textContent = data.error || 'Please try again.';
+                        return;
+                    }
+                    form.reset();
+                    if (message) {
+                        message.innerHTML = `You are on the Preferred Private Client List. <a href="${data.profile_url}">Complete your preferred profile.</a>`;
+                    }
+                } catch (error) {
+                    if (message) message.textContent = 'Please try again.';
+                }
+            });
+        });
+
+        document.querySelectorAll('.article-feedback').forEach((widget) => {
+            const message = widget.querySelector('.article-feedback-message');
+            widget.querySelectorAll('button[data-vote]').forEach((button) => {
+                button.addEventListener('click', async () => {
+                    const formData = new FormData();
+                    formData.append('article_id', widget.dataset.articleId);
+                    formData.append('vote', button.dataset.vote);
+                    if (message) message.textContent = '';
+                    try {
+                        const response = await fetch('{{ url_for("capture_article_feedback") }}', { method: 'POST', body: formData });
+                        const data = await response.json();
+                        if (!response.ok || !data.success) {
+                            if (message) message.textContent = data.error || 'Could not save feedback.';
+                            return;
+                        }
+                        widget.querySelectorAll('button[data-vote]').forEach((item) => item.classList.remove('selected'));
+                        button.classList.add('selected');
+                        if (message) message.textContent = data.message || 'Thanks for the feedback.';
+                    } catch (error) {
+                        if (message) message.textContent = 'Could not save feedback.';
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>

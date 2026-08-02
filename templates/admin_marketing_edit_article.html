@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Marketing Draft - G&amp;M Admin</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+        body { background: #0a0a1a; color: #e0e0e0; font-family: 'Inter', 'Segoe UI', Arial, sans-serif; margin: 0; }
+        header { align-items: center; background: #0f0f2a; border-bottom: 1px solid #1e1e3a; display: flex; gap: 1rem; justify-content: space-between; padding: 0.85rem 2rem; }
+        header h1 { color: #c8a84e; font-size: 1.1rem; margin: 0; }
+        nav { align-items: center; display: flex; flex-wrap: wrap; gap: 0.85rem; }
+        nav a { color: #c8a84e; font-size: 0.92rem; font-weight: 700; text-decoration: none; }
+        .page-wrap { margin: 2.5rem auto; max-width: 1180px; padding: 0 1.5rem 4rem; }
+        .page-kicker { color: #c8a84e; font-size: 0.78rem; font-weight: 900; letter-spacing: 0.16em; text-transform: uppercase; }
+        .page-title { color: #fff; font-size: clamp(1.75rem, 4vw, 2.8rem); line-height: 1.08; margin: 0.35rem 0 0.75rem; }
+        .page-subtitle { color: #8f8fa8; line-height: 1.6; margin-bottom: 1.5rem; max-width: 780px; }
+        .panel { background: #0f0f2a; border: 1px solid #1e1e3a; border-radius: 12px; padding: 1.5rem; }
+        .form-grid { display: grid; gap: 1rem; }
+        label { color: #a8a8bd; display: block; font-size: 0.78rem; font-weight: 800; letter-spacing: 0.08em; margin-bottom: 0.45rem; text-transform: uppercase; }
+        input, textarea { background: #1a1a3a; border: 1px solid #2e2e5e; border-radius: 8px; color: #fff; font-size: 1rem; padding: 0.85rem 0.95rem; width: 100%; }
+        textarea { font-family: Consolas, 'Courier New', monospace; min-height: 520px; resize: vertical; }
+        .help { color: #8f8fa8; font-size: 0.84rem; line-height: 1.5; margin-top: 0.45rem; }
+        .link-helper { background: #151532; border: 1px solid #262653; border-radius: 10px; display: grid; gap: 0.75rem; padding: 1rem; }
+        .link-helper-grid { display: grid; gap: 0.75rem; grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr) auto; }
+        .link-helper button { align-self: end; background: #25315f; border: 1px solid #41539a; border-radius: 8px; color: #fff; cursor: pointer; font-size: 0.84rem; font-weight: 900; min-height: 48px; padding: 0.7rem 0.9rem; }
+        .actions { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 1.25rem; }
+        .actions a, .actions button { background: #25315f; border: 1px solid #41539a; border-radius: 8px; color: #fff; cursor: pointer; font-size: 0.9rem; font-weight: 900; padding: 0.78rem 1rem; text-decoration: none; }
+        .actions button { background: #c8a84e; border-color: #c8a84e; color: #0a0a1a; }
+        .message { border-radius: 8px; font-weight: 700; margin-bottom: 1rem; padding: 0.85rem 1rem; }
+        .message.error { background: rgba(231,76,60,0.12); border: 1px solid rgba(231,76,60,0.35); color: #ff8a80; }
+        .message.success { background: rgba(46,204,113,0.12); border: 1px solid rgba(46,204,113,0.35); color: #5ee08c; }
+        @media (max-width: 760px) { header { align-items: flex-start; flex-direction: column; } .link-helper-grid { grid-template-columns: 1fr; } .page-wrap { padding-left: 1rem; padding-right: 1rem; } textarea { min-height: 420px; } }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>G&amp;M Marketing</h1>
+        <nav>
+            <a href="{{ url_for('admin_marketing') }}">Marketing</a>
+            <a href="{{ url_for('admin_marketing_draft_preview', article_id=article.id) }}" target="_blank" rel="noopener">Preview Draft</a>
+            <a href="{{ url_for('admin_dashboard') }}">Dashboard</a>
+        </nav>
+    </header>
+
+    <main class="page-wrap">
+        <div class="page-kicker">Draft Review</div>
+        <h1 class="page-title">Edit Marketing Draft</h1>
+        <p class="page-subtitle">Correct wording, add links, adjust the SEO description, and clean up the article before publishing. The body accepts safe HTML such as paragraphs, headings, lists, and links.</p>
+
+        {% if error %}<div class="message error">{{ error }}</div>{% endif %}
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+            <div class="message {{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endwith %}
+
+        <section class="panel">
+            <form method="POST" action="{{ url_for('admin_marketing_edit_article', article_id=article.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="form-grid">
+                    <div>
+                        <label for="title">Title</label>
+                        <input id="title" name="title" type="text" value="{{ article.title }}" maxlength="180" required>
+                    </div>
+                    <div>
+                        <label for="slug">Public URL Slug</label>
+                        <input id="slug" name="slug" type="text" value="{{ article.slug }}" maxlength="180">
+                        <div class="help">Example: private-chauffeur-downtown-sarasota-dining. Leave blank to regenerate from the title.</div>
+                    </div>
+                    <div>
+                        <label for="meta_description">SEO Description</label>
+                        <input id="meta_description" name="meta_description" type="text" value="{{ article.meta_description or '' }}" maxlength="255">
+                    </div>
+                    <div>
+                        <label for="content">Article HTML</label>
+                        <div class="link-helper" aria-label="Link helper">
+                            <div class="link-helper-grid">
+                                <div>
+                                    <label for="quick_link_text">Link Text</label>
+                                    <input id="quick_link_text" type="text" placeholder="Official event page">
+                                </div>
+                                <div>
+                                    <label for="quick_link_url">Link URL</label>
+                                    <input id="quick_link_url" type="url" placeholder="https://example.com">
+                                </div>
+                                <button id="insert_link" type="button">Insert Link</button>
+                            </div>
+                            <div class="help">Place your cursor in the article body where the link should go, add link text and URL, then insert.</div>
+                        </div>
+                        <textarea id="content" name="content" required>{{ article.content }}</textarea>
+                        <div class="help">To add a link: &lt;a href="https://example.com"&gt;link text&lt;/a&gt;. Script/style/iframe code is removed when saved.</div>
+                    </div>
+                </div>
+                <div class="actions">
+                    <button type="submit">Save Draft Edits</button>
+                    <a href="{{ url_for('admin_marketing_draft_preview', article_id=article.id) }}" target="_blank" rel="noopener">Preview Draft</a>
+                    <a href="{{ url_for('admin_marketing') }}">Back to Marketing</a>
+                </div>
+            </form>
+        </section>
+    </main>
+    <script>
+        const contentField = document.getElementById('content');
+        const linkTextField = document.getElementById('quick_link_text');
+        const linkUrlField = document.getElementById('quick_link_url');
+        const insertLinkButton = document.getElementById('insert_link');
+
+        function escapeHtml(value) {
+            return (value || '').replace(/[&<>"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[char]));
+        }
+
+        if (insertLinkButton && contentField) {
+            insertLinkButton.addEventListener('click', () => {
+                const text = (linkTextField?.value || '').trim();
+                const url = (linkUrlField?.value || '').trim();
+                if (!text || !url) return;
+                const selected = contentField.value.slice(contentField.selectionStart, contentField.selectionEnd).trim();
+                const linkLabel = selected || text;
+                const anchor = `<a href="${escapeHtml(url)}">${escapeHtml(linkLabel)}</a>`;
+                const start = contentField.selectionStart;
+                const end = contentField.selectionEnd;
+                contentField.value = `${contentField.value.slice(0, start)}${anchor}${contentField.value.slice(end)}`;
+                contentField.focus();
+                contentField.selectionStart = contentField.selectionEnd = start + anchor.length;
+            });
+        }
+    </script>
+</body>
+
+</html>

@@ -67,6 +67,28 @@ class Booking(db.Model):
         return f'<Booking {self.id} - {self.customer_name}>'
 
 
+class Article(db.Model):
+    __tablename__ = 'articles'
+
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(180), nullable=False)
+    slug = db.Column(db.String(180), nullable=False, unique=True, index=True)
+    content = db.Column(db.Text, nullable=False)
+    meta_description = db.Column(db.String(255), nullable=True)
+    published_at = db.Column(db.DateTime, nullable=True, index=True)
+
+
+class ArticleFeedback(db.Model):
+    __tablename__ = 'article_feedback'
+
+    id = db.Column(db.Integer, primary_key=True)
+    article_id = db.Column(db.Integer, nullable=False, index=True)
+    vote = db.Column(db.String(8), nullable=False, index=True)
+    source_path = db.Column(db.String(255), nullable=True)
+    visitor_hash = db.Column(db.String(64), nullable=True, index=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False, index=True)
+
+
 class PricingTier(db.Model):
     __tablename__ = 'pricing_tiers'
 

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0a0a1a">
+    <title>Blog Marketing - G&M Admin</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        body { background:#0a0a1a; color:#e0e0e0; font-family:'Inter','Segoe UI',Arial,sans-serif; margin:0; }
+        .wrap { max-width:1180px; margin:0 auto; padding:1rem; }
+        .card { background:#141428; border:1px solid #333; border-radius:12px; padding:1rem; margin-bottom:1rem; }
+        .grid { display:grid; grid-template-columns:1fr 1fr; gap:0.9rem; }
+        .table { width:100%; border-collapse:collapse; font-size:0.92rem; }
+        .table th, .table td { text-align:left; padding:0.55rem; border-bottom:1px solid #2c2c40; vertical-align:top; }
+        input, textarea { width:100%; box-sizing:border-box; padding:0.6rem; border-radius:8px; border:1px solid #444; background:#0a0a1a; color:#fff; }
+        textarea { min-height:180px; }
+        .btn { background:#c8a84e; color:#111; border:none; border-radius:8px; padding:0.6rem 1rem; font-weight:700; cursor:pointer; }
+        .btn-secondary { background:#25315f; color:#fff; border:1px solid #41539a; border-radius:7px; padding:0.35rem 0.7rem; text-decoration:none; display:inline-block; }
+        a { color:#c8a84e; text-decoration:none; }
+        @media (max-width: 900px){ .grid { grid-template-columns:1fr; } }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <div style="margin-bottom:1rem;"><a href="{{ url_for('admin_dashboard') }}">← Back to Dashboard</a></div>
+        <div class="card">
+            <h2 style="margin-top:0;">Blog Marketing Center</h2>
+            {% if error %}<p style="color:#ff8a80;font-weight:700;">{{ error }}</p>{% endif %}
+            <form method="POST">
+                <div class="grid">
+                    <div>
+                        <label>Title</label>
+                        <input name="title" required>
+                    </div>
+                    <div>
+                        <label>Slug (optional)</label>
+                        <input name="slug" placeholder="auto-generated if empty">
+                    </div>
+                </div>
+                <div style="margin-top:0.8rem;">
+                    <label>SEO Description</label>
+                    <input name="meta_description" maxlength="255">
+                </div>
+                <div style="margin-top:0.8rem;">
+                    <label>Article HTML Content</label>
+                    <textarea name="content" required></textarea>
+                </div>
+                <div style="margin-top:0.8rem; display:flex; gap:1rem; align-items:center;">
+                    <label style="display:flex; gap:0.5rem; align-items:center;">
+                        <input type="checkbox" name="publish_now" value="1" style="width:auto;"> Publish now
+                    </label>
+                    <button class="btn" type="submit">Save Article</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="card">
+            <h3 style="margin-top:0;">Drafts</h3>
+            <table class="table">
+                <thead><tr><th>ID</th><th>Title</th><th>Slug</th><th>Actions</th></tr></thead>
+                <tbody>
+                {% for article in drafts %}
+                    <tr>
+                        <td>{{ article.id }}</td>
+                        <td>{{ article.title }}</td>
+                        <td>{{ article.slug }}</td>
+                        <td>
+                            <a class="btn-secondary" href="{{ url_for('admin_marketing_draft_preview', article_id=article.id) }}" target="_blank" rel="noopener">Preview</a>
+                            <a class="btn-secondary" href="{{ url_for('admin_marketing_edit_article', article_id=article.id) }}">Edit</a>
+                            <form method="POST" action="{{ url_for('admin_marketing_publish_article', article_id=article.id) }}" style="display:inline;">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button class="btn-secondary" type="submit">Publish</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr><td colspan="4">No drafts found.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card">
+            <h3 style="margin-top:0;">Published</h3>
+            <table class="table">
+                <thead><tr><th>ID</th><th>Title</th><th>Published</th><th>Link</th></tr></thead>
+                <tbody>
+                {% for article in published %}
+                    <tr>
+                        <td>{{ article.id }}</td>
+                        <td>{{ article.title }}</td>
+                        <td>{{ article.published_at.strftime('%Y-%m-%d %H:%M') if article.published_at else '—' }}</td>
+                        <td><a class="btn-secondary" href="{{ url_for('blog_article', slug=article.slug) }}" target="_blank" rel="noopener">View</a></td>
+                    </tr>
+                {% else %}
+                    <tr><td colspan="4">No published articles yet.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>
