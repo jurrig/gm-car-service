@@ -54,8 +54,34 @@
         <div class="detail-row"><span>Name</span><strong>{{ booking.customer_name }}</strong></div>
         <div class="detail-row"><span>Pickup</span><strong>{{ booking.pickup_location }}</strong></div>
         <div class="detail-row"><span>Drop-off</span><strong>{{ booking.dropoff_location }}</strong></div>
+        {% if booking.is_round_trip %}
+        <div class="detail-row"><span>Return Pickup</span><strong>{{ booking.return_pickup_location or '—' }}</strong></div>
+        <div class="detail-row"><span>Return Drop-off</span><strong>{{ booking.return_dropoff_location or '—' }}</strong></div>
+        <div class="detail-row"><span>Return Date &amp; Time</span><strong>{{ booking.return_pickup_time.strftime('%B %d, %Y at %I:%M %p') if booking.return_pickup_time else '—' }}</strong></div>
+        {% endif %}
         <div class="detail-row"><span>Date &amp; Time</span><strong>{{ booking.pickup_time.strftime('%B %d, %Y at %I:%M %p') if booking.pickup_time else '—' }}</strong></div>
+        <div class="detail-row"><span>Vehicle</span><strong>{{ booking.vehicle_type|title if booking.vehicle_type else '—' }}</strong></div>
+        <div class="detail-row"><span>Passengers</span><strong>{{ booking.passengers or 1 }}</strong></div>
+        <div class="detail-row"><span>Payment</span><strong>{{ booking.payment_status|title if booking.payment_status else '—' }}</strong></div>
         <div class="detail-row"><span>Fare</span><strong>${{ '%.2f'|format(booking.estimated_price) if booking.estimated_price else '—' }}</strong></div>
+        {% if booking.is_airport_pickup %}
+        <div class="detail-row"><span>Airport</span><strong>{{ booking.airport_exit or 'Airport pickup' }}</strong></div>
+        {% endif %}
+        {% if booking.flight_number %}
+        <div class="detail-row"><span>Flight</span><strong>{{ booking.flight_number }}</strong></div>
+        {% endif %}
+        {% if booking.return_flight_number %}
+        <div class="detail-row"><span>Return Flight</span><strong>{{ booking.return_flight_number }}</strong></div>
+        {% endif %}
+        {% if booking.return_airline %}
+        <div class="detail-row"><span>Return Airline</span><strong>{{ booking.return_airline }}</strong></div>
+        {% endif %}
+        {% if booking.driver_notes %}
+        <div class="detail-row"><span>Notes</span><strong>{{ booking.driver_notes }}</strong></div>
+        {% endif %}
+        {% if payment_url %}
+        <p style="margin-top:0.9rem;"><a href="{{ payment_url }}" style="color:#c8a84e; font-weight:700;">Pay or add a tip</a></p>
+        {% endif %}
         <p style="color:#9aa0ad; margin:0.8rem 0 0;">Need to change or cancel this booking? Call <a href="tel:+19415551234" style="color:#c8a84e;">(941) 555-1234</a>.</p>
     </div>
     {% endif %}

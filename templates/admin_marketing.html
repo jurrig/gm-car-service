@@ -28,6 +28,7 @@
             <h2 style="margin-top:0;">Blog Marketing Center</h2>
             {% if error %}<p style="color:#ff8a80;font-weight:700;">{{ error }}</p>{% endif %}
             <form method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="grid">
                     <div>
                         <label>Title</label>
@@ -53,6 +54,26 @@
                     <button class="btn" type="submit">Save Article</button>
                 </div>
             </form>
+        </div>
+
+        <div class="card">
+            <h3 style="margin-top:0;">Lead Capture Pulse</h3>
+            <p style="margin-top:0; color:#c9c1ae;">{{ lead_count }} lead(s) captured so far. These are the newest submissions from the VIP landing page and API/webhook entry points.</p>
+            <table class="table">
+                <thead><tr><th>Created</th><th>Email</th><th>Source</th><th>Phone</th></tr></thead>
+                <tbody>
+                {% for lead in recent_leads %}
+                    <tr>
+                        <td>{{ lead.created_at.strftime('%Y-%m-%d %H:%M') if lead.created_at else '—' }}</td>
+                        <td>{{ lead.email }}</td>
+                        <td>{{ lead.source_tag or '—' }}</td>
+                        <td>{{ lead.phone or '—' }}</td>
+                    </tr>
+                {% else %}
+                    <tr><td colspan="4">No leads captured yet.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
         </div>
 
         <div class="card">

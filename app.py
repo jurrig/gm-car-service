@@ -4,7 +4,8 @@ from flask_wtf.csrf import CSRFProtect
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from functools import wraps
-from models import db, Booking, Article, ArticleFeedback, PricingTier, Vehicle, Driver, MedicalOffice, AppSetting, Expense, MileageLog, DriverShift, Payout, PromoCode, FlatRate
+from sqlalchemy import inspect, text
+from models import db, Booking, Article, ArticleFeedback, LeadCapture, PricingTier, Vehicle, Driver, MedicalOffice, AppSetting, Expense, MileageLog, DriverShift, Payout, PromoCode, FlatRate
 from notifications import send_email_alert, send_sms_alert, send_rider_sms, send_receipt_email
 from scheduler import check_availability, format_suggestions
 from flight_tracker import check_flight, update_booking_flight_status, check_upcoming_flights, check_traffic_for_booking
@@ -65,6 +66,32 @@ ZELLE_BUSINESS_ID = os.environ.get('ZELLE_BUSINESS_ID', 'info@gmcarservice.com')
 
 with app.app_context():
     db.create_all()
+
+    def ensure_booking_columns():
+        inspector = inspect(db.engine)
+        existing_columns = {column['name'] for column in inspector.get_columns('bookings')}
+        with db.engine.begin() as connection:
+            if 'is_round_trip' not in existing_columns:
+                connection.execute(text('ALTER TABLE bookings ADD COLUMN is_round_trip BOOLEAN DEFAULT 0'))
+            if 'return_pickup_location' not in existing_columns:
+                connection.execute(text('ALTER TABLE bookings ADD COLUMN return_pickup_location VARCHAR(255)'))
+            if 'return_dropoff_location' not in existing_columns:
+                connection.execute(text('ALTER TABLE bookings ADD COLUMN return_dropoff_location VARCHAR(255)'))
+            if 'return_pickup_time' not in existing_columns:
+                connection.execute(text('ALTER TABLE bookings ADD COLUMN return_pickup_time DATETIME'))
+            if 'return_airline' not in existing_columns:
+                connection.execute(text('ALTER TABLE bookings ADD COLUMN return_airline VARCHAR(100)'))
+            if 'return_flight_number' not in existing_columns:
+                connection.execute(text('ALTER TABLE bookings ADD COLUMN return_flight_number VARCHAR(20)'))
+            if 'return_trip_distance_miles' not in existing_columns:
+                connection.execute(text('ALTER TABLE bookings ADD COLUMN return_trip_distance_miles FLOAT'))
+            if 'return_trip_duration_min' not in existing_columns:
+                connection.execute(text('ALTER TABLE bookings ADD COLUMN return_trip_duration_min FLOAT'))
+            if 'return_estimated_price' not in existing_columns:
+                connection.execute(text('ALTER TABLE bookings ADD COLUMN return_estimated_price FLOAT'))
+
+    ensure_booking_columns()
+
     # Seed default pricing tiers if table is empty
     if PricingTier.query.count() == 0:
         defaults = [
@@ -267,6 +294,13 @@ def _sanitize_generated_article_html(content):
     return content.strip()
 
 
+def _get_lead_payload():
+    payload = request.get_json(silent=True)
+    if isinstance(payload, dict):
+        return payload
+    return request.form
+
+
 @app.route('/blog')
 def blog_index():
     articles = Article.query.filter(
@@ -289,6 +323,8 @@ def blog_article(slug):
 
 @app.route('/vip-service')
 def marketing_landing():
+    if not session.get('admin_logged_in'):
+        return redirect(url_for('admin_login'))
     return render_template('marketing.html')
 
 
@@ -299,9 +335,11 @@ def driver_app_entry():
 
 
 @app.route('/manage-booking', methods=['GET', 'POST'])
+@csrf.exempt
 def manage_booking():
     booking = None
     error = None
+    payment_url = None
     if request.method == 'POST':
         booking_id_raw = (request.form.get('booking_id') or '').strip()
         phone_last4 = ''.join(ch for ch in (request.form.get('phone_last4') or '') if ch.isdigit())
@@ -318,21 +356,51 @@ def manage_booking():
                 if not booking_phone_digits.endswith(phone_last4):
                     error = 'Booking details do not match.'
                     booking = None
-    return render_template('manage_booking.html', booking=booking, error=error)
+                else:
+                    payment_url = url_for('pay_page', token=booking.payment_token) if booking.payment_token else None
+    return render_template('manage_booking.html', booking=booking, payment_url=payment_url, error=error)
 
 
 @app.route('/api/leads', methods=['POST'])
 @csrf.exempt
 @limiter.limit("20 per hour")
 def capture_lead():
-    return jsonify({'success': True, 'profile_url': '/'})
+    payload = _get_lead_payload()
+    email = (payload.get('email') or '').strip().lower()
+    if not email or '@' not in email:
+        return jsonify({'success': False, 'error': 'Please provide a valid email address.'}), 400
+
+    lead = LeadCapture(
+        email=email,
+        name=(payload.get('name') or '').strip() or None,
+        phone=(payload.get('phone') or '').strip() or None,
+        source_tag=(payload.get('source_tag') or 'api').strip() or 'api',
+        notes=(payload.get('notes') or '').strip() or None,
+    )
+    db.session.add(lead)
+    db.session.commit()
+    return jsonify({'success': True, 'profile_url': url_for('index'), 'message': 'You are on the Preferred Private Client List.'})
 
 
 @app.route('/submit-lead', methods=['POST'])
 @csrf.exempt
 @limiter.limit("20 per hour")
 def submit_lead():
-    return jsonify({'success': True, 'profile_url': '/'})
+    payload = _get_lead_payload()
+    email = (payload.get('email') or '').strip().lower()
+    if not email or '@' not in email:
+        return jsonify({'success': False, 'error': 'Please provide a valid email address.'}), 400
+
+    lead = LeadCapture(
+        email=email,
+        name=(payload.get('name') or '').strip() or None,
+        phone=(payload.get('phone') or '').strip() or None,
+        source_tag=(payload.get('source_tag') or 'vip_service_landing').strip() or 'vip_service_landing',
+        notes=(payload.get('notes') or '').strip() or None,
+    )
+    db.session.add(lead)
+    db.session.commit()
+    return jsonify({'success': True, 'profile_url': url_for('index'), 'message': 'You are on the Preferred Private Client List.'})
 
 
 @app.route('/api/article-feedback', methods=['POST'])
@@ -400,10 +468,20 @@ def book():
     miles_str = request.form.get('miles', '0').strip()
     vehicle_type = request.form.get('vehicle_type', 'sedan').strip().lower()
     passengers_str = request.form.get('passengers', '1').strip()
+    direction = request.form.get('direction', 'one_way').strip().lower()
+    is_round_trip = direction == 'round_trip'
 
     # Basic validation
     if not all([customer_name, phone, pickup_location, dropoff_location, pickup_date_str, pickup_time_str]):
         return render_template('index.html', error='All fields are required.'), 400
+
+    if is_round_trip:
+        return_pickup_location = request.form.get('return_pickup_location', '').strip()
+        return_dropoff_location = request.form.get('return_dropoff_location', '').strip()
+        return_pickup_date_str = request.form.get('return_pickup_date', '').strip()
+        return_pickup_time_str = request.form.get('return_pickup_time', '').strip()
+        if not all([return_pickup_location, return_dropoff_location, return_pickup_date_str, return_pickup_time_str]):
+            return render_template('index.html', error='Return trip details are required.'), 400
 
     if vehicle_type not in VEHICLE_TYPES:
         vehicle_type = 'sedan'
@@ -412,6 +490,13 @@ def book():
         pickup_time = datetime.fromisoformat(f'{pickup_date_str}T{pickup_time_str}')
     except ValueError:
         return render_template('index.html', error='Invalid date/time format.'), 400
+
+    return_pickup_time = None
+    if is_round_trip:
+        try:
+            return_pickup_time = datetime.fromisoformat(f'{return_pickup_date_str}T{return_pickup_time_str}')
+        except ValueError:
+            return render_template('index.html', error='Invalid return trip date/time format.'), 400
 
     try:
         miles = max(float(miles_str), 0)
@@ -430,7 +515,7 @@ def book():
     except ValueError:
         toll_fee = 0
 
-    estimated_price = calculate_estimate(miles, vehicle_type) + toll_fee
+    outbound_estimated_price = calculate_estimate(miles, vehicle_type) + toll_fee
 
     # --- Flat Rate Override ---
     matched_flat = find_flat_rate(pickup_location, dropoff_location)
@@ -439,9 +524,12 @@ def book():
     if matched_flat:
         flat_price = matched_flat.get_price(vehicle_type)
         if flat_price and flat_price > 0:
-            estimated_price = flat_price + toll_fee
+            outbound_estimated_price = flat_price + toll_fee
             is_flat_rate = True
             flat_rate_id = matched_flat.id
+
+    return_estimated_price = outbound_estimated_price if is_round_trip else 0
+    estimated_price = round(outbound_estimated_price + return_estimated_price, 2)
 
     # --- VIP Discount Logic ---
     discount_percent = 0
@@ -521,6 +609,15 @@ def book():
         payment_status='unpaid',
         is_flat_rate=is_flat_rate,
         flat_rate_id=flat_rate_id,
+        is_round_trip=is_round_trip,
+        return_pickup_location=return_pickup_location.strip() if is_round_trip else None,
+        return_dropoff_location=return_dropoff_location.strip() if is_round_trip else None,
+        return_pickup_time=return_pickup_time,
+        return_airline=request.form.get('return_airline', '').strip() or None if is_round_trip else None,
+        return_flight_number=request.form.get('return_flight_number', '').strip().upper() or None if is_round_trip else None,
+        return_trip_distance_miles=miles if is_round_trip and miles > 0 else None,
+        return_trip_duration_min=trip_duration_min if is_round_trip else None,
+        return_estimated_price=return_estimated_price if is_round_trip else None,
     )
 
     concierge_code = request.form.get('concierge_access_code', '').strip().upper()
@@ -827,7 +924,16 @@ def admin_marketing():
 
     drafts = Article.query.filter(Article.published_at.is_(None)).order_by(Article.id.desc()).all()
     published = Article.query.filter(Article.published_at.isnot(None)).order_by(Article.published_at.desc()).all()
-    return render_template('admin_marketing.html', drafts=drafts, published=published, error=error)
+    recent_leads = LeadCapture.query.order_by(LeadCapture.created_at.desc()).limit(10).all()
+    lead_count = LeadCapture.query.count()
+    return render_template(
+        'admin_marketing.html',
+        drafts=drafts,
+        published=published,
+        recent_leads=recent_leads,
+        lead_count=lead_count,
+        error=error,
+    )
 
 
 @app.route('/admin/marketing/draft/<int:article_id>')

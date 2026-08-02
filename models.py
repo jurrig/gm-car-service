@@ -29,6 +29,15 @@ class Booking(db.Model):
     accepted_at = db.Column(db.DateTime, nullable=True)
     passenger_photo = db.Column(db.String(255), nullable=True)
     is_airport_pickup = db.Column(db.Boolean, default=False)
+    is_round_trip = db.Column(db.Boolean, default=False)
+    return_pickup_location = db.Column(db.String(255), nullable=True)
+    return_dropoff_location = db.Column(db.String(255), nullable=True)
+    return_pickup_time = db.Column(db.DateTime, nullable=True)
+    return_airline = db.Column(db.String(100), nullable=True)
+    return_flight_number = db.Column(db.String(20), nullable=True)
+    return_trip_distance_miles = db.Column(db.Float, nullable=True)
+    return_trip_duration_min = db.Column(db.Float, nullable=True)
+    return_estimated_price = db.Column(db.Float, nullable=True)
     airport_exit = db.Column(db.String(100), nullable=True)
     airport_door_color = db.Column(db.String(50), nullable=True)
     airport_door_number = db.Column(db.String(50), nullable=True)
@@ -87,6 +96,19 @@ class ArticleFeedback(db.Model):
     source_path = db.Column(db.String(255), nullable=True)
     visitor_hash = db.Column(db.String(64), nullable=True, index=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False, index=True)
+
+
+class LeadCapture(db.Model):
+    __tablename__ = 'lead_captures'
+
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(180), nullable=False, index=True)
+    name = db.Column(db.String(120), nullable=True)
+    phone = db.Column(db.String(30), nullable=True)
+    source_tag = db.Column(db.String(80), nullable=True, index=True)
+    notes = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False, index=True)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False, index=True, onupdate=datetime.utcnow)
 
 
 class PricingTier(db.Model):

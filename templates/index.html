@@ -152,7 +152,6 @@
             <a href="#routes">Routes</a>
             <a href="{{ url_for('blog_index') }}">Blog</a>
             <a href="{{ url_for('medical_login') }}">Medical</a>
-            <a href="{{ url_for('marketing_landing') }}">Marketing</a>
             <a href="{{ url_for('manage_booking') }}">Manage Booking</a>
             <a href="{{ url_for('driver_app_entry') }}">Driver App</a>
             <a href="#about">About</a>
@@ -270,6 +269,50 @@
                         <div class="form-group">
                             <label for="pickup_time">DEPARTURE TIME *</label>
                             <input type="time" id="pickup_time" name="pickup_time" required>
+                        </div>
+                    </div>
+
+                    <div id="return-trip-section" style="display:none;margin-top:1rem;padding:1rem;background:rgba(200,168,78,0.08);border:1px solid rgba(200,168,78,0.25);border-radius:10px;">
+                        <p style="color:#c8a84e;font-weight:600;margin-bottom:0.75rem;font-size:0.9rem;">&#x21AA; RETURN TRIP DETAILS</p>
+                        <p style="color:#aaa;font-size:0.8rem;margin-bottom:1rem;">Capture the return leg separately so the pickup and drop-off can differ from the outbound trip.</p>
+                        <div class="form-group">
+                            <label for="return_pickup_location">RETURN PICKUP ADDRESS *</label>
+                            <input type="text" id="return_pickup_location" name="return_pickup_location" placeholder="Start typing a return pickup address..." autocomplete="off">
+                        </div>
+                        <div class="form-group">
+                            <label for="return_dropoff_location">RETURN DROP-OFF ADDRESS *</label>
+                            <input type="text" id="return_dropoff_location" name="return_dropoff_location" placeholder="Start typing a return destination..." autocomplete="off">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="return_pickup_date">RETURN DATE *</label>
+                                <input type="date" id="return_pickup_date" name="return_pickup_date">
+                            </div>
+                            <div class="form-group">
+                                <label for="return_pickup_time">RETURN TIME *</label>
+                                <input type="time" id="return_pickup_time" name="return_pickup_time">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="return_airline">RETURN AIRLINE</label>
+                                <select id="return_airline" name="return_airline" style="padding:0.65rem;border-radius:8px;background:#1e1e3a;color:#fff;border:1px solid #333;">
+                                    <option value="">Select airline</option>
+                                    <option value="AA">American Airlines</option>
+                                    <option value="BA">British Airways</option>
+                                    <option value="DL">Delta</option>
+                                    <option value="UA">United</option>
+                                    <option value="SW">Southwest</option>
+                                    <option value="JetBlue">JetBlue</option>
+                                    <option value="Spirit">Spirit</option>
+                                    <option value="Frontier">Frontier</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="return_flight_number">RETURN FLIGHT NUMBER</label>
+                                <input type="text" id="return_flight_number" name="return_flight_number" placeholder="e.g. AA1234" maxlength="10" style="text-transform:uppercase;">
+                            </div>
                         </div>
                     </div>
 
@@ -878,9 +921,8 @@
                 <a href="#routes">Routes</a>
                 <a href="{{ url_for('blog_index') }}">Blog</a>
                 <a href="{{ url_for('medical_login') }}">Medical</a>
-                <a href="{{ url_for('marketing_landing') }}">Marketing</a>
-                <a href="{{ url_for('manage_booking') }}">Manage Booking</a>
-                <a href="{{ url_for('driver_app_entry') }}">Driver App</a>
+               <a href="{{ url_for('manage_booking') }}">Manage Booking</a>
+               <a href="{{ url_for('driver_app_entry') }}">Driver App</a>
                 <a href="#faq">FAQ</a>
                 <a href="#about">About</a>
                 <a href="/admin">Admin</a>
@@ -934,15 +976,30 @@
                 };
             });
 
-        /* ---- Booking Agent: Availability Check ---- */
-        function checkAvailabilityAndProceed() {
+        function validateJourneyFields() {
             const form = document.getElementById('booking-form');
             const fields = ['pickup_location', 'dropoff_location', 'pickup_date', 'pickup_time'];
             for (const f of fields) {
                 const el = form.querySelector(`[name="${f}"]`);
-                if (!el.value.trim()) { el.focus(); el.reportValidity(); return; }
+                if (!el.value.trim()) { el.focus(); el.reportValidity(); return false; }
             }
 
+            if (document.getElementById('direction').value === 'round_trip') {
+                const returnFields = ['return_pickup_location', 'return_dropoff_location', 'return_pickup_date', 'return_pickup_time'];
+                for (const f of returnFields) {
+                    const el = form.querySelector(`[name="${f}"]`);
+                    if (!el.value.trim()) { el.focus(); el.reportValidity(); return false; }
+                }
+            }
+
+            return true;
+        }
+
+        /* ---- Booking Agent: Availability Check ---- */
+        function checkAvailabilityAndProceed() {
+            if (!validateJourneyFields()) return;
+
+            const form = document.getElementById('booking-form');
             const banner = document.getElementById('avail-banner');
             const btn = document.getElementById('btn-get-quote');
             const pickup = document.getElementById('pickup_location').value;
@@ -1040,6 +1097,9 @@
             setTimeout(() => checkAvailabilityAndProceed(), 300);
         }
 
+        document.getElementById('direction').addEventListener('change', toggleReturnTripFields);
+        toggleReturnTripFields();
+
         /* ---- Payment method selector ---- */
         document.querySelectorAll('.pay-option input[name="payment_method"]').forEach(radio => {
             radio.addEventListener('change', function () {
@@ -1059,12 +1119,7 @@
         function goToStep(n) {
             // Validate step 1: only journey fields (no name/phone yet)
             if (n === 2) {
-                const form = document.getElementById('booking-form');
-                const fields = ['pickup_location', 'dropoff_location', 'pickup_date', 'pickup_time'];
-                for (const f of fields) {
-                    const el = form.querySelector(`[name="${f}"]`);
-                    if (!el.value.trim()) { el.focus(); el.reportValidity(); return; }
-                }
+                if (!validateJourneyFields()) return;
                 // Auto-detect airport pickup from pickup location
                 autoDetectAirport();
             }
@@ -1109,6 +1164,22 @@
                 document.getElementById('flight_number').value = '';
                 document.getElementById('flight-status-preview').style.display = 'none';
             }
+        }
+
+        function toggleReturnTripFields() {
+            const section = document.getElementById('return-trip-section');
+            const isRoundTrip = document.getElementById('direction').value === 'round_trip';
+            section.style.display = isRoundTrip ? 'block' : 'none';
+            if (!isRoundTrip) {
+                document.getElementById('return_pickup_location').value = '';
+                document.getElementById('return_dropoff_location').value = '';
+                document.getElementById('return_pickup_date').value = '';
+                document.getElementById('return_pickup_time').value = '';
+                document.getElementById('return_airline').value = '';
+                document.getElementById('return_flight_number').value = '';
+            }
+            updateQuote();
+            updateFinalSummary();
         }
 
         function checkFlightStatus() {
@@ -1297,12 +1368,13 @@
 
         function getEstimate(type) {
             const vType = type || selectedVehicle;
+            const multiplier = document.getElementById('direction').value === 'round_trip' ? 2 : 1;
             // Flat rate takes priority
             if (activeFlatRate) {
                 let fp = activeFlatRate.price_sedan;
                 if (vType === 'suv' && activeFlatRate.price_suv) fp = activeFlatRate.price_suv;
                 if (vType === 'luxury' && activeFlatRate.price_luxury) fp = activeFlatRate.price_luxury;
-                let price = fp + currentTollFee;
+                let price = (fp + currentTollFee) * multiplier;
                 if (activePromoDiscount > 0) price = price * (1 - activePromoDiscount / 100);
                 return price;
             }
@@ -1315,7 +1387,7 @@
                 }
             }
             const raw = tier.base_fare + tier.per_mile * currentMiles;
-            let price = Math.max(raw, tier.min_fare) + currentTollFee;
+            let price = (Math.max(raw, tier.min_fare) + currentTollFee) * multiplier;
             if (activePromoDiscount > 0) {
                 price = price * (1 - activePromoDiscount / 100);
             }
@@ -1324,11 +1396,12 @@
 
         function getEstimateOriginal(type) {
             const vType = type || selectedVehicle;
+            const multiplier = document.getElementById('direction').value === 'round_trip' ? 2 : 1;
             if (activeFlatRate) {
                 let fp = activeFlatRate.price_sedan;
                 if (vType === 'suv' && activeFlatRate.price_suv) fp = activeFlatRate.price_suv;
                 if (vType === 'luxury' && activeFlatRate.price_luxury) fp = activeFlatRate.price_luxury;
-                return fp + currentTollFee;
+                return (fp + currentTollFee) * multiplier;
             }
             const tiers = PRICING_TIERS[vType];
             if (!tiers || tiers.length === 0) return 0;
@@ -1339,7 +1412,7 @@
                 }
             }
             const raw = tier.base_fare + tier.per_mile * currentMiles;
-            return Math.max(raw, tier.min_fare) + currentTollFee;
+            return (Math.max(raw, tier.min_fare) + currentTollFee) * multiplier;
         }
 
         // --- Promo code state ---
@@ -1386,6 +1459,7 @@
 
         /* Update all vehicle prices + the big quote card */
         function updateQuote() {
+            const isRoundTrip = document.getElementById('direction').value === 'round_trip';
             // Show price on every vehicle card
             ['sedan', 'suv', 'luxury'].forEach(type => {
                 const el = document.getElementById('price-' + type);
@@ -1401,6 +1475,9 @@
             document.getElementById('quote-duration').textContent = durationText;
             const hasPrice = activeFlatRate ? true : currentMiles > 0;
             document.getElementById('quote-amount').textContent = hasPrice ? '$' + getEstimate().toFixed(2) : '—';
+            if (isRoundTrip) {
+                document.getElementById('quote-duration').textContent = durationText + ' • Return included';
+            }
 
             // Flat rate badge
             const flatBadge = document.getElementById('quote-flat-badge');
@@ -1430,9 +1507,10 @@
             document.getElementById('fin-dropoff').textContent = document.getElementById('dropoff_location').value;
             const date = document.getElementById('pickup_date').value;
             const time = document.getElementById('pickup_time').value;
-            document.getElementById('fin-time').textContent = date + ' ' + time;
+            const direction = document.getElementById('direction').value;
+            document.getElementById('fin-time').textContent = date + ' ' + time + (direction === 'round_trip' ? ' • Return later' : '');
             document.getElementById('fin-vehicle').textContent = VEHICLE_LABELS[selectedVehicle] || selectedVehicle;
-            document.getElementById('fin-distance').textContent = distanceText;
+            document.getElementById('fin-distance').textContent = distanceText + (direction === 'round_trip' ? ' • Return included' : '');
             document.getElementById('fin-price').textContent = currentMiles > 0 ? '$' + getEstimate().toFixed(2) : '—';
 
             // Discount summary
