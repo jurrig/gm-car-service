@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#003d6b">
+    <title>Transport Options &mdash; G&amp;M Medical Portal</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        :root { --med-blue: #005088; --med-teal: #11CAA0; --med-dark: #00111e; --med-card: #001829; }
+
+        * { box-sizing: border-box; }
+        body { background: var(--med-dark); color: #e8edf2; font-family: 'Segoe UI', Arial, sans-serif; margin: 0; }
+
+        /* ---- Nav ---- */
+        .med-nav {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0.75rem 2rem;
+            background: rgba(0,26,44,0.97);
+            border-bottom: 2px solid var(--med-teal);
+            backdrop-filter: blur(8px);
+        }
+        .med-nav img { height: 80px; width: auto; }
+        .med-nav .nav-links { display: flex; gap: 1.5rem; align-items: center; }
+        .med-nav a { color: #b0c8d8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s; }
+        .med-nav a:hover { color: var(--med-teal); }
+        .med-nav .pill { color: var(--med-teal) !important; font-weight: 700; border: 1px solid var(--med-teal); padding: 0.25rem 0.8rem; border-radius: 6px; }
+
+        /* ---- Page wrap ---- */
+        .dash-wrap {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 7.5rem 1.5rem 3rem;
+        }
+
+        .dash-header { margin-bottom: 2.5rem; text-align: center; }
+        .dash-header .eyebrow {
+            font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase;
+            color: var(--med-teal); font-weight: 600; margin-bottom: 0.4rem;
+        }
+        .dash-header h1 { font-size: 1.75rem; font-weight: 700; color: #fff; margin: 0 0 0.5rem; }
+        .dash-header p { color: #7a95a8; font-size: 0.92rem; margin: 0; }
+
+        /* ---- Office badge ---- */
+        .office-badge {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            background: rgba(17,202,160,0.08); border: 1px solid rgba(17,202,160,0.3);
+            border-radius: 20px; padding: 0.3rem 1rem;
+            font-size: 0.82rem; color: var(--med-teal); font-weight: 600;
+            margin-bottom: 2rem;
+        }
+
+        /* ---- Tier cards grid ---- */
+        .tier-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        @media (max-width: 620px) { .tier-grid { grid-template-columns: 1fr; } }
+
+        .tier-card {
+            background: var(--med-card);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 14px;
+            padding: 2rem 1.75rem;
+            display: flex; flex-direction: column;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+        .tier-card::before {
+            content: '';
+            position: absolute; top: 0; left: 0; right: 0; height: 3px;
+            background: var(--accent);
+        }
+        .tier-card:hover { border-color: var(--accent); box-shadow: 0 8px 30px rgba(0,0,0,0.4); }
+
+        .tier-card.vip   { --accent: var(--med-teal); }
+        .tier-card.direct { --accent: var(--med-blue); }
+
+        .tier-icon { font-size: 2rem; margin-bottom: 0.75rem; }
+
+        .tier-label {
+            font-size: 0.68rem; letter-spacing: 0.14em; text-transform: uppercase;
+            font-weight: 700; margin-bottom: 0.3rem;
+            color: var(--accent);
+        }
+        .tier-card h2 { font-size: 1.3rem; font-weight: 700; color: #fff; margin: 0 0 0.5rem; }
+
+        .tier-price {
+            font-size: 2rem; font-weight: 800;
+            color: var(--accent); margin: 0.75rem 0;
+            letter-spacing: -0.02em;
+        }
+        .tier-price .unit { font-size: 0.85rem; font-weight: 400; color: #7a95a8; }
+
+        .tier-desc { font-size: 0.87rem; color: #7a95a8; margin-bottom: 1.25rem; line-height: 1.55; }
+
+        .feature-list { list-style: none; padding: 0; margin: 0 0 1.5rem; flex: 1; }
+        .feature-list li {
+            font-size: 0.85rem; color: #b0c8d8;
+            padding: 0.35rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            display: flex; align-items: flex-start; gap: 0.5rem;
+        }
+        .feature-list li:last-child { border-bottom: none; }
+        .feature-list .check { color: var(--accent); font-size: 0.9rem; flex-shrink: 0; margin-top: 1px; }
+
+        .tier-standby {
+            background: rgba(17,202,160,0.06); border: 1px solid rgba(17,202,160,0.2);
+            border-radius: 7px; padding: 0.6rem 0.9rem;
+            font-size: 0.8rem; color: #7a95a8;
+            margin-bottom: 1.25rem; line-height: 1.5;
+        }
+        .tier-standby strong { color: var(--med-teal); }
+
+        .tier-btn {
+            display: block; width: 100%;
+            padding: 0.82rem 1rem;
+            border: none; border-radius: 8px;
+            font-size: 0.97rem; font-weight: 700;
+            cursor: pointer; text-align: center;
+            text-decoration: none;
+            transition: opacity 0.2s, box-shadow 0.2s;
+        }
+        .tier-btn.vip-btn {
+            background: var(--med-teal); color: #001829;
+            box-shadow: 0 3px 14px rgba(17,202,160,0.25);
+        }
+        .tier-btn.vip-btn:hover { opacity: 0.88; box-shadow: 0 4px 20px rgba(17,202,160,0.4); }
+        .tier-btn.direct-btn {
+            background: var(--med-blue); color: #fff;
+            box-shadow: 0 3px 14px rgba(0,80,136,0.3);
+        }
+        .tier-btn.direct-btn:hover { opacity: 0.88; box-shadow: 0 4px 20px rgba(0,80,136,0.5); }
+
+        .dash-footer { text-align: center; font-size: 0.82rem; color: #4a6070; }
+        .dash-footer a { color: var(--med-teal); text-decoration: none; }
+    </style>
+</head>
+<body>
+
+    <!-- Nav -->
+    <nav class="med-nav">
+        <a href="/medical/dashboard">
+            <img src="{{ url_for('static', filename='brand/gm-logo-transparent.png') }}"
+                 alt="G&amp;M Car Service" onerror="this.style.display='none'">
+        </a>
+        <div class="nav-links">
+            <a href="/medical/dashboard" class="pill">&#10010; New Transport</a>
+            <a href="/medical/log">&#128203; Office Log</a>
+            <a href="tel:+19414011907">&#9742; Support</a>
+            <a href="/medical/logout" style="color:#4a6070;font-size:0.85rem;">Sign Out</a>
+        </div>
+    </nav>
+
+    <div class="dash-wrap">
+
+        <div class="dash-header">
+            <div class="eyebrow">G&amp;M Medical Concierge</div>
+            <h1>Select Transport Type</h1>
+            <p>Choose the service level that fits your patient&rsquo;s needs.</p>
+        </div>
+
+        <div style="text-align:center;">
+            <div class="office-badge">
+                &#10010;&nbsp; {{ office.office_name }}
+            </div>
+        </div>
+
+        <div class="tier-grid">
+
+            <!-- Option A: VIP Concierge -->
+            <div class="tier-card vip">
+                <div class="tier-icon">&#127775;</div>
+                <div class="tier-label">Option A</div>
+                <h2>VIP Concierge</h2>
+                <div class="tier-price">${{ '%.0f'|format(vip_rate) }} <span class="unit">flat rate</span></div>
+                <p class="tier-desc">
+                    Destination locked to your clinic. Includes a 2-hour chauffeur standby for appointments that run long.
+                </p>
+                <ul class="feature-list">
+                    <li><span class="check">&#10003;</span> Destination locked to clinic address</li>
+                    <li><span class="check">&#10003;</span> 2-hour chauffeur standby included</li>
+                    <li><span class="check">&#10003;</span> Pharmacy stop option (+$20)</li>
+                    <li><span class="check">&#10003;</span> Mobility notes sent to driver</li>
+                    <li><span class="check">&#10003;</span> 2025 Santa Fe Hybrid — SUV</li>
+                </ul>
+                <div class="tier-standby">
+                    <strong>&#9201; Standby Included</strong><br>
+                    Driver waits up to 2 hours while your patient is at the appointment — no extra charge.
+                </div>
+                <a href="/medical/book?tier=vip" class="tier-btn vip-btn">Book VIP Transport &nbsp;&rarr;</a>
+            </div>
+
+                <!-- Option B: Medical Direct -->
+            <div class="tier-card direct">
+                <div class="tier-icon">&#128663;</div>
+                <div class="tier-label">Option B</div>
+                <h2>Medical Direct</h2>
+                <p class="tier-desc">
+                    Simplified mileage-based SUV pricing. Patient or staff enters any destination — home, specialist, facility.
+                </p>
+                <ul class="feature-list">
+                    <li><span class="check">&#10003;</span> Any destination — set your own route</li>
+                    <li><span class="check">&#10003;</span> One-way or scheduled return trip</li>
+                    <li><span class="check">&#10003;</span> No standby — point-to-point</li>
+                    <li><span class="check">&#10003;</span> 2025 Santa Fe Hybrid — SUV</li>
+                </ul>
+                <div class="tier-standby" style="border-color:rgba(0,80,136,0.3);background:rgba(0,80,136,0.07);">
+                    <strong style="color:var(--med-blue);">&#128663; Point-to-Point</strong><br>
+                    Instant quote based on distance. Driver proceeds directly — no standby billed.
+                </div>
+                <a href="/medical/book?tier=direct" class="tier-btn direct-btn">Book Direct Transport &nbsp;&rarr;</a>
+            </div>
+
+        </div>
+
+        <div class="dash-footer">
+            Questions? &nbsp;<a href="tel:+19414011907">&#9742; (941) 401-1907</a>
+            &nbsp;&bull;&nbsp;
+            <a href="/medical/log">View previous bookings</a>
+        </div>
+
+    </div>
+</body>
+</html>

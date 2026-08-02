@@ -58,6 +58,7 @@ class Booking(db.Model):
     original_price = db.Column(db.Float, nullable=True)
     is_flat_rate = db.Column(db.Boolean, default=False)
     flat_rate_id = db.Column(db.Integer, nullable=True)
+    concierge_access_code = db.Column(db.String(50), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     assigned_driver = db.relationship('Driver', backref='bookings', foreign_keys=[assigned_driver_id])
@@ -130,6 +131,18 @@ class Driver(db.Model):
 
     def __repr__(self):
         return f'<Driver {self.id} {self.name} @{int(self.commission_rate*100)}%>'
+
+
+class MedicalOffice(db.Model):
+    __tablename__ = 'medical_offices'
+
+    id = db.Column(db.Integer, primary_key=True)
+    access_code = db.Column(db.String(50), unique=True, nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    address = db.Column(db.String(255), nullable=False)
+    office_id_key = db.Column(db.String(50), unique=True, nullable=False)
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 
 class Expense(db.Model):

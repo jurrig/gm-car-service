@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0a0a1a">
+    <title>Medical Providers - G&M Car Service</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        body { background:#0a0a1a; color:#e0e0e0; font-family:'Inter',sans-serif; }
+        .wrap { max-width:1100px; margin:0 auto; padding:1rem; }
+        .card { background:#141428; border:1px solid #333; border-radius:12px; padding:1rem; margin-bottom:1rem; }
+        .row { display:grid; grid-template-columns:1fr 1fr; gap:0.8rem; }
+        .table { width:100%; border-collapse:collapse; font-size:0.9rem; }
+        .table th,.table td { padding:0.65rem; border-bottom:1px solid #2c2c40; text-align:left; }
+        input { width:100%; box-sizing:border-box; padding:0.6rem; border-radius:8px; border:1px solid #444; background:#0a0a1a; color:#fff; }
+        .btn { background:#c8a84e; color:#111; border:none; border-radius:8px; padding:0.6rem 1rem; font-weight:700; cursor:pointer; }
+        .btn-del { background:#7b1e1e; color:#fff; border:none; border-radius:6px; padding:0.4rem 0.7rem; cursor:pointer; }
+        a { color:#c8a84e; text-decoration:none; }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <div style="margin-bottom:1rem;">
+            <a href="{{ url_for('admin_dashboard') }}">← Back to Dashboard</a>
+        </div>
+
+        <div class="card">
+            <h2 style="margin-top:0;">Medical Provider Manager</h2>
+            <form method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="action" value="add">
+                <div class="row">
+                    <input type="text" name="name" placeholder="Clinic name" required>
+                    <input type="text" name="address" placeholder="Clinic address" required>
+                    <input type="text" name="office_id_key" placeholder="Office ID key (e.g. SMH-VENICE)" required>
+                    <input type="text" name="access_code" placeholder="Access code (e.g. SMH2026)" required>
+                </div>
+                <div style="margin-top:0.8rem;">
+                    <button class="btn" type="submit">Save Provider</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="card">
+            <h3 style="margin-top:0;">Active Medical Partners</h3>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Clinic</th>
+                        <th>Office Key</th>
+                        <th>Access Code</th>
+                        <th>Address</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for office in offices %}
+                    <tr>
+                        <td>{{ office.name }}</td>
+                        <td>{{ office.office_id_key }}</td>
+                        <td>{{ office.access_code }}</td>
+                        <td>{{ office.address }}</td>
+                        <td>
+                            <form method="POST" onsubmit="return confirm('Delete {{ office.name }}?');">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="hidden" name="action" value="delete">
+                                <input type="hidden" name="id" value="{{ office.id }}">
+                                <button class="btn-del" type="submit">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="5">No providers yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

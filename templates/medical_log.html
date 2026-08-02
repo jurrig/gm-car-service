@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#003d6b">
+    <title>Office Log &mdash; G&amp;M Medical Portal</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        :root { --med-blue: #005088; --med-teal: #11CAA0; --med-dark: #00111e; }
+        body { background: var(--med-dark); color: #e8edf2; font-family: 'Segoe UI', Arial, sans-serif; }
+
+        .med-nav {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0.75rem 2rem;
+            background: rgba(0,26,44,0.97);
+            border-bottom: 2px solid var(--med-teal);
+            backdrop-filter: blur(8px);
+        }
+        .med-nav img { height: 80px; width: auto; }
+        .med-nav .nav-links { display: flex; gap: 1.5rem; align-items: center; }
+        .med-nav a { color: #b0c8d8; text-decoration: none; font-size: 0.9rem; }
+        .med-nav a:hover { color: var(--med-teal); }
+        .med-nav .pill {
+            color: var(--med-teal) !important; font-weight: 700;
+            border: 1px solid var(--med-teal); padding: 0.25rem 0.8rem; border-radius: 6px;
+        }
+
+        .log-wrap { max-width: 900px; margin: 0 auto; padding: 7rem 1.5rem 3rem; }
+
+        .log-header { margin-bottom: 2rem; }
+        .log-header h1 { font-size: 1.6rem; font-weight: 700; color: #fff; margin: 0 0 0.3rem; }
+        .log-header p { color: #7a95a8; font-size: 0.88rem; margin: 0; }
+
+        .log-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+        .log-table th {
+            text-align: left; padding: 0.6rem 0.9rem;
+            font-size: 0.72rem; letter-spacing: 0.09em; text-transform: uppercase;
+            color: var(--med-teal); border-bottom: 1px solid rgba(17,202,160,0.2);
+        }
+        .log-table td {
+            padding: 0.75rem 0.9rem; color: #c8d8e0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .log-table tr:hover td { background: rgba(17,202,160,0.04); }
+
+        .badge-status {
+            display: inline-block; padding: 0.2rem 0.6rem;
+            border-radius: 20px; font-size: 0.75rem; font-weight: 600;
+        }
+        .badge-confirmed { background: rgba(17,202,160,0.12); color: var(--med-teal); }
+        .badge-pending   { background: rgba(255,200,0,0.12);   color: #ffc800; }
+        .badge-cancelled { background: rgba(231,76,60,0.12);   color: #e74c3c; }
+
+        .empty-state {
+            text-align: center; padding: 4rem 2rem;
+            color: #4a6070; font-size: 0.95rem;
+        }
+        .empty-state .icon { font-size: 2.5rem; margin-bottom: 0.75rem; opacity: 0.5; }
+
+        .btn-new {
+            display: inline-block; margin-top: 1rem;
+            padding: 0.65rem 1.4rem;
+            background: var(--med-blue); color: #fff;
+            font-weight: 700; font-size: 0.9rem; border-radius: 7px;
+            text-decoration: none; transition: opacity 0.2s;
+        }
+        .btn-new:hover { opacity: 0.85; }
+    </style>
+</head>
+<body>
+
+    <nav class="med-nav">
+        <a href="/medical/dashboard">
+            <img src="{{ url_for('static', filename='brand/gm-logo-transparent.png') }}"
+                 alt="G&amp;M Car Service" onerror="this.style.display='none'">
+        </a>
+        <div class="nav-links">
+            <a href="/medical/dashboard">&#10010; New Transport</a>
+            <a href="/medical/log" class="pill">&#128203; Office Log</a>
+            <a href="tel:+19414011907">&#9742; Support</a>
+            <a href="/medical/logout" style="color:#4a6070;font-size:0.85rem;">Sign Out</a>
+        </div>
+    </nav>
+
+    <div class="log-wrap">
+
+        <div class="log-header">
+            <h1>&#128203; Office Transport Log</h1>
+            <p>{{ office.office_name }} &mdash; Recent bookings placed through the Medical Concierge Portal</p>
+        </div>
+
+        {% if bookings %}
+        <table class="log-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Patient Name</th>
+                    <th>Pickup</th>
+                    <th>Date / Time</th>
+                    <th>Fare</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for b in bookings %}
+                <tr>
+                    <td style="color:#7a95a8;">{{ b.id }}</td>
+                    <td>{{ b.customer_name }}</td>
+                    <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                        {{ b.pickup_location }}
+                    </td>
+                    <td>{{ b.pickup_time.strftime('%b %d %Y, %I:%M %p') if b.pickup_time else '&mdash;' }}</td>
+                    <td>${{ '%.2f' % b.estimated_price if b.estimated_price else '&mdash;' }}</td>
+                    <td>
+                        {% if b.status == 'confirmed' %}
+                            <span class="badge-status badge-confirmed">Confirmed</span>
+                        {% elif b.status == 'cancelled' %}
+                            <span class="badge-status badge-cancelled">Cancelled</span>
+                        {% else %}
+                            <span class="badge-status badge-pending">Pending</span>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <div class="icon">&#128203;</div>
+            <p>No transport bookings found for this office yet.</p>
+            <a href="/medical/dashboard" class="btn-new">&#10010; Book First Transport</a>
+        </div>
+        {% endif %}
+
+    </div>
+
+</body>
+</html>

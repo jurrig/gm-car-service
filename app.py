@@ -4,7 +4,7 @@ from flask_wtf.csrf import CSRFProtect
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from functools import wraps
-from models import db, Booking, PricingTier, Vehicle, Driver, AppSetting, Expense, MileageLog, DriverShift, Payout, PromoCode, FlatRate
+from models import db, Booking, PricingTier, Vehicle, Driver, MedicalOffice, AppSetting, Expense, MileageLog, DriverShift, Payout, PromoCode, FlatRate
 from notifications import send_email_alert, send_sms_alert, send_rider_sms, send_receipt_email
 from scheduler import check_availability, format_suggestions
 from flight_tracker import check_flight, update_booking_flight_status, check_upcoming_flights, check_traffic_for_booking
@@ -399,6 +399,10 @@ def book():
         flat_rate_id=flat_rate_id,
     )
 
+    concierge_code = request.form.get('concierge_access_code', '').strip().upper()
+    if concierge_code:
+        booking.concierge_access_code = concierge_code
+
     # Capture pickup GPS for auto-arrive
     try:
         plat = float(request.form.get('pickup_lat', '') or 0)
@@ -516,6 +520,158 @@ def admin_login():
 def admin_logout():
     session.pop('admin_logged_in', None)
     return redirect(url_for('index'))
+
+
+# --------------- Medical Provider Portal ---------------
+def _medical_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not session.get('medical_office_key'):
+            return redirect(url_for('medical_login'))
+        return f(*args, **kwargs)
+    return decorated
+
+
+def _current_medical_office():
+    office_key = session.get('medical_office_key')
+    if not office_key:
+        return None
+    return MedicalOffice.query.filter_by(office_id_key=office_key, is_active=True).first()
+
+
+@app.route('/medical', methods=['GET', 'POST'])
+@limiter.limit("10 per minute")
+def medical_login():
+    if session.get('medical_office_key'):
+        return redirect(url_for('medical_dashboard'))
+
+    error = None
+    if request.method == 'POST':
+        submitted = request.form.get('access_code', '').strip().upper()
+        office = MedicalOffice.query.filter_by(access_code=submitted, is_active=True).first()
+        if office:
+            session['medical_office_key'] = office.office_id_key
+            session['medical_office_name'] = office.name
+            session['medical_destination'] = office.address
+            return redirect(url_for('medical_dashboard'))
+        error = 'Invalid access code. Please contact G&M Car Service.'
+
+    return render_template('medical_login.html', error=error)
+
+
+@app.route('/medical/dashboard')
+@_medical_required
+def medical_dashboard():
+    office = _current_medical_office()
+    if not office:
+        session.pop('medical_office_key', None)
+        session.pop('medical_office_name', None)
+        session.pop('medical_destination', None)
+        return redirect(url_for('medical_login'))
+
+    office_data = {
+        'office_key': office.office_id_key,
+        'office_name': office.name,
+        'destination': office.address,
+    }
+    vip_rate = float(AppSetting.get('medical_base_rate', '170.00') or '170.00')
+    direct_per_mile = float(AppSetting.get('medical_direct_per_mile', '3.50') or '3.50')
+    direct_min_fare = float(AppSetting.get('medical_direct_min_fare', '45.00') or '45.00')
+    return render_template(
+        'medical_dashboard.html',
+        office=office_data,
+        vip_rate=vip_rate,
+        direct_per_mile=direct_per_mile,
+        direct_min_fare=direct_min_fare,
+    )
+
+
+@app.route('/medical/book')
+@_medical_required
+def medical_book():
+    office = _current_medical_office()
+    if not office:
+        return redirect(url_for('medical_login'))
+
+    tier = request.args.get('tier', '').strip().lower()
+    if tier not in ('vip', 'direct'):
+        tier = 'vip'
+
+    office_data = {
+        'office_id_key': office.office_id_key,
+        'office_name': office.name,
+        'address': office.address,
+    }
+    return render_template(
+        'medical_booking.html',
+        medical_office=office_data,
+        medical_tier=tier,
+        form_data={},
+        initial_step=1,
+        error=None,
+    )
+
+
+@app.route('/medical/log')
+@_medical_required
+def medical_log():
+    office = _current_medical_office()
+    if not office:
+        return redirect(url_for('medical_login'))
+
+    bookings = Booking.query.filter_by(concierge_access_code=office.office_id_key)\
+        .order_by(Booking.pickup_time.desc()).limit(200).all()
+
+    office_data = {
+        'office_key': office.office_id_key,
+        'office_name': office.name,
+        'destination': office.address,
+    }
+    return render_template('medical_log.html', bookings=bookings, office=office_data)
+
+
+@app.route('/medical/logout')
+def medical_logout():
+    session.pop('medical_office_key', None)
+    session.pop('medical_office_name', None)
+    session.pop('medical_destination', None)
+    return redirect(url_for('medical_login'))
+
+
+@app.route('/admin/medical-providers', methods=['GET', 'POST'])
+@admin_required
+def admin_medical_providers():
+    if request.method == 'POST':
+        action = request.form.get('action', '').strip().lower()
+        if action == 'add':
+            name = request.form.get('name', '').strip()
+            address = request.form.get('address', '').strip()
+            office_id_key = request.form.get('office_id_key', '').strip().upper()
+            access_code = request.form.get('access_code', '').strip().upper()
+            if name and address and office_id_key and access_code:
+                existing = MedicalOffice.query.filter(
+                    (MedicalOffice.office_id_key == office_id_key) |
+                    (MedicalOffice.access_code == access_code)
+                ).first()
+                if not existing:
+                    db.session.add(MedicalOffice(
+                        name=name,
+                        address=address,
+                        office_id_key=office_id_key,
+                        access_code=access_code,
+                        is_active=True,
+                    ))
+                    db.session.commit()
+        elif action == 'delete':
+            office_id = request.form.get('id', '').strip()
+            if office_id.isdigit():
+                office = db.get_or_404(MedicalOffice, int(office_id))
+                db.session.delete(office)
+                db.session.commit()
+        return redirect(url_for('admin_medical_providers'))
+
+    offices = MedicalOffice.query.order_by(MedicalOffice.name.asc()).all()
+    return render_template('admin_medical_providers.html', offices=offices)
 
 
 @app.route('/admin')

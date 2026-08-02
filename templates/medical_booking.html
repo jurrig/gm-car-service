@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#003d6b">
+    <title>Book Medical Transport - G&M Car Service</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        body { background:#00111e; color:#e8edf2; font-family:'Segoe UI', Arial, sans-serif; margin:0; }
+        .wrap { max-width:920px; margin:0 auto; padding:2rem 1rem 3rem; }
+        .card { background:#001829; border:1px solid rgba(17,202,160,0.35); border-radius:12px; padding:1.25rem; margin-bottom:1rem; }
+        .row { display:grid; grid-template-columns:1fr 1fr; gap:0.9rem; }
+        @media (max-width:720px){ .row { grid-template-columns:1fr; } }
+        label { display:block; font-size:0.8rem; color:#7a95a8; margin-bottom:0.35rem; text-transform:uppercase; letter-spacing:0.08em; }
+        input, select, textarea { width:100%; box-sizing:border-box; padding:0.72rem; border:1px solid rgba(17,202,160,0.35); border-radius:8px; background:#0a1f31; color:#fff; }
+        .btn { border:none; border-radius:8px; cursor:pointer; padding:0.85rem 1rem; font-weight:700; }
+        .btn-primary { background:#11CAA0; color:#001829; }
+        .btn-link { color:#11CAA0; text-decoration:none; }
+        .sub { color:#7a95a8; font-size:0.9rem; margin:0.3rem 0 0; }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;">
+                <div>
+                    <h1 style="margin:0;font-size:1.4rem;">Medical Transport Booking</h1>
+                    <p class="sub">{{ medical_office.office_name }} • {{ medical_tier|upper }} tier</p>
+                </div>
+                <div style="display:flex;gap:0.8rem;">
+                    <a class="btn-link" href="{{ url_for('medical_dashboard') }}">Back to Options</a>
+                    <a class="btn-link" href="{{ url_for('medical_logout') }}">Sign Out</a>
+                </div>
+            </div>
+        </div>
+
+        {% if error %}
+        <div class="card" style="border-color:rgba(231,76,60,0.6); color:#f08070;">{{ error }}</div>
+        {% endif %}
+
+        <form class="card" method="POST" action="{{ url_for('book') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="vehicle_type" value="suv">
+            <input type="hidden" name="medical_tier" value="{{ medical_tier }}">
+            <input type="hidden" name="concierge_access_code" value="{{ medical_office.office_id_key }}">
+            <input type="hidden" name="miles" value="0">
+            <input type="hidden" name="toll_fee" value="0">
+
+            <div class="row">
+                <div>
+                    <label for="customer_name">Patient Name</label>
+                    <input id="customer_name" name="customer_name" required>
+                </div>
+                <div>
+                    <label for="phone">Patient Phone</label>
+                    <input id="phone" name="phone" required>
+                </div>
+            </div>
+
+            <div class="row">
+                <div>
+                    <label for="email">Email (optional)</label>
+                    <input id="email" name="email" type="email">
+                </div>
+                <div>
+                    <label for="passengers">Passengers</label>
+                    <select id="passengers" name="passengers">
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="row">
+                <div>
+                    <label for="pickup_location">Pickup Address</label>
+                    <input id="pickup_location" name="pickup_location" required>
+                </div>
+                <div>
+                    <label for="dropoff_location">Destination</label>
+                    {% if medical_tier == 'vip' %}
+                    <input id="dropoff_location" name="dropoff_location" value="{{ medical_office.address }}" readonly>
+                    {% else %}
+                    <input id="dropoff_location" name="dropoff_location" required>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="row">
+                <div>
+                    <label for="pickup_date">Pickup Date</label>
+                    <input id="pickup_date" name="pickup_date" type="date" required>
+                </div>
+                <div>
+                    <label for="pickup_time">Pickup Time</label>
+                    <input id="pickup_time" name="pickup_time" type="time" required>
+                </div>
+            </div>
+
+            <div style="margin-top:1rem;">
+                <button class="btn btn-primary" type="submit">Submit Medical Transport</button>
+            </div>
+        </form>
+    </div>
+</body>
+</html>
