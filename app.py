@@ -119,12 +119,17 @@ def send_payment_receipt(booking):
 # --------------- Pricing Engine ---------------
 VEHICLE_TYPES = ['sedan', 'suv', 'luxury']
 VEHICLE_LABELS = {'sedan': 'Sedan', 'suv': 'SUV', 'luxury': 'Luxury'}
+COMPLETED_STATUSES = {'completed', 'complete'}
 
 
 def get_tiers(vehicle_type):
     """Get pricing tiers for a vehicle type, ordered by min_miles."""
     return PricingTier.query.filter_by(vehicle_type=vehicle_type)\
         .order_by(PricingTier.min_miles.asc()).all()
+
+
+def is_completed_status(status):
+    return (status or '').strip().lower() in COMPLETED_STATUSES
 
 
 def calculate_estimate(miles, vehicle_type='sedan'):
@@ -516,7 +521,9 @@ def admin_logout():
 @app.route('/admin')
 @admin_required
 def admin_dashboard():
-    bookings = Booking.query.order_by(Booking.pickup_time.asc()).all()
+    all_bookings = Booking.query.order_by(Booking.pickup_time.asc()).all()
+    bookings = [b for b in all_bookings if not is_completed_status(b.status)]
+    completed_bookings = [b for b in all_bookings if is_completed_status(b.status)]
 
     # Today's rides & earnings
     now = datetime.now()
@@ -524,11 +531,11 @@ def admin_dashboard():
     today_end = today_start + timedelta(days=1)
     today_rides = [b for b in bookings if b.pickup_time and today_start <= b.pickup_time < today_end]
     week_start = today_start - timedelta(days=now.weekday())  # Monday
-    week_rides = [b for b in bookings if b.pickup_time and week_start <= b.pickup_time < today_end]
+    week_rides = [b for b in all_bookings if b.pickup_time and week_start <= b.pickup_time < today_end]
 
-    today_earnings = sum(b.estimated_price for b in today_rides if b.status == 'Completed')
-    week_earnings = sum(b.estimated_price for b in week_rides if b.status == 'Completed')
-    total_earnings = sum(b.estimated_price for b in bookings if b.status == 'Completed')
+    today_earnings = sum(b.estimated_price for b in today_rides if is_completed_status(b.status))
+    week_earnings = sum(b.estimated_price for b in week_rides if is_completed_status(b.status))
+    total_earnings = sum(b.estimated_price for b in all_bookings if is_completed_status(b.status))
 
     # Next upcoming ride
     upcoming = [b for b in bookings if b.pickup_time and b.pickup_time >= now and b.status not in ('Completed', 'No-Show', 'Cancelled')]
@@ -541,10 +548,25 @@ def admin_dashboard():
         today_earnings=today_earnings,
         week_earnings=week_earnings,
         total_earnings=total_earnings,
+        completed_count=len(completed_bookings),
         next_ride=next_ride,
         next_ride_min=next_ride_min,
         now=now,
         drivers=Driver.query.filter_by(is_active=True).all(),
+    )
+
+
+@app.route('/admin/trip-log')
+@admin_required
+def admin_trip_log():
+    completed_bookings = Booking.query.filter(
+        db.func.lower(Booking.status).in_(list(COMPLETED_STATUSES))
+    ).order_by(Booking.pickup_time.desc()).all()
+    total_completed_earnings = sum(b.estimated_price for b in completed_bookings)
+    return render_template(
+        'admin_trip_log.html',
+        completed_bookings=completed_bookings,
+        total_completed_earnings=total_completed_earnings,
     )
 
 

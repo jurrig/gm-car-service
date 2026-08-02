@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0a0a1a">
+    <title>Trip Log - G&M Car Service</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body style="background:#0a0a1a;color:#e0e0e0;font-family:'Inter',sans-serif;">
+    <header>
+        <h1>G&amp;M Car Service</h1>
+        <nav class="admin-nav">
+            <span>&#128221; Completed Trip Log</span>
+            <div style="display:flex;gap:0.75rem;align-items:center;">
+                <a href="{{ url_for('admin_dashboard') }}" style="color:#c8a84e;text-decoration:none;font-weight:600;">&#128663; Dashboard</a>
+                <a href="{{ url_for('admin_logout') }}">Logout</a>
+            </div>
+        </nav>
+    </header>
+
+    <main style="max-width:1100px;margin:0 auto;padding:1rem;">
+        <div class="earnings-bar" style="margin-bottom:1rem;">
+            <div class="earning-chip">Completed Trips: <strong>{{ completed_bookings|length }}</strong></div>
+            <div class="earning-chip">Total Completed Earnings: <strong>${{ '%.2f'|format(total_completed_earnings) }}</strong></div>
+        </div>
+
+        {% if completed_bookings %}
+        <div class="ride-cards">
+            {% for b in completed_bookings %}
+            <div class="ride-card status-completed">
+                <div class="ride-card-header">
+                    <div>
+                        <span class="ride-id">#{{ b.id }}</span>
+                        &nbsp;{{ b.customer_name }}
+                    </div>
+                    <div style="display:flex;align-items:center;gap:0.75rem;">
+                        <span class="badge badge-completed">{{ b.status }}</span>
+                        <span class="ride-time">{{ b.pickup_time.strftime('%b %d, %I:%M %p') if b.pickup_time else '—' }}</span>
+                    </div>
+                </div>
+                <div class="ride-card-body">
+                    <div class="ride-field"><label>Phone</label><span>{{ b.phone }}</span></div>
+                    <div class="ride-field"><label>Pickup</label><span>{{ b.pickup_location }}</span></div>
+                    <div class="ride-field"><label>Drop-off</label><span>{{ b.dropoff_location }}</span></div>
+                    <div class="ride-field"><label>Fare</label><span>${{ '%.2f'|format(b.estimated_price) }}</span></div>
+                    <div class="ride-field"><label>Vehicle</label><span>{{ b.vehicle_type|capitalize }}</span></div>
+                    <div class="ride-field"><label>Booked</label><span>{{ b.created_at.strftime('%b %d, %I:%M %p') if b.created_at else '—' }}</span></div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="ride-card">
+            <div class="ride-card-body">
+                <p style="margin:0;">No completed trips yet.</p>
+            </div>
+        </div>
+        {% endif %}
+    </main>
+</body>
+
+</html>

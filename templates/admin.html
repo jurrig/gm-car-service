@@ -1164,6 +1164,8 @@
                     style="color:#c8a84e; text-decoration:none; font-weight:600;">&#127775; Promos</a>
                 <a href="{{ url_for('admin_flat_rates') }}"
                     style="color:#c8a84e; text-decoration:none; font-weight:600;">&#128274; Flat Rates</a>
+                <a href="{{ url_for('admin_trip_log') }}"
+                    style="color:#c8a84e; text-decoration:none; font-weight:600;">&#128221; Trip Log ({{ completed_count }})</a>
                 <button class="car-mode-toggle" id="carModeBtn" title="Toggle car infotainment mode">&#128663; Car
                     Mode</button>
                 <a href="{{ url_for('admin_logout') }}">Logout</a>
@@ -1227,7 +1229,6 @@
         {% set accepted_count = bookings | selectattr('status', 'equalto', 'Accepted') | list | length %}
         {% set enroute_count = bookings | selectattr('status', 'equalto', 'En Route') | list | length %}
         {% set arrived_count = bookings | selectattr('status', 'equalto', 'Arrived') | list | length %}
-        {% set completed_count = bookings | selectattr('status', 'equalto', 'Completed') | list | length %}
         <div class="dash-stats">
             <div class="stat-card">
                 <div class="stat-num">{{ pending_count + confirmed_count }}</div>
@@ -1280,8 +1281,6 @@
                     }}</span></button>
             <button class="filter-btn" data-filter="Arrived">Arrived <span class="filter-count">{{ arrived_count
                     }}</span></button>
-            <button class="filter-btn" data-filter="Completed">Completed <span class="filter-count">{{
-                    completed_count }}</span></button>
             <button class="filter-btn" id="checkAllFlightsBtn" onclick="checkAllFlights(this)"
                 style="margin-left:auto;border-color:rgba(0,123,255,0.4);color:#7bb8f5;">&#9992; Check All
                 Flights</button>
