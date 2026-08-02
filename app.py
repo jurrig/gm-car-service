@@ -9,14 +9,19 @@ from notifications import send_email_alert, send_sms_alert, send_rider_sms, send
 from scheduler import check_availability, format_suggestions
 from flight_tracker import check_flight, update_booking_flight_status, check_upcoming_flights, check_traffic_for_booking
 from datetime import datetime, timedelta
-from dotenv import load_dotenv
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
+import sys
 import stripe
 import math
 
-load_dotenv()
+PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
+
+from dotenv import load_dotenv
+load_dotenv(os.path.join(PROJECT_ROOT, '.env'))
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-change-me')
@@ -463,8 +468,20 @@ def book():
 
 
 # --------------- Admin Dashboard ---------------
-ADMIN_SECRET = os.environ.get('ADMIN_SECRET', 'admin')
-ADMIN_HASH = generate_password_hash(ADMIN_SECRET)
+def get_admin_secret():
+    env_secret = os.environ.get('ADMIN_SECRET', '').strip()
+    if env_secret:
+        return env_secret
+
+    stored_secret = AppSetting.get('admin_secret')
+    if stored_secret:
+        return stored_secret
+
+    return os.environ.get('ADMIN_PASSWORD', 'admin')
+
+
+def get_admin_hash():
+    return generate_password_hash(get_admin_secret())
 
 
 def admin_required(f):
@@ -477,10 +494,12 @@ def admin_required(f):
 
 
 @app.route('/admin/login', methods=['GET', 'POST'])
+@csrf.exempt
 @limiter.limit("5 per minute")
 def admin_login():
     if request.method == 'POST':
-        if check_password_hash(ADMIN_HASH, request.form.get('secret', '')):
+        submitted_secret = request.form.get('secret', '').strip()
+        if submitted_secret and check_password_hash(get_admin_hash(), submitted_secret):
             session['admin_logged_in'] = True
             return redirect(url_for('admin_dashboard'))
         return render_template('admin_login.html', error='Invalid admin password.')
